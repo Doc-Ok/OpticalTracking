@@ -1,0 +1,878 @@
+/***********************************************************************
+GeometryValueCoders - Value coder classes for templatized geometry
+objects.
+Copyright (c) 2003-2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_GEOMETRYVALUECODERS_IMPLEMENTATION
+
+#include <Geometry/GeometryValueCoders.h>
+
+#include <ctype.h>
+#include <string.h>
+#include <Misc/StandardValueCoders.h>
+#include <Misc/ArrayValueCoders.h>
+#include <Math/Math.h>
+#include <Geometry/ComponentArray.h>
+#include <Geometry/Vector.h>
+#include <Geometry/Point.h>
+#include <Geometry/HVector.h>
+#include <Geometry/Box.h>
+#include <Geometry/Plane.h>
+#include <Geometry/Matrix.h>
+#include <Geometry/Rotation.h>
+#include <Geometry/OrthonormalTransformation.h>
+#include <Geometry/OrthogonalTransformation.h>
+#include <Geometry/AffineTransformation.h>
+#include <Geometry/ProjectiveTransformation.h>
+
+namespace Misc {
+
+/**********************************************************************************
+Methods of class ValueCoder<Geometry::ComponentArray<ScalarParam,dimensionParam> >:
+**********************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::ComponentArray<ScalarParam,dimensionParam> >::encode(
+	const Geometry::ComponentArray<ScalarParam,dimensionParam>& value)
+	{
+	return CFixedArrayValueCoder<ScalarParam,dimensionParam>::encode(value.getComponents());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::ComponentArray<ScalarParam,dimensionParam>
+ValueCoder<Geometry::ComponentArray<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		Geometry::ComponentArray<ScalarParam,dimensionParam> result;
+		CFixedArrayValueCoder<ScalarParam,dimensionParam>(result.getComponents()).decode(start,end,decodeEnd);
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::ComponentArray due to ")+err.what());
+		}
+	}
+
+/**************************************************************************
+Methods of class ValueCoder<Geometry::Vector<ScalarParam,dimensionParam> >:
+**************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::Vector<ScalarParam,dimensionParam> >::encode(
+	const Geometry::Vector<ScalarParam,dimensionParam>& value)
+	{
+	return CFixedArrayValueCoder<ScalarParam,dimensionParam>::encode(value.getComponents());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::Vector<ScalarParam,dimensionParam>
+ValueCoder<Geometry::Vector<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		Geometry::Vector<ScalarParam,dimensionParam> result;
+		CFixedArrayValueCoder<ScalarParam,dimensionParam>(result.getComponents()).decode(start,end,decodeEnd);
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Vector due to ")+err.what());
+		}
+	}
+
+/*************************************************************************
+Methods of class ValueCoder<Geometry::Point<ScalarParam,dimensionParam> >:
+*************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::Point<ScalarParam,dimensionParam> >::encode(
+	const Geometry::Point<ScalarParam,dimensionParam>& value)
+	{
+	return CFixedArrayValueCoder<ScalarParam,dimensionParam>::encode(value.getComponents());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::Point<ScalarParam,dimensionParam>
+ValueCoder<Geometry::Point<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		Geometry::Point<ScalarParam,dimensionParam> result;
+		CFixedArrayValueCoder<ScalarParam,dimensionParam>(result.getComponents()).decode(start,end,decodeEnd);
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Point due to ")+err.what());
+		}
+	}
+
+/**************************************************************************
+Methods of class ValueCoder<Geometry::HVector<ScalarParam,dimensionParam> >:
+**************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::HVector<ScalarParam,dimensionParam> >::encode(
+	const Geometry::HVector<ScalarParam,dimensionParam>& value)
+	{
+	return CFixedArrayValueCoder<ScalarParam,dimensionParam+1>::encode(value.getComponents());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::HVector<ScalarParam,dimensionParam>
+ValueCoder<Geometry::HVector<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		Geometry::HVector<ScalarParam,dimensionParam> result;
+		CFixedArrayValueCoder<ScalarParam,dimensionParam+1>(result.getComponents()).decode(start,end,decodeEnd);
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::HVector due to ")+err.what());
+		}
+	}
+
+/***********************************************************************
+Methods of class ValueCoder<Geometry::Box<ScalarParam,dimensionParam> >:
+***********************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::Box<ScalarParam,dimensionParam> >::encode(
+	const Geometry::Box<ScalarParam,dimensionParam>& value)
+	{
+	typedef Geometry::Box<ScalarParam,dimensionParam> Box;
+	
+	std::string result;
+	result.append(ValueCoder<typename Box::Point>::encode(value.getOrigin()));
+	result.push_back(',');
+	result.push_back(' ');
+	result.append(ValueCoder<typename Box::Size>::encode(value.getSize()));
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::Box<ScalarParam,dimensionParam>
+ValueCoder<Geometry::Box<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::Box<ScalarParam,dimensionParam> Box;
+	
+	try
+		{
+		/* Parse the box's origin: */
+		const char* cPtr=start;
+		typename Box::Point origin=ValueCoder<typename Box::Point>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Check for comma separator: */
+		cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Parse the box's size: */
+		typename Box::Size size=ValueCoder<typename Box::Size>::decode(cPtr,end,&cPtr);
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return Box(origin,size);
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Box due to ")+err.what());
+		}
+	}
+
+/*************************************************************************
+Methods of class ValueCoder<Geometry::Plane<ScalarParam,dimensionParam> >:
+*************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::Plane<ScalarParam,dimensionParam> >::encode(
+	const Geometry::Plane<ScalarParam,dimensionParam>& value)
+	{
+	typedef Geometry::Plane<ScalarParam,dimensionParam> Plane;
+	
+	std::string result;
+	result.append(ValueCoder<typename Plane::Vector>::encode(value.getNormal()));
+	result.push_back(',');
+	result.push_back(' ');
+	result.append(ValueCoder<typename Plane::Scalar>::encode(value.getOffset()));
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::Plane<ScalarParam,dimensionParam>
+ValueCoder<Geometry::Plane<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::Plane<ScalarParam,dimensionParam> Plane;
+	
+	try
+		{
+		/* Parse the plane's normal vector: */
+		const char* cPtr=start;
+		typename Plane::Vector normal=ValueCoder<typename Plane::Vector>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Check for comma separator: */
+		cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Parse the plane's offset: */
+		typename Plane::Scalar offset=ValueCoder<typename Plane::Scalar>::decode(cPtr,end,&cPtr);
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return Plane(normal,offset);
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Plane due to ")+err.what());
+		}
+	}
+
+/****************************************************************************************
+Methods of class ValueCoder<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >:
+****************************************************************************************/
+
+template <class ScalarParam,int numRowsParam,int numColumnsParam>
+inline
+std::string
+ValueCoder<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >::encode(
+	const Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam>& value)
+	{
+	/* Convert matrix to array of column vectors: */
+	Geometry::ComponentArray<ScalarParam,numRowsParam> columns[numColumnsParam];
+	for(int i=0;i<numRowsParam;++i)
+		for(int j=0;j<numColumnsParam;++j)
+			columns[j][i]=value(i,j);
+	
+	/* Encode the column vector array: */
+	return CFixedArrayValueCoder<Geometry::ComponentArray<ScalarParam,numRowsParam>,numColumnsParam>::encode(columns);
+	}
+
+template <class ScalarParam,int numRowsParam,int numColumnsParam>
+inline
+Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam>
+ValueCoder<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		/* Decode array of column vectors: */
+		Geometry::ComponentArray<ScalarParam,numRowsParam> columns[numColumnsParam];
+		CFixedArrayValueCoder<Geometry::ComponentArray<ScalarParam,numRowsParam>,numColumnsParam>(columns).decode(start,end,decodeEnd);
+		
+		/* Convert array of column vectors to matrix: */
+		Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> result;
+		for(int i=0;i<numRowsParam;++i)
+			for(int j=0;j<numColumnsParam;++j)
+				result(i,j)=columns[j][i];
+		
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Matrix due to ")+err.what());
+		}
+	}
+
+/***************************************************************
+Methods of class ValueCoder<Geometry::Rotation<ScalarParam,2> >:
+***************************************************************/
+
+template <class ScalarParam>
+inline
+std::string
+ValueCoder<Geometry::Rotation<ScalarParam,2> >::encode(
+	const Geometry::Rotation<ScalarParam,2>& value)
+	{
+	return ValueCoder<ScalarParam>::encode(Math::deg(value.getAngle()));
+	}
+
+template <class ScalarParam>
+inline
+Geometry::Rotation<ScalarParam,2>
+ValueCoder<Geometry::Rotation<ScalarParam,2> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		ScalarParam angle=ValueCoder<ScalarParam>::decode(start,end,decodeEnd);
+		return Geometry::Rotation<ScalarParam,2>(Math::rad(angle));
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Rotation due to ")+err.what());
+		}
+	}
+
+/***************************************************************
+Methods of class ValueCoder<Geometry::Rotation<ScalarParam,3> >:
+***************************************************************/
+
+template <class ScalarParam>
+inline
+std::string
+ValueCoder<Geometry::Rotation<ScalarParam,3> >::encode(
+	const Geometry::Rotation<ScalarParam,3>& value)
+	{
+	std::string result;
+	
+	result.append(ValueCoder<Geometry::Vector<ScalarParam,3> >::encode(value.getAxis()));
+	result.push_back(',');
+	result.push_back(' ');
+	result.append(ValueCoder<ScalarParam>::encode(Math::deg(value.getAngle())));
+	
+	return result;
+	}
+
+template <class ScalarParam>
+inline
+Geometry::Rotation<ScalarParam,3>
+ValueCoder<Geometry::Rotation<ScalarParam,3> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		const char* cPtr=start;
+		
+		/* Decode rotation axis: */
+		Geometry::Vector<ScalarParam,3> axis=ValueCoder<Geometry::Vector<ScalarParam,3> >::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Check for comma separator: */
+		cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Decode rotation angle: */
+		ScalarParam angle=ValueCoder<ScalarParam>::decode(cPtr,end,&cPtr);
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return Geometry::Rotation<ScalarParam,3>(axis,Math::rad(angle));
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::Rotation due to ")+err.what());
+		}
+	}
+
+/*********************************************************************************************
+Methods of class ValueCoder<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >:
+*********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >::encode(
+	const Geometry::OrthonormalTransformation<ScalarParam,dimensionParam>& value)
+	{
+	typedef Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> ONT;
+	
+	std::string result;
+	
+	if(value.getTranslation()!=ONT::Vector::zero)
+		{
+		result.append("translate ");
+		result.append(ValueCoder<typename ONT::Vector>::encode(value.getTranslation()));
+		}
+	if(value.getRotation()!=ONT::Rotation::identity)
+		{
+		if(!result.empty())
+			result.append(" * ");
+		result.append("rotate ");
+		result.append(ValueCoder<typename ONT::Rotation>::encode(value.getRotation()));
+		}
+	if(result.empty())
+		result.append("identity");
+	
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::OrthonormalTransformation<ScalarParam,dimensionParam>
+ValueCoder<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> ONT;
+	
+	try
+		{
+		ONT result=ONT::identity;
+		const char* cPtr=start;
+		
+		/* Decode all elementary transformations: */
+		while(true)
+			{
+			std::string token=ValueCoder<std::string>::decode(cPtr,end,&cPtr);
+			if(token=="translate")
+				{
+				/* Parse a translation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename ONT::Vector t=ValueCoder<typename ONT::Vector>::decode(cPtr,end,&cPtr);
+				result*=ONT::translate(t);
+				}
+			else if(token=="rotate")
+				{
+				/* Parse a rotation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename ONT::Rotation r=ValueCoder<typename ONT::Rotation>::decode(cPtr,end,&cPtr);
+				result*=ONT::rotate(r);
+				}
+			else if(token=="rotateAround")
+				{
+				/* Parse a center point: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename ONT::Point p=ValueCoder<typename ONT::Point>::decode(cPtr,end,&cPtr);
+				
+				/* Check for comma separator: */
+				cPtr=checkSeparator(',',cPtr,end);
+				
+				/* Parse a rotation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename ONT::Rotation r=ValueCoder<typename ONT::Rotation>::decode(cPtr,end,&cPtr);
+				result*=ONT::rotateAround(p,r);
+				}
+			else if(token!="identity")
+				{
+				throw DecodingError(std::string("unknown token ")+token);
+				}
+			cPtr=skipWhitespace(cPtr,end);
+			
+			/* Check for multiplication sign: */
+			if(cPtr==end||*cPtr!='*')
+				break;
+			++cPtr;
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::OrthonormalTransformation due to ")+err.what());
+		}
+	}
+
+/********************************************************************************************
+Methods of class ValueCoder<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >:
+********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >::encode(
+	const Geometry::OrthogonalTransformation<ScalarParam,dimensionParam>& value)
+	{
+	typedef Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> OGT;
+	
+	std::string result;
+	
+	if(value.getTranslation()!=OGT::Vector::zero)
+		{
+		result.append("translate ");
+		result.append(ValueCoder<typename OGT::Vector>::encode(value.getTranslation()));
+		}
+	if(value.getRotation()!=OGT::Rotation::identity)
+		{
+		if(!result.empty())
+			result.append(" * ");
+		result.append("rotate ");
+		result.append(ValueCoder<typename OGT::Rotation>::encode(value.getRotation()));
+		}
+	if(value.getScaling()!=typename OGT::Scalar(1))
+		{
+		if(!result.empty())
+			result.append(" * ");
+		result.append("scale ");
+		result.append(ValueCoder<typename OGT::Scalar>::encode(value.getScaling()));
+		}
+	if(result.empty())
+		result.append("identity");
+	
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::OrthogonalTransformation<ScalarParam,dimensionParam>
+ValueCoder<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> OGT;
+	
+	try
+		{
+		OGT result=OGT::identity;
+		const char* cPtr=start;
+		
+		/* Decode all atomic transformations: */
+		while(true)
+			{
+			std::string token=ValueCoder<std::string>::decode(cPtr,end,&cPtr);
+			if(token=="translate")
+				{
+				/* Parse a translation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Vector t=ValueCoder<typename OGT::Vector>::decode(cPtr,end,&cPtr);
+				result*=OGT::translate(t);
+				}
+			else if(token=="rotate")
+				{
+				/* Parse a rotation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Rotation r=ValueCoder<typename OGT::Rotation>::decode(cPtr,end,&cPtr);
+				result*=OGT::rotate(r);
+				}
+			else if(token=="rotateAround")
+				{
+				/* Parse a center point: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Point p=ValueCoder<typename OGT::Point>::decode(cPtr,end,&cPtr);
+				
+				/* Check for comma separator: */
+				cPtr=checkSeparator(',',cPtr,end);
+				
+				/* Parse a rotation transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Rotation r=ValueCoder<typename OGT::Rotation>::decode(cPtr,end,&cPtr);
+				result*=OGT::rotateAround(p,r);
+				}
+			else if(token=="scale")
+				{
+				/* Parse a scaling transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Scalar s=ValueCoder<typename OGT::Scalar>::decode(cPtr,end,&cPtr);
+				result*=OGT::scale(s);
+				}
+			else if(token=="scaleAround")
+				{
+				/* Parse a center point: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Point p=ValueCoder<typename OGT::Point>::decode(cPtr,end,&cPtr);
+				
+				/* Check for comma separator: */
+				cPtr=checkSeparator(',',cPtr,end);
+				
+				/* Parse a scaling transformation: */
+				cPtr=skipWhitespace(cPtr,end);
+				typename OGT::Scalar s=ValueCoder<typename OGT::Scalar>::decode(cPtr,end,&cPtr);
+				result*=OGT::scaleAround(p,s);
+				}
+			else if(token!="identity")
+				{
+				throw DecodingError(std::string("unknown token ")+token);
+				}
+			cPtr=skipWhitespace(cPtr,end);
+			
+			/* Check for multiplication sign: */
+			if(cPtr==end||*cPtr!='*')
+				break;
+			++cPtr;
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::OrthogonalTransformation due to ")+err.what());
+		}
+	}
+
+/****************************************************************************************
+Methods of class ValueCoder<Geometry::AffineTransformation<ScalarParam,dimensionParam> >:
+****************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::AffineTransformation<ScalarParam,dimensionParam> >::encode(
+	const Geometry::AffineTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return ValueCoder<Geometry::Matrix<ScalarParam,dimensionParam,dimensionParam+1> >::encode(value.getMatrix());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::AffineTransformation<ScalarParam,dimensionParam>
+ValueCoder<Geometry::AffineTransformation<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::AffineTransformation<ScalarParam,dimensionParam> AT;
+	
+	try
+		{
+		AT result=AT::identity;
+		const char* cPtr=start;
+		
+		/* Decode all atomic transformations: */
+		while(true)
+			{
+			if(*cPtr=='(')
+				{
+				/* Parse an affine matrix: */
+				AT matrix;
+				matrix.getMatrix()=ValueCoder<Geometry::Matrix<ScalarParam,dimensionParam,dimensionParam+1> >::decode(cPtr,end,&cPtr);
+				result*=matrix;
+				}
+			else
+				{
+				std::string token=ValueCoder<std::string>::decode(cPtr,end,&cPtr);
+				if(token=="translate")
+					{
+					/* Parse a translation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Vector t=ValueCoder<typename AT::Vector>::decode(cPtr,end,&cPtr);
+					result*=AT::translate(t);
+					}
+				else if(token=="rotate")
+					{
+					/* Parse a rotation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Rotation r=ValueCoder<typename AT::Rotation>::decode(cPtr,end,&cPtr);
+					result*=AT::rotate(r);
+					}
+				else if(token=="rotateAround")
+					{
+					/* Parse a center point: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Point p=ValueCoder<typename AT::Point>::decode(cPtr,end,&cPtr);
+					
+					/* Check for comma separator: */
+					cPtr=checkSeparator(',',cPtr,end);
+					
+					/* Parse a rotation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Rotation r=ValueCoder<typename AT::Rotation>::decode(cPtr,end,&cPtr);
+					result*=AT::rotateAround(p,r);
+					}
+				else if(token=="scale")
+					{
+					/* Parse a scaling transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Scalar s=ValueCoder<typename AT::Scalar>::decode(cPtr,end,&cPtr);
+					result*=AT::scale(s);
+					}
+				else if(token=="scaleAround")
+					{
+					/* Parse a center point: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Point p=ValueCoder<typename AT::Point>::decode(cPtr,end,&cPtr);
+					
+					/* Check for comma separator: */
+					cPtr=checkSeparator(',',cPtr,end);
+					
+					/* Parse a scaling transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename AT::Scalar s=ValueCoder<typename AT::Scalar>::decode(cPtr,end,&cPtr);
+					result*=AT::scaleAround(p,s);
+					}
+				else if(token!="identity")
+					{
+					throw DecodingError(std::string("unknown token ")+token);
+					}
+				}
+			cPtr=skipWhitespace(cPtr,end);
+			
+			/* Check for multiplication sign: */
+			if(cPtr==end||*cPtr!='*')
+				break;
+			++cPtr;
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::AffineTransformation due to ")+err.what());
+		}
+	}
+
+/********************************************************************************************
+Methods of class ValueCoder<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >:
+********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+std::string
+ValueCoder<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >::encode(
+	const Geometry::ProjectiveTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return ValueCoder<Geometry::Matrix<ScalarParam,dimensionParam+1,dimensionParam+1> >::encode(value.getMatrix());
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+Geometry::ProjectiveTransformation<ScalarParam,dimensionParam>
+ValueCoder<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	typedef Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> PT;
+	
+	try
+		{
+		PT result=PT::identity;
+		const char* cPtr=start;
+		
+		/* Decode all atomic transformations: */
+		while(true)
+			{
+			if(*cPtr=='(')
+				{
+				/* Parse a projective matrix: */
+				PT matrix;
+				matrix.getMatrix()=ValueCoder<Geometry::Matrix<ScalarParam,dimensionParam+1,dimensionParam+1> >::decode(cPtr,end,&cPtr);
+				result*=matrix;
+				}
+			else
+				{
+				std::string token=ValueCoder<std::string>::decode(cPtr,end,&cPtr);
+				if(token=="translate")
+					{
+					/* Parse a translation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Vector t=ValueCoder<typename PT::Vector>::decode(cPtr,end,&cPtr);
+					result*=PT::translate(t);
+					}
+				else if(token=="rotate")
+					{
+					/* Parse a rotation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Rotation r=ValueCoder<typename PT::Rotation>::decode(cPtr,end,&cPtr);
+					result*=PT::rotate(r);
+					}
+				else if(token=="rotateAround")
+					{
+					/* Parse a center point: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Point p=ValueCoder<typename PT::Point>::decode(cPtr,end,&cPtr);
+					
+					/* Check for comma separator: */
+					cPtr=checkSeparator(',',cPtr,end);
+					
+					/* Parse a rotation transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Rotation r=ValueCoder<typename PT::Rotation>::decode(cPtr,end,&cPtr);
+					result*=PT::rotateAround(p,r);
+					}
+				else if(token=="scale")
+					{
+					/* Parse a scaling transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Scalar s=ValueCoder<typename PT::Scalar>::decode(cPtr,end,&cPtr);
+					result*=PT::scale(s);
+					}
+				else if(token=="scaleAround")
+					{
+					/* Parse a center point: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Point p=ValueCoder<typename PT::Point>::decode(cPtr,end,&cPtr);
+					
+					/* Check for comma separator: */
+					cPtr=checkSeparator(',',cPtr,end);
+					
+					/* Parse a scaling transformation: */
+					cPtr=skipWhitespace(cPtr,end);
+					typename PT::Scalar s=ValueCoder<typename PT::Scalar>::decode(cPtr,end,&cPtr);
+					result*=PT::scaleAround(p,s);
+					}
+				else if(token!="identity")
+					{
+					throw DecodingError(std::string("unknown token ")+token);
+					}
+				}
+			cPtr=skipWhitespace(cPtr,end);
+			
+			/* Check for multiplication sign: */
+			if(cPtr==end||*cPtr!='*')
+				break;
+			++cPtr;
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Geometry::ProjectiveTransformation due to ")+err.what());
+		}
+	}
+
+}

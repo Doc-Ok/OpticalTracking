@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<TITLE>Vrui Input Handling</TITLE>
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>Input Handling in Vrui</H1>
+
+Unlike many other VR development toolkits, Vrui discourages applications from directly talking to an environment's input devices. In other systems, there is usually a low-level input device driver that abstracts the particulars of a device's hardware, such as communications protocol and data format, and provides a list of <EM>virtualized input devices</EM> that can usually be enumerated or queried by name. Applications then handle input by searching for a particular input device and installing event handlers to react to, for example, position changes or button presses. This approach limits the portability of applications, because they have to react to different environments with different sets of input devices. While simple differences in naming schemes can easily be overcome, more fundamental differences, such as the number of available devices or the capabilities of individual devices, require tremendous effort by the application programmer. For example, an application designed to expect two 6-DOF tracked input devices will usually require major effort to port to an environment with only one input device, or with devices that track less than six degrees of freedom. On the other hand, applications written for single-device environments typically cannot make use of additional input devices that may exist in a given environment. Furthermore, applications are often written to directly work with the raw data provided by the virtualized input devices, meaning that basic interaction tasks such as navigation or menu selection are implemented at the application level, leading to user interfaces widely varying between applications.<P>
+
+Vrui aims to overcome all these problems by inserting another layer of abstraction between the virtualized input devices provided by the low-level device driver and the applications. This layer is defined by small self-contained objects, so-called <EM>tools</EM>, that translate raw device events such as motion or button events into higher-level application events such as navigation, menu selection, or object selection and dragging. By providing specialized tools, an environment integrator can provide an optimized and flexible mapping between the set of input devices and application functionality. For example, in an environment providing 6-DOF input devices, users could navigate by &quot;grabbing space&quot; with a 6-DOF device, whereas an environment that only has a standard mouse device would use some trackball-like navigation interface. From an application's point of view, the two environments are indistinguishable: both offer full navigation functionality, implemented as intuitively as possible given the environment's capabilities.<P>
+
+Another benefit of tools is that they can be created and destroyed dynamically during the runtime of an application, and allow to map different functions to the same input devices during a program's run time. For example, in an environment with only a single 3-button wand, only one or two buttons may be available for application use. Using the tool approach, a user could create a selection/dragging tool to move around a few virtual objects, and then delete the selection/dragging tool and create a measurement tool to measure the positions of and distances between objects. Normally, this flexibility would have to be programmed into each application; using the tool model, it is handled once at the toolkit level and available to all applications immediately.<P>
+
+Yet another benefit of tools is that they are a separate and independent layer between the VR toolkit and the VR applications. An environment integrator can create custom tools to optimally work with some provision or limitation of the environment, whereas an application developer can develop per-application tools that expose some special application functionality. This ability is very useful as the state of the art of VR environments is still evolving. A new input device with some specialized extra functionality can be accompanied by a set of custom tools that make the new functionality immediately available to all previously existing applications. As a result, the typical chicken-and-egg problem that newly developed devices will not become widely accepted unless they are supported by applications, and that applications will not support a device until it is widely adopted, can be avoided.<P>
+
+<H2>Overview of the Vrui Input Handling Stack</H2>
+
+The Vrui input stack consists of four distinct layers, translating from input device hardware to application reactions to user interaction.
+
+<H3>Low-level Device Drivers</H3>
+
+The low-level device driver connects directly or indirectly to input device hardware, and is represented in Vrui by a separate VR device daemon. The device daemon supports a wide variety of input device hardware from desktop devices using the USB HID protocol over proprietary devices such as Spaceballs to tracking systems such as the ones offered by Polhemus, Ascension, or Intersense. The device daemon presents a flat device namespace to its clients, with a set of trackers (represented as positions and orientations), a set of buttons (boolean values), and a set of valuators (analog axes reporting values from -1 to 1). The device daemon implies no association between trackers, buttons, and valuators; it is the clients' responsibility to assemble them into virtualized devices such as a tracked wand with three buttons and two valuators.
+
+<H3>Virtualized Input Devices</H3>
+
+The Vrui runtime environment can contain multiple <EM>input device adapters</EM>, each gathering input device data from a single source, such as a VR device daemon running on the same or a separate computer, mouse and keyboard events generated by the windowing system, and (in the future) other VR device drivers using external protocols. Virtualized input devices are assembled from individual trackers, buttons and valuators reported by a single input device adapter according to configuration file settings read during application startup. The input device adapter layer presents a flat list of virtualized input devices to higher layers. Each input device has a unique name, and consists of at most a single tracker with definable degrees of freedom (position only, position plus one direction, position plus orientation), a set of buttons, and a set of valuators. Higher layers are to assume that an input device's buttons and valuators are colocated with the position (and orientation) reported by its tracker.
+
+<H3>Tools</H3>
+
+The Vrui tool layer consists of a set of small objects derived from a common base class. The tool layer communicates tools' functions to the application layer by the tools' classes. For example, different user interfaces for navigation are implemented as separate tool classes all derived from the common navigation tool base class. Thus, applications can check whether a certain tool is a navigation tool without having to know about particular implementations of navigation. In other words, tools advertise <EM>what</EM> they do, but hide <EM>how</EM> they do it. This separation between function and implementation at the user interface level makes the tool model so flexible.<P>
+
+Tools connect to the previous input stack layer by <EM>sockets</EM> that can connect to one or more input devices, and zero or more buttons and/or valuators on each input device. The association between tools and input devices is mostly created by users during the runtime of an application, but common associations can be instantiated at application startup time by listing them in Vrui's configuration file.
+
+<B>to be continued...</B>
+
+<H3>Application Tool Event Handling</H3>
+
+<B>to be continued...</B>
+
+</BODY>

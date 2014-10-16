@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<TITLE>GLGeometry -- Templatized Geometry OpenGL Bindings Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>GLGeometry&nbsp;-- Templatized Geometry OpenGL Bindings Library</H1>
+
+The GLGeometry library contains classes and functions providing OpenGL bindings for geometry data types, such as the ability to specify a templatized point type as an argument to glVertex().
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>GLGeometryWrappers.h</DT>
+<DD>GLGeometryWrappers.h provides overloaded versions of OpenGL functions that can take geometry data types as arguments. These include vertex attribute specification functions, light source positioning functions, and OpenGL matrix manipulation functions.</DD>
+
+<DT>GLGeometryVertex.h</DT>
+<DD>GLGeometry::Vertex is a class to represent the state of OpenGL vertices using a data structure comprised of geometry types from the templatized geometry library.</DD>
+
+<DT>GLTransformationWrappers.h</DT>
+<DD>GLTransformationWrappers.h provides overloaded functions that support directly using transformation objects as argument to the OpenGL glLoadMatrix/glMultMatrix/glGetMatrix families of functions.</DD>
+
+<DT>GLFrustum.h</DT>
+<DD>GLFrustum is a class to represent OpenGL view frustra to perform software-based frustum culling and LOD calculations based on the projected size of a sphere in pixel units.</DD>
+
+<DT>GLPolylineTube.h</DT>
+<DD>GLPolylineTube is a helper class to render cylindrical tubes around arbitrary polylines.</DD>
+</DL>
+
+</BODY>
+</HTML>

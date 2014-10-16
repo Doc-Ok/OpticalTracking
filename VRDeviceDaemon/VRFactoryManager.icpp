@@ -1,0 +1,72 @@
+/***********************************************************************
+VRFactoryManager - Class to manage a set of DSOs containing code for a
+set of classes derived from a common base class
+Copyright (c) 2002-2010 Oliver Kreylos
+
+This file is part of the Vrui VR Device Driver Daemon (VRDeviceDaemon).
+
+The Vrui VR Device Driver Daemon is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Vrui VR Device Driver Daemon is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Vrui VR Device Driver Daemon; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define VRFACTORYMANAGER_IMPLEMENTATION
+
+#include <VRDeviceDaemon/VRFactoryManager.h>
+
+#include <VRDeviceDaemon/VRFactory.h>
+
+/*********************************
+Methods of class VRFactoryManager:
+*********************************/
+
+template <class BaseClassParam>
+inline
+VRFactoryManager<BaseClassParam>::VRFactoryManager(
+	const std::string& sDsoPath)
+	:dsoPath(sDsoPath)
+	{
+	}
+
+template <class BaseClassParam>
+inline
+VRFactoryManager<BaseClassParam>::~VRFactoryManager(
+	void)
+	{
+	/* Delete all factories: */
+	for(typename FactoryList::iterator fIt=factories.begin();fIt!=factories.end();++fIt)
+		delete *fIt;
+	factories.clear();
+	}
+
+template <class BaseClassParam>
+inline
+typename VRFactoryManager<BaseClassParam>::Factory*
+VRFactoryManager<BaseClassParam>::getFactory(
+	const std::string& className)
+	{
+	/* Search if factory for class is already loaded: */
+	typename FactoryList::iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&className!=(*fIt)->getClassName();++fIt)
+		;
+	if(fIt==factories.end())
+		{
+		/* Create and return new factory: */
+		Factory* newFactory=new Factory(this,className,dsoPath);
+		factories.push_back(newFactory);
+		return newFactory;
+		}
+	else
+		return *fIt;
+	}

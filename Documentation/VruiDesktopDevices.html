@@ -1,0 +1,403 @@
+<HTML>
+<HEAD>
+<TITLE>Using Desktop Input Devices with Vrui</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Using Desktop Devices with Vrui</H1>
+
+One of Vrui's fundamental design ideas is to provide incremental &quot;upgrade paths&quot; between the desktop realm and the virtual reality (VR) realm. Before, the choices were either a low-cost desktop system with very limited interactivity, or an immersive VR environment with high interactivity, but very high cost. Applications written for the desktop did typically not support additional features such as stereo displays or 3D input devices such as joysticks, spaceballs, or tracking systems, whereas applications written for VR typically required head-tracked stereoscopic display and six-degree-of-freedom (6-DOF) tracked input devices. For users, this meant there was no way to incrementally upgrade their systems: augmenting a desktop system with new display or input device hardware would bring little or no added or improved functionality, until the threshold into the VR realm was crossed, at a very high purchase price and the additional cost of buying or writing completely new application software. As a result, users were either stuck with &quot;vanilla&quot; desktop systems (monitor, keyboard, mouse) or full-fledged VR systems. This led to a dilemma in development: Hardware companies had little incentive to create novel input devices because users were not able to immediately use them with their existing software, and software companies had little incentive to support novel devices, because very few users already owned them.<P>
+
+Vrui aims to bridge the gap (or chasm, depending on who is asked) between these realms by providing immediate benefits commensurate with each added piece of display or input device hardware, such that each individual purchase can be justified by added functionality, and each bit of added functionality might be incentive to further upgrade the hardware. As a result, there will be a larger variety of desktop systems, using different display modalities and a large array of different input devices, while the same software will run on all these systems, and always make optimal use of the available devices. This might entice manufacturers to develop new devices, because there immediately are applications to make use of them, which in turn might sell more of these devices, which will entice software developers to add support for such devices to their software.<P>
+
+Despite this, we recently saw an increased number of desktop input devices, such as joysticks, spaceballs, 3D mice, or graphics tablets, reaching the market at affordable prices. One particular example (and maybe cause for this) is the Nintendo Wii controller, a semi-3D input device with currently untapped potential. Vrui includes support for many of these devices, with the idea to provide optimal ways to integrate each of them into Vrui applications, based on their particular capabilities. The remainder of this document describes how to integrate one class of such devices into Vrui applications.
+
+<H2>Human Interface Devices</H2>
+
+The Human Interface Device (HID) section of the USB protocol defines a class of devices roughly covering Vrui's definition of desktop input devices: devices with a certain number of buttons and analog axes. Concrete examples are joysticks, with typically between two and six analog axes and four or more buttons, and spaceballs, with six axes (three rotational and three translational) and around eight buttons. The HID protocol also covers standard keyboards (many buttons, no axes) and mice (few buttons, two axes). From Vrui's point of view, all these devices have in common that they are not inherently three-dimensional (while spaceballs are intended for 3D applications, their axes do not measure their position in space). For comparison, the Nintendo Wii controller is not considered a desktop input device: from Vrui's point of view, it is a 6-DOF tracked input device, albeit one with very limited tracking range.<P>
+
+As a result, integrating a desktop input device into Vrui is a two-step approach: in the first step, a low-level device driver needs to communicate with the device and read its buttons and axes, and in the second step, the set of buttons and axes needs to be converted into one or more virtual 6-DOF input device(s). Concretely, the first step is handled by Vrui's VR device driver (VRDeviceDaemon), whereas the second step is handled by special Vrui tool classes.
+
+<H2>The Vrui VR Device Driver</H2>
+
+In Vrui, low-level drivers for all input devices except mouse and keyboard (and USB input devices starting in version 1.0-068) are included in the external VR device driver (VRDeviceDaemon). The driver is typically started as a daemon process, and serves input device data to any Vrui applications that connect to it via its TCP/IP protocol. The device driver is configured via its own configuration file, <TT>VRDevices.cfg</TT> in Vrui's <TT>etc</TT> directory. Any devices to be used by Vrui applications must be added to this configuration file. The following sections describe how to add several supported devices.
+
+<H3>General Configuration</H3>
+
+When the device driver is started, it reads the configuration file root section corresponding to the host name of the local machine, as displayed by <TT>printenv HOSTNAME</TT> or, if that fails, <TT>printenv HOST</TT>. Inside that section, it will first look for the &quot;DeviceManager&quot; section. This section's main setting is &quot;deviceNames,&quot; a list of all devices served by the driver. This list is a list of subsection headings contained in the &quot;DeviceManager&quot; section. The driver reads all listed sections in order, and assembles the set of served devices based on their contents.<P>
+
+Each device section must define the type of device it represents, using the &quot;deviceType&quot; setting. Device types are simply the names of device driver plug-in modules. All other settings in a device section are read by the selected driver plug-in, and hence depend on the device type.<P>
+
+The other important group of settings is in the &quot;DeviceServer&quot; section inside the root section. That section defines the interface between the device driver and Vrui applications; the most important setting is &quot;serverPort,&quot; the TCP port number on which the server listens for incoming connections from Vrui applications.
+
+<H3>Serial-Port Spaceballs</H3>
+
+Older six-axis spaceball models, such as the 3DConnexion 4000FLX, are connected to the host computer via a serial cable. They are HID devices by function, but predate the USB specification (their more modern relatives use USB and are described in the next section). This device class is handled by the &quot;SpaceBallRaw&quot; device driver plug-in module. The relevant settings are the following:
+<DL>
+<DT>devicePort</DT>
+<DD>Name of the serial port device file representing the port into which the spaceball is plugged, for example <TT>/dev/ttyS0</TT>.</DD>
+
+<DT>deviceBaudRate</DT>
+<DD>Serial port speed for communications with the device. Always 9600 bps for 4000FLX models; might be different for different models.</DD>
+
+<DT>linearAxisGain</DT>
+<DD>Scaling factor to translate the values of translational axes as reported by the device into the Vrui valid range of [-1, +1]. Larger values mean that the same force applied to the axis results in larger valuator values.</DD>
+
+<DT>angularAxisGain</DT>
+<DD>The same scaling factor, but for rotational axes.</DD>
+
+<DT>valuatorThreshold</DT>
+<DD>Size of a flat zone around the spaceball's rest position after scaling factors have been applied. Any valuator value smaller than this will be reset to zero.</DD>
+
+<DT>valuatorExponent</DT>
+<DD>Exponent applied to non-zero valuator values for any axis after scaling factors and thresholds have been applied. Values larger than one will scale down small values and scale up larger ones.</DD>
+</DL>
+
+<H3>USB Joysticks and Spaceballs</H3>
+
+USB input devices are all handled by the &quot;HIDDevice&quot; device driver plug-in module. Under Linux, this module uses the event device interface represented by device files in <TT>/dev/input/event*</TT>; under MacOS X, it uses the HID API.
+
+<H4>Identifying USB Input Devices</H4>
+
+USB input devices are identified in their respective device sections in one of three ways: by the name of their event device file, by the unique vendor/product IDs assigned to them, or by the name under which they advertise themselves. Using device files directly is not recommended, because these files are created as devices are hotplugged, and might change between reboots. Device IDs or device names are both invariant, but using IDs is simpler. There is one exception: devices of the same type have the same IDs and names, so if multiple identical devices are connected to the same computer, they have to be identified by device event file name.<P>
+
+The HIDDevice module's relevant settings are the following, with only one out of the first three required to identify a particular device:
+<DL>
+<DT>deviceFileName</DT>
+<DD>Fully qualified name of the device's event file, for example <TT>/dev/input/event2</TT>. Not recommended, because device event files are created dynamically and might change.</DD>
+
+<DT>deviceVendorProductId</DT>
+<DD>Pair of hexadecimal vendor/product IDs for the input device, for example &quot;046d:c215&quot; for a Logitech Wingman Extreme 3D joystick. Vendor/product IDs can be found by looking at the list of connected USB devices.</DD>
+
+<DT>deviceName</DT>
+<DD>Name under which the device advertises itself, for example &quot;Logitech Extreme 3D&quot; for a Logitech Wingman Extreme 3D joystick.</DD>
+
+<DT>axis&lt;axisIndex&gt;Settings</DT>
+<DD>Defines for each axis (axisIndex from 0 to number of axes minus one) a mapping between axis values reported by the device, and the [-1, +1] range of Vrui valuators. Most USB devices report their own axis settings, but these settings can be used to override the reported defaults. The format for an axis setting is (&lt;minimum&gt;, &lt;maximum&gt;, &lt;center&gt;, &lt;threshold&gt;). &lt;minimum&gt; is the minimum axis value and is mapped to -1, &lt;maximum&gt; is the maximum value mapped to +1, &lt;center&gt; is the center value and is mapped to 0, and &lt;threshold&gt; defines a range around the center value, in reported device values, that is clamped to zero. Example: (0.0, 255.0, 127.5, 25.0) maps 0 to -1, 255 maps to +1, and everything between 102.5 and 152.5 maps to 0.</DD>
+</DL>
+
+<H3>Example VRDevices.cfg</H3>
+
+Here is an example VRDevices.cfg for a Logitech SpaceTraveler, a six-axis spaceball with eight buttons:
+<PRE>
+section localhost # Or whatever is reported by "hostname"
+  section DeviceManager
+    deviceNames (SpaceTraveler)
+    
+    section SpaceTraveler
+      deviceType HIDDevice
+      deviceVendorProductId 046d:c623
+      # Device reports wonky axis limits; we override with sane values:
+      axis1Settings (-350.0, 350.0, 0.0, 30.0)
+      axis2Settings (-350.0, 350.0, 0.0, 30.0)
+      axis3Settings (-350.0, 350.0, 0.0, 30.0)
+      axis4Settings (-350.0, 350.0, 0.0, 30.0)
+      axis5Settings (-350.0, 350.0, 0.0, 30.0)
+      axis6Settings (-350.0, 350.0, 0.0, 30.0)
+      # This is the only device in the driver's name space; start counting at zero:
+      buttonIndexBase 0
+      valuatorIndexBase 0
+    endsection
+  endsection
+  
+  section DeviceServer
+    serverPort 8555 # Listen to TCP port 8555
+  endsection
+endsection
+</PRE>
+
+<H4>Linux Device Node Permissions</H4>
+
+Under Linux, the event device files in <TT>/dev/input/</TT> used by the HIDDevice module are only readable by root (this is for security reasons, to prevent intruders from logging keystrokes by directly reading the keyboard's device file). This means that using USB input devices either requires running the device driver as root (<TT>sudo VRDeviceDaemon</TT>), or changing the permissions on the necessary event files.<P>
+
+Recent Linux distributions (Fedora &gt;=8, Ubuntu &gt;=9.10, etc.) provide a clean and secure way to make USB input devices accessible to non-root users <EM>if and only if</EM> they are logged in via the local console. This mechanism is supported via POSIX ACL (access control lists), the udev daemon, and the ConsoleKit package. To make a specific USB input device accessible, one has to know the device's vendor and product IDs, which can be gathered from <TT>lsusb</TT>. Then one creates a file called <TT>69-3d-inputdevices-acl.rules</TT> in the directory <TT>/etc/udev/rules.d</TT>, with the following contents:
+<PRE>
+# Rules to relax permissions on event files for USB joysticks and spaceballs
+
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="&lt;vendor ID&gt;", ATTRS{idProduct}=="&lt;product ID&gt;", ENV{ACL_MANAGE}="1"
+</PRE>
+where &lt;vendor ID&gt; and &lt;product ID&gt; are replaced with the particular device's vendor and product IDs, respectively. One can add one rule for every such input device. Afterwards, if a device is plugged in, or a user logs into the local console, all devices matching the given rules will be accessible by that user, and access will be revoked when the user logs out.
+
+<H4>Issues With Current X Servers</H4>
+
+Current versions of the Xorg X&nbsp;server support hot-plugging of input devices, and contain driver support for some models of spaceballs. If an input device is grabbed by the X&nbsp;server, it is no longer available for use in Vrui. To remove a specific input device from the X&nbsp;server's hotplug list, one has to create a file called <TT>11-3d-inputdevices.fdi</TT> in the directory <TT>/etc/hal/fdi/policy</TT>, with the following contents:
+<PRE>
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;deviceinfo version="0.2"&gt;
+    &lt;device&gt;
+        &lt;match key="@input.originating_device:usb.vendor_id" int="0x&lt;vendor ID&gt;"&gt;
+            &lt;match key="@input.originating_device:usb.product_id" int="0x&lt;product ID&gt;"&gt;
+                &lt;remove key="input.x11_driver"/&gt;
+            &lt;/match&gt;
+        &lt;/match&gt;
+    &lt;/device&gt;
+&lt;/deviceinfo&gt;
+</PRE>
+As above, &lt;vendor ID&gt; and &lt;product ID&gt; must be replaced with the vendor and product IDs, respectively, of the input device, and one rule can be added for each device.
+
+<H2>Vrui Tools for Desktop Input Devices</H2>
+
+Vrui uses special tool classes to transform sets of related buttons and analog axes reported by a desktop input device into virtual 6-DOF input devices that can be used for arbitrary interactions in Vrui applications. The main transformation class is DesktopDeviceNavigationTool. For each set of related axes and buttons, it creates a virtual input device that can be moved using combinations of buttons and axes, and whose buttons are associated with buttons on the desktop input device. Furthermore, it provides a navigation method that uses the same method to move the virtual input device, but moves the Vrui camera instead. As a result, it allows to seamlessly integrate a variety of desktop input devices into Vrui applications.<P>
+
+Creating a transformation tool requires three steps:
+<OL>
+<LI>Vrui has to be told how to get the device's buttons and valuators from the VR device driver;</LI>
+
+<LI>the DesktopDeviceNavigationTool has to be configured to match the specifics of the used real input device and the desired movement method; and</LI>
+
+<LI>a tool object of class DesktopDeviceNavigationTool has to be associated with the set of buttons and axes belonging to the real input device.</LI>
+</OL>
+All three steps are performed by editing the Vrui configuration file. Unfortunately, Vrui currently does not support different settings for separate objects of the same tool class; this means that Vrui currently does not support using multiple desktop input devices with different numbers of axes or buttons, or different desired movement methods, at the same time.
+
+<H3>Connecting to the VR Device Driver</H3>
+
+Desktop configurations of Vrui are typically configured to only use the mouse and keyboard as input devices, using the &quot;Mouse&quot; input device adapter class. Since desktop input devices are handled by the external VR device driver, an additional input device adapter has to be added to the environment's configuration file section. Vrui can handle an arbitrary number of input device sources. They are configured by adding subsections defining them to the environment's root section, and then listing the names of those subsections in the &quot;inputDeviceAdapterNames&quot; setting. The exact structure of these sections and their available settings are described in detail in the <A HREF="VruiConfigurationFileReference.html#inputdeviceadaptersections">Vrui Configuration File Reference</A>. The input device adapter type communicating with the VR device driver is called &quot;DeviceDaemonAdapter.&quot; It needs to know how to connect to the VR device driver (by specifying the name of the host on which it runs, and the number of the TCP port it listens on), and how to create Vrui input devices from the flat arrays of tracker positions and button and valuator states reported by the VR device driver. The settings used inside a DeviceDaemon configuration section are:
+<DL>
+<DT>inputDeviceAdapterType</DT>
+<DD>Defines the type of input device adapter. Must be DeviceDaemon.</DD>
+
+<DT>serverName</DT>
+<DD>Name of host on which the VR device driver runs. Can be the same host (&quot;localhost&quot;) or a remote machine, specified by name or dotted IP address.</DD>
+
+<DT>serverPort</DT>
+<DD>TCP port the VR device driver listens on; this is configured in its VRDevices.cfg configuration file.</DD>
+
+<DT>inputDeviceNames</DT>
+<DD>List of names of subsections defining Vrui input devices controlled by this input device adapter. Each subsection specifies how a Vrui input device&nbsp;-- an (optional) tracker position and orientation, and a number of buttons and valuators&nbsp;-- is assembled from the data sent by the VR device driver. The names of the sections are independent of the names of the input devices defined in them.</DD>
+</DL><P>
+
+Each input device subsection has the following settings relevant to desktop input devices (see the <A HREF="VruiConfigurationFileReference.html#inputdeviceadapterdevicedaemonsettings">Vrui Configuration File Reference</A> for the full list):
+<DL>
+<DT>name</DT>
+<DD>The name under which the input device will be registered with Vrui. This name is referred to in other parts of the configuration file, especially the tool assignment sections (see below). The name of the device's subsection is arbitrary, it is only used to find device definitions during initialization.</DD>
+
+<DT>trackType</DT>
+<DD>Specifies the device's tracking capabilities. Can be None (no tracking), 3D (only position), Ray (position plus a direction vector), or 6D (full 6-DOF tracking). For desktop input devices, this is None (they don't have tracking).</DD>
+
+<DT>numButtons</DT>
+<DD>Number of buttons on the device.</DD>
+
+<DT>buttonIndexBase</DT>
+<DD>If the device's buttons have consecutive indices in the VR device driver's numbering scheme, this is the index of the first button.</DD>
+
+<DT>buttonIndex&lt;index&gt;</DT>
+<DD>If button indices are not consecutive, indices can be assigned individually for each button. &lt;index&gt; is the index of the button on this device (between 0 and numButtons-1), the setting's value is the button's index in the VR device driver's numbering scheme.</DD>
+
+<DT>numValuators</DT>
+<DD>Number of valuators on the device.</DD>
+
+<DT>valuatorIndexBase</DT>
+<DD>If the device's valuators have consecutive indices in the VR device driver's numbering scheme, this is the index of the first valuator.</DD>
+
+<DT>valuatorIndex&lt;index&gt;</DT>
+<DD>If valuator indices are not consecutive, indices can be assigned individually for each valuator. &lt;index&gt; is the index of the valuator on this device (between 0 and numValuators-1), the setting's value is the valuator's index in the VR device driver's numbering scheme.</DD>
+</DL><P>
+
+Here is an example input device adapter section defining a six-axis eight-button spaceball controlled by a VR device driver running on the same computer, using the example VRDevices.cfg shown above:
+<PRE>
+section Vrui
+  section Desktop
+    ...
+    inputDeviceAdapterNames (..., \
+                             DeviceDaemonAdapter, \
+                             ...)
+    ...
+    section DeviceDaemonAdapter
+      inputDeviceAdapterType DeviceDaemon
+      serverName localhost
+      serverPort 8555
+      inputDeviceNames (Spaceball)
+      
+      section Spaceball
+        name Spaceball # Unique name for input device; used later in tool assignments
+        trackType None
+        numButtons 8
+        buttonIndexBase 0
+        numValuators 6
+        valuatorIndexBase 0
+      endsection
+    endsection
+    ...
+  endsection
+endsection
+</PRE>
+
+<H3>Using USB Input Devices Directly From Vrui.cfg</H3>
+
+As of version 1.0-068, Vrui contains a new input device adapter type (InputDeviceAdapterHID) that can connect directly to USB input devices, without the need for a running VRDeviceDaemon instance. The configuration options for this adapter type are listed in the <A HREF="VruiConfigurationFileReference.html#inputdeviceadapterhidsettings">Vrui Configuration File Reference</A>. In a nutshell, one creates a section for each input device to be supported, and lists the names of all these sections in the &quot;inputDeviceNames&quot; setting. Input devices are given an arbitrary name to identify them in later configuration file sections, and are identified by their vendor and product IDs, and by an integer index to distinguish multiple devices with identical ID pairs. The HID input device adapter queries the number of buttons and valuators on each device directly from the HID subsystem, so there is no need to configure them explicitly. The only additional settings supported for each input device are axis value mappers, to fine-tune the behavior of each analog axis on a device individually.<P>
+
+Here is an example input device adapter section for a 12-button, 6-axis joystick (a Logitech Wingman Extreme 3D Pro):
+<PRE>
+section Vrui
+  section Desktop
+    ...
+    inputDeviceAdapterNames (..., \
+                             HIDAdapter, \
+                             ...)
+    ...
+    section HIDAdapter
+      inputDeviceAdapterType HID
+      inputDeviceNames (WingmanExtreme3DPro)
+      
+      section WingmanExtreme3DPro
+        name WingmanExtreme3DPro
+        deviceVendorProductId 046d:c215
+        deviceIndex 0
+        # Horizontal axis with big flat spot:
+        axis0Setting (0.0, 447.5, 575.5, 1023.0)
+        # Vertical axis inverted with big flat spot:
+        axis1Setting (1023.0, 575.5, 447.5, 0.0)
+        # Twist axis with big flat spot:
+        axis2Setting (0.0, 95.5, 159.5, 255.0)
+        # Throttle axis with medium flat spot:
+        axis3Setting (0.0, 111.5, 143.5, 255.0)
+      endsection
+    endsection
+  endsection
+endsection
+</PRE>
+
+<H3>Configuring Class DesktopDeviceNavigationTool</H3>
+
+The movement of the virtual input device controlled by a DesktopDeviceNavigationTool object, and the movement of the Vrui camera in navigation mode, are defined by specifying an arbitrary number of translational and rotational axes. Each axis maps an analog axis of the real input device, optionally in combination with a set of buttons, to a translation along a given axis, or a rotation around a given axis, in Vrui's physical coordinate space. To control the scaling factor of the virtual camera, the tool class additionally supports zoom axes.
+
+<H4>Axis Layers</H4>
+
+Arbitrary movement of a virtual input device (or the Vrui camera) requires at least six distinct axes: three rotational and three translational. To enable the use of devices with less than six physical axes, such as cheap joysticks, and to increase flexibility, the tool class supports increasing the number of available axes on the real input device by providing axis layers. The tool class can be configured to treat a given set of buttons on the real input device as layer switches, comparable to the shift, alt, and control keys on a keyboard. If a device has N&nbsp;real axes, each combination of the switch buttons selects another layer of N&nbsp;virtual axes. For example, if buttons 0 and&nbsp;1 on the device are selected as layer switches, and the device has four axes, then the total number of available axes is&nbsp;16: axes&nbsp;0-3 if no layer switch buttons are pressed, axes&nbsp;4-7 if button&nbsp;0 is pressed, axes&nbsp;8-11 if button&nbsp;1 is pressed, and axes&nbsp;12-15 if both layer switch buttons are pressed. Each of these axes can then be used as translational, rotational, or zoom axes.
+
+<H4>Configuration File Settings</H4>
+
+The DesktopDeviceNavigationTool class has the following configuration settings:
+<DL>
+<DT>numButtons</DT>
+<DD>Number of buttons on the real input device.</DD>
+
+<DT>numValuators</DT>
+<DD>Number of valuators (analog axes) on the real input device.</DD>
+
+<DT>toggleButtonIndices</DT>
+<DD>List of button indices (0 to numButtons-1) that are treated as toggle buttons, i.e., buttons that change their state every time the button on the real device is pressed. Toggle buttons can include buttons used for other purposes, such as layer switches. Processing of toggle state occurs before other assigned functions.</DD>
+
+<DT>axisShiftButtonIndices</DT>
+<DD>List of buttons used as layer switches (see previous section). The number of a virtual axis is constructed by the layer index, which is numValuators times the bit mask value of all pressed layer switch buttons (with the first listed button the least significant bit), plus the number of the associated real axis.</DD>
+
+<DT>rotationalAxes</DT>
+<DD>List of axis descriptors for rotational axes. The vector given in the descriptor is the axis of rotation, and the length of the vector multiplied by the rotation factor and the valuator value is the angular velocity in radians/s.</DD>
+
+<DT>rotateFactor</DT>
+<DD>Scaling factor applied to the angular velocities of all rotational axes.</DD>
+
+<DT>translationalAxes</DT>
+<DD>List of axis descriptors for translational axes. The vector given in the descriptor is the direction of translation, and the length of the vector multiplied by the translation factor and the valuator value is the linear velocity in physical coordinate units/s.</DD>
+
+<DT>translateFactor</DT>
+<DD>Scaling factor applied to the linear velocities of all translational axes.</DD>
+
+<DT>navigationButtonIndex</DT>
+<DD>Index of the button used as a switch between moving the virtual input device and the Vrui camera.</DD>
+
+<DT>invertNavigation</DT>
+<DD>Flag whether to invert all translational and rotational axes when moving the Vrui camera. This switches between a &quot;world in hand&quot; model if the flag is false, and a &quot;camera in hand&quot; model if the flag is true.</DD>
+
+<DT>zoomAxes</DT>
+<DD>List of axis descriptors for zooming in navigation mode. The zoom factor is determined by the z component of the given vector, multiplied by the zoom factor and the value of the associated valuator.</DD>
+
+<DT>zoomFactor</DT>
+<DD>Additional scaling factor applied to zoom axes to determine the zooming speed.</DD>
+
+<DT>navigationCenter</DT>
+<DD>Center point for rotations in navigation mode in physical coordinates. Defaults to the center of the main screen.</DD>
+
+<DT>homeButtonIndex</DT>
+<DD>Index of a button that can be used to recenter the virtual input device should it get &quot;lost&quot; off-screen. By default, the index is -1, meaning there is no home button.</DD>
+
+<DT>deviceGlyphType</DT>
+<DD>Type of glyph to draw the virtual input device (see Vrui Configuration File Reference).</DD>
+
+<DT>deviceGlyphMaterial</DT>
+<DD>Material properties to draw the virtual input device (see Vrui Configuration File Reference).</DD>
+
+<DT>showScreenCenter</DT>
+<DD>Flag to draw a crosshair when in navigation mode.</DD>
+</DL>
+
+<H4>Example Settings</H4>
+
+The following tool settings are appropriate for a hypothetical joystick with 12&nbsp;buttons and 6&nbsp;analog axes (horizontal, vertical, twist, throttle, hat switch horizontal, hat switch vertical):
+<PRE>
+section DesktopDeviceNavigationTool
+  numButtons 12
+  toggleButtonIndices (6, 8, 9, 10, 11)
+  axisShiftButtonIndices (1, 7)
+  numValuators 6
+  rotationalAxes (( 0, ( 0.0,  0.0, -1.0)), ( 1, ( 1.0,  0.0,  0.0)), \
+                  ( 6, ( 0.0,  1.0,  0.0)), ( 7, ( 1.0,  0.0,  0.0)))
+  rotateFactor 3.14159
+  translationalAxes (( 3, ( 0.0, -5.0,  0.0)), ( 4, ( 1.0,  0.0,  0.0)), ( 5, ( 0.0,  0.0, -1.0)), \
+                     ( 9, ( 0.0, -5.0,  0.0)), (10, ( 1.0,  0.0,  0.0)), (11, ( 0.0,  0.0, -1.0)))
+  translateFactor 12.0
+  navigationButtonIndex 6
+  zoomAxes ((15, ( 0.0,  0.0,  1.0)))
+  zoomFactor 1.0
+  navigationCenter ( 0.0,  0.0,  0.0)
+  deviceGlyphType Cone
+  showScreenCenter true
+endsection
+</PRE>
+The rotationalAxes setting specifies that the horizontal joystick axis rotates around the physical Z&nbsp;axis (yaw) when neither button 1 nor&nbsp;7 are pressed, and around the physical Y&nbsp;axis (roll) when button&nbsp;1 is pressed. The vertical joystick axis rotates around the physical X&nbsp;axis (pitch) as long as button&nbsp;7 is not pressed. The translationalAxes setting specifies that the throttle axis translates along&nbsp;Y, and the hat switch axes translate along X and&nbsp;Z, as long as button&nbsp;7 is not pressed. If button&nbsp;7 is pressed, and the tool is in navigation mode, the throttle axis zooms in or out, and no other axes have any effect. Buttons&nbsp;6 (the navigation button) and 8-11 are configured as toggles.<P>
+
+The following tool settings are appropriate for a six-axis spaceball device with eight buttons:
+<PRE>
+section DesktopDeviceNavigationTool
+  numButtons 8
+  toggleButtonIndices (7)
+  axisShiftButtonIndices (6)
+  numValuators 6
+  rotationalAxes ((0, (1.0, 0.0, 0.0)), (1, (0.0, 1.0, 0.0)), (2, (0.0, 0.0, 1.0)))
+  rotateFactor 3.14159
+  translationalAxes ((3, (1.0, 0.0, 0.0)), (4, (0.0, 1.0, 0.0)), (5, (0.0, 0.0, 1.0)))
+  translateFactor 12.0
+  navigationButtonIndex 7
+  zoomAxes ((10, (0.0, 0.0, 1.0)))
+  zoomFactor 1.0
+  navigationCenter (0.0, 0.0, 0.0)
+  deviceGlyphType Cone
+  showScreenCenter true
+endsection
+</PRE>
+Here, the first three axes rotate around X, Y, and Z, respectively, and the next three axes translate along X, Y, and&nbsp;Z, respectively. If button&nbsp;7 is pressed, axis 4 (the axis otherwise used to dolly into&nbsp;/ out of the screen) is used for zooming instead. The navigation button is configured as a toggle.
+
+<H3>Assigning a DesktopDeviceNavigationTool to a Desktop Input Device</H3>
+
+Since collections of buttons and analog axes do not define 3D input devices by themselves, and hence cannot be used to select from Vrui menus, DesktopDeviceNavigationTool objects have to be assigned to real input devices using the default tool assignments in the Vrui configuration file. The mechanism is the same as for all other default assignments: the tool manager's section in the Vrui configuration file must contain a subsection defining the tool assignment, and the name of that subsection must be listed in the tool manager's "toolNames" setting. The assignment subsection must contain the type of tool to create, and the devices and buttons and/or valuators on those devices with which the tool will be associated. The number of device, button, and valuator mappings must match the numbers expected by the tool class. Here is an example of a configuration file section to create a DesktopDeviceNavigationTool for a six-axis spaceball (using the example tool class definition given above):
+<PRE>
+section Vrui
+  section Desktop
+    ...
+    section DesktopTools
+      ...
+      toolNames (..., \
+                 SpaceballNavTool, \
+                 ...)
+      ...
+      section SpaceballNavTool
+        toolClass DesktopDeviceNavigationTool
+        deviceName0 Spaceball # Device name as configured in device driver section
+        device0ButtonIndexBase 0
+        device0ValuatorIndexBase 0
+      endsection
+      ...
+    endsection
+  endsection
+endsection
+</PRE>
+
+<H2>Using Desktop Devices</H2>
+
+When a Vrui application is started, each configured and assigned DesktopDeviceNavigationTool will show up as a virtual input device (by default rendered as a grey cone glyph) floating close to the center of the screen. This virtual input device is controlled by the analog axes of the real input device; if configured properly, it will replicate manipulation of the input device intuitively. For example, a correctly configured spaceball device would translate the virtual input device left if the ball is pushed to the left, and would rotate it around the vertical axis if the spaceball is twisted around the vertical axis. Of course, the details of mapping real device motions to virtual device motions are up to the individual tastes of the user. If any buttons on the real device (except those used as axis layer or navigation switches) are pressed, the normal Vrui tool selection menu shows up, and tools can be assigned to device buttons by using the device to select an entry from the tool menu. Tool assignments can be deleted by moving the virtual device over the tool kill zone (red rectangle), and pressing a button. Should the virtual input device &quot;get lost&quot; off-screen, users can press the home button (if one is configured) to reset the virtual device's position and orientation to the initial state.<P>
+
+While the navigation switch button is pressed, manipulations of the real device do not control the virtual input device, but the Vrui camera, or, more precisely, the Vrui navigation transformation. Depending on the setting of the DesktopDeviceNavigationTool's invertNavigation flag, the Vrui camera will either follow a &quot;world in hand&quot; or &quot;viewer in hand&quot; paradigm; either way, the camera should react to manipulations in roughly the same way as the virtual input device.
+
+</BODY>
+</HTML>

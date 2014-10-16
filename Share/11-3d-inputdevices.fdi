@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<deviceinfo version="0.2">
+    <device>
+        <match key="@input.originating_device:usb.vendor_id" int="0x046d">
+            <match key="@input.originating_device:usb.product_id" int="0xc623">
+                <remove key="input.x11_driver"/>
+            </match>
+        </match>
+    </device>
+
+    <device>
+        <match key="@input.originating_device:usb.vendor_id" int="0x046d">
+            <match key="@input.originating_device:usb.product_id" int="0xc625">
+                <remove key="input.x11_driver"/>
+            </match>
+        </match>
+    </device>
+
+    <device>
+        <match key="@input.originating_device:usb.vendor_id" int="0x046d">
+            <match key="@input.originating_device:usb.product_id" int="0xc626">
+                <remove key="input.x11_driver"/>
+            </match>
+        </match>
+    </device>
+
+    <device>
+        <match key="@input.originating_device:usb.vendor_id" int="0x046d">
+            <match key="@input.originating_device:usb.product_id" int="0xc627">
+                <remove key="input.x11_driver"/>
+            </match>
+        </match>
+    </device>
+</deviceinfo>
+

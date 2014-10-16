@@ -1,0 +1,27 @@
+# Rules to relax permissions on event files for USB joysticks and other USB desktop input devices:
+
+# Rule for Logitech Wingman Extreme 3D Pro
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c215", TAG+="uaccess"
+
+# Rule for Logitech / 3DConnexion Space Traveler
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c623", TAG+="uaccess"
+
+# Rule for Logitech / 3DConnexion Space Pilot
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c625", TAG+="uaccess"
+
+# Rule for Logitech / 3DConnexion Space Navigator
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c626", TAG+="uaccess"
+
+# Rule for Logitech / 3DConnexion Space Explorer
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c627", TAG+="uaccess"
+
+# Rule for Razer Hydra desktop 6-DOF tracking system
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="0300", TAG+="uaccess"
+
+# Rule for Oculus Rift DK1 head-mounted display and latency tester
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="2833", ATTRS{idProduct}=="0001", TAG+="uaccess"
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="2833", ATTRS{idProduct}=="0101", TAG+="uaccess"
+
+# Rule for Oculus Rift DK2 head-mounted display
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="2833", ATTRS{idProduct}=="0021", TAG+="uaccess"
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="2833", ATTRS{idProduct}=="2021", TAG+="uaccess"

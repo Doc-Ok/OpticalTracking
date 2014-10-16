@@ -1,0 +1,176 @@
+/***********************************************************************
+PNMImageFileReader - Class to read images in PNM format from a stream
+data source.
+Copyright (c) 2007-2010 Oliver Kreylos
+
+This file is part of the Image Handling Library (Images).
+
+The Image Handling Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Image Handling Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Image Handling Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define IMAGES_PNMIMAGEFILEREADER_IMPLEMENTATION
+
+#include <Images/PNMImageFileReader.h>
+
+#include <stdio.h>
+#include <Misc/ThrowStdErr.h>
+#include <GL/GLColor.h>
+
+namespace Images {
+
+/***********************************
+Methods of class PNMImageFileReader:
+***********************************/
+
+template <class DataSourceParam>
+inline
+PNMImageFileReader<DataSourceParam>::PNMImageFileReader(
+	typename PNMImageFileReader<DataSourceParam>::DataSource& sDataSource)
+	:dataSource(sDataSource),
+	 imageAlreadyRead(false)
+	{
+	/* Check the PNM file type: */
+	char line[80];
+	dataSource.gets(line,sizeof(line));
+	if(line[0]!='P'||line[1]<'4'||line[1]>'6'||line[2]!='\n')
+		Misc::throwStdErr("PNMImageFileReader::PNMImageFileReader: illegal PNM header");
+	fileFormat=line[1]-'0';
+	
+	/* Skip any comment lines in the PNM header: */
+	do
+		{
+		dataSource.gets(line,sizeof(line));
+		}
+	while(line[0]=='#');
+	
+	/* Parse the image size: */
+	sscanf(line,"%u %u",&size[0],&size[1]);
+	
+	/* Parse the max value field: */
+	maxVal=1;
+	if(fileFormat!=4)
+		{
+		dataSource.gets(line,sizeof(line));
+		sscanf(line,"%u",&maxVal);
+		}
+	}
+
+template <class DataSourceParam>
+template <class ImageParam>
+inline
+ImageParam
+PNMImageFileReader<DataSourceParam>::readImage(
+	void)
+	{
+	/* Check if the image has already been read: */
+	if(imageAlreadyRead)
+		Misc::throwStdErr("PNMImageFileReader::readImage: Attempt to read more than one image from stream");
+	imageAlreadyRead=true;
+	
+	/* Create the result image: */
+	ImageParam result(size[0],size[1]);
+	
+	/* Read the image according to the data source's file format: */
+	switch(fileFormat)
+		{
+		case 4: // Raw bitmap
+			{
+			/* Create an intermediate buffer: */
+			unsigned int rowLen=(size[0]+7)>>3; // Image bits are packed into bytes
+			GLubyte* tempRow=new GLubyte[rowLen];
+			
+			/* Read each row of the image file: */
+			for(unsigned int y=size[1];y>0;--y)
+				{
+				/* Read the next image row from the data source: */
+				dataSource.read(tempRow,rowLen);
+				
+				/* Copy the row pixels into the result image: */
+				typename ImageParam::Color* row=result.modifyPixelRow(y-1);
+				for(unsigned int x=0;x<size[0];++x)
+					{
+					unsigned int byte=x>>3;
+					GLubyte bitmask=GLubyte(0x80>>(x&0x7)); // Bytes are packed MSB-first
+					GLubyte value=(tempRow[byte]&bitmask)?GLubyte(255):GLubyte(0);
+					row[x]=GLColor<GLubyte,3>(value,value,value);
+					}
+				}
+			delete[] tempRow;
+			break;
+			}
+		
+		case 5: // Raw greyscale image
+			{
+			if(maxVal<256)
+				{
+				/* Read each row of the image file: */
+				GLubyte* tempRow=new GLubyte[size[0]];
+				for(unsigned int y=size[1];y>0;--y)
+					{
+					/* Read the next image row from the data source: */
+					dataSource.read(tempRow,size[0]);
+					
+					/* Copy the row pixels into the result image: */
+					typename ImageParam::Color* row=result.modifyPixelRow(y-1);
+					for(unsigned int x=0;x<size[0];++x)
+						row[x]=GLColor<GLubyte,3>(tempRow[x],tempRow[x],tempRow[x]);
+					}
+				delete[] tempRow;
+				}
+			else
+				{
+				/* Read each row of the image file: */
+				GLushort* tempRow=new GLushort[size[0]];
+				for(unsigned int y=size[1];y>0;--y)
+					{
+					/* Read the next image row from the data source: */
+					dataSource.read(tempRow,size[0]);
+					
+					/* Copy the row pixels into the result image: */
+					typename ImageParam::Color* row=result.modifyPixelRow(y-1);
+					for(unsigned int x=0;x<size[0];++x)
+						row[x]=GLColor<GLushort,3>(tempRow[x],tempRow[x],tempRow[x]);
+					}
+				delete[] tempRow;
+				}
+			break;
+			}
+		
+		case 6: // Raw RGB image
+			{
+			/* Read each row of the image file: */
+			GLColor<GLubyte,3>* tempRow=new GLColor<GLubyte,3>[size[0]];
+			for(unsigned int y=size[1];y>0;--y)
+				{
+				/* Read the next image row from the data source: */
+				dataSource.read(tempRow,size[0]);
+				
+				/* Copy the row pixels into the result image: */
+				typename ImageParam::Color* row=result.modifyPixelRow(y-1);
+				for(unsigned int x=0;x<size[0];++x)
+					row[x]=tempRow[x];
+				}
+			delete[] tempRow;
+			break;
+			}
+		
+		default:
+			Misc::throwStdErr("PNMImageFileReader::readImage: Unsupported PNM file format %d",fileFormat);
+		}
+	
+	return result;
+	}
+	
+}

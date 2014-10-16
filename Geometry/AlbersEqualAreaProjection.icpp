@@ -1,0 +1,205 @@
+/***********************************************************************
+AlbersEqualAreaProjection - Class to represent Albers equal-area conic
+projections as horizontal datums.
+Copyright (c) 2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_ALBERSEQUALAREAPROJECTION_IMPLEMENTATION
+
+#include <Geometry/AlbersEqualAreaProjection.h>
+
+namespace Geometry {
+
+/******************************************
+Methods of class AlbersEqualAreaProjection:
+******************************************/
+
+template <class ScalarParam>
+inline
+void AlbersEqualAreaProjection<ScalarParam>::calcProjectionConstants(
+	void)
+	{
+	/* Check for north- or south-pole centered cone: */
+	if(standardLats[0]<=standardLats[1])
+		southern=Math::abs(standardLats[0])>Math::abs(standardLats[1]);
+	else
+		southern=Math::abs(standardLats[0])<Math::abs(standardLats[1]);
+	
+	/*********************************************************************
+	These formulae are from the literature. Don't ask me to explain them.
+	*********************************************************************/
+	
+	e=Math::sqrt(e2);
+	
+	double p0=e*Math::sin(lat0);
+	double p1=e*Math::sin(standardLats[0]);
+	double p2=e*Math::sin(standardLats[1]);
+	
+	double m1=Math::cos(standardLats[0])/Math::sqrt(1.0-p1*p1);
+	double m2=Math::cos(standardLats[1])/Math::sqrt(1.0-p2*p2);
+	
+	double q0=(1-e2)*(p0/(1.0-p0*p0)-0.5*Math::log((1.0-p0)/(1.0+p0)))/e;
+	double q1=(1-e2)*(p1/(1.0-p1*p1)-0.5*Math::log((1.0-p1)/(1.0+p1)))/e;
+	double q2=(1-e2)*(p2/(1.0-p2*p2)-0.5*Math::log((1.0-p2)/(1.0+p2)))/e;
+	
+	n=(Math::sqr(m1)-Math::sqr(m2))/(q2-q1);
+	
+	c=Math::sqr(m1)+n*q1;
+	
+	rho0=radius*Math::sqrt(c-n*q0)/n;
+	
+	betaScale=(1.0-((1.0-e2)/(2.0*e))*Math::log((1.0-e)/(1.0+e)));
+	}
+
+template <class ScalarParam>
+inline
+AlbersEqualAreaProjection<ScalarParam>::AlbersEqualAreaProjection(
+	double sLng0,
+	double sLat0,
+	double sStandardLat0,
+	double sStandardLat1)
+	:lng0(sLng0),lat0(sLat0),
+	 unitFactor(1.0)
+	{
+	/* Copy the standard parallels: */
+	standardLats[0]=sStandardLat0;
+	standardLats[1]=sStandardLat1;
+	
+	/* Initialize the false easting and northing: */
+	offset[0]=0.0;
+	offset[1]=0.0;
+	
+	/* Calculate the projection constants: */
+	calcProjectionConstants();
+	}
+
+template <class ScalarParam>
+inline
+AlbersEqualAreaProjection<ScalarParam>::AlbersEqualAreaProjection(
+	double sLng0,
+	double sLat0,
+	double sStandardLat0,
+	double sStandardLat1,
+	double sRadius,
+	double sFlatteningFactor)
+	:Geoid<ScalarParam>(sRadius,sFlatteningFactor),
+	 lng0(sLng0),lat0(sLat0),
+	 unitFactor(1.0)
+	{
+	/* Copy the standard parallels: */
+	standardLats[0]=sStandardLat0;
+	standardLats[1]=sStandardLat1;
+	
+	/* Initialize the false easting and northing: */
+	offset[0]=0.0;
+	offset[1]=0.0;
+	
+	/* Calculate the projection constants: */
+	calcProjectionConstants();
+	}
+
+template <class ScalarParam>
+inline
+void
+AlbersEqualAreaProjection<ScalarParam>::setUnitFactor(
+	double newUnitFactor)
+	{
+	unitFactor=newUnitFactor;
+	}
+
+template <class ScalarParam>
+inline
+void
+AlbersEqualAreaProjection<ScalarParam>::setFalseNorthing(
+	double newFalseNorthing)
+	{
+	offset[1]=newFalseNorthing;
+	}
+
+template <class ScalarParam>
+inline
+void
+AlbersEqualAreaProjection<ScalarParam>::setFalseEasting(
+	double newFalseEasting)
+	{
+	offset[0]=newFalseEasting;
+	}
+
+template <class ScalarParam>
+inline
+typename AlbersEqualAreaProjection<ScalarParam>::PBox
+AlbersEqualAreaProjection<ScalarParam>::geodeticToMap(
+	const typename AlbersEqualAreaProjection<ScalarParam>::PBox& geodetic) const
+	{
+	/* Convert the box's four corner vertices from geodetic space to map space: */
+	PBox result=PBox::empty;
+	for(int i=0;i<4;++i)
+		result.addPoint(geodeticToMap(geodetic.getVertex(i)));
+	
+	/* Check for the special case of the box crossing the central meridian: */
+	if(geodetic.min[0]<lng0&&geodetic.max[0]>lng0)
+		{
+		/* Check if the cone is centered on the north or south pole: */
+		if(southern)
+			{
+			/* South-centered cone: add the top of the central meridian crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(lng0,geodetic.max[1])));
+			}
+		else
+			{
+			/* North-centered cone: add the bottom of the central meridian crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(lng0,geodetic.min[1])));
+			}
+		}
+	
+	return result;
+	}
+
+template <class ScalarParam>
+inline
+typename AlbersEqualAreaProjection<ScalarParam>::PBox
+AlbersEqualAreaProjection<ScalarParam>::mapToGeodetic(
+	const typename AlbersEqualAreaProjection<ScalarParam>::PBox& map) const
+	{
+	/* Convert the box's four corner vertices from map space to geodetic space: */
+	PBox result=PBox::empty;
+	for(int i=0;i<4;++i)
+		result.addPoint(mapToGeodetic(map.getVertex(i)));
+	
+	/* Check for the special case of the box crossing the central meridian: */
+	if(map.min[0]<offset[0]&&map.max[0]>offset[0])
+		{
+		/* Check if the cone is centered on the north or south pole: */
+		if(southern)
+			{
+			/* South-centered cone: add the bottom of the central meridian crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(offset[0],map.min[1])));
+			}
+		else
+			{
+			/* North-centered cone: add the top of the central meridian crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(offset[0],map.max[1])));
+			}
+		}
+	
+	return result;
+	}
+
+}

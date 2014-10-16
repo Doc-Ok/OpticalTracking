@@ -1,0 +1,395 @@
+/***********************************************************************
+ExtractBlobs - Function to find 8-connected sets of "foreground" pixels
+in images of arbitrary pixel types.
+Copyright (c) 2013-2014 Oliver Kreylos
+
+This file is part of the Image Handling Library (Images).
+
+The Image Handling Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Image Handling Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Image Handling Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define IMAGES_EXTRACTBLOBS_IMPLEMENTATION
+
+#include <Images/ExtractBlobs.h>
+
+#include <Math/Math.h>
+
+namespace Images {
+
+namespace {
+
+/* Helper structure to assemble blobs row-by-row: */
+template <class BlobParam>
+struct ExtractBlobsSpan:public BlobParam
+	{
+	/* Elements: */
+	public:
+	unsigned int y;
+	unsigned int x1,x2;
+	unsigned int parent;
+	
+	/* Constructors and destructors: */
+	ExtractBlobsSpan(unsigned int sX,unsigned int sY,const typename BlobParam::Pixel& pixel,const typename BlobParam::Creator& creator)
+		:BlobParam(sX,sY,pixel,creator),
+		 y(sY),x1(sX)
+		{
+		}
+	};
+
+}
+
+template <class BlobParam,class PixelParam,class ForegroundSelectorParam>
+inline
+std::vector<BlobParam>
+extractBlobs(
+	const unsigned int size[2],
+	const PixelParam* image,
+	const ForegroundSelectorParam& foregroundSelector,
+	const typename BlobParam::Creator& blobCreator,
+	unsigned int* blobIdImage)
+	{
+	typedef ExtractBlobsSpan<BlobParam> Span;
+	std::vector<Span> spans;
+	unsigned int numSpans=0;
+	
+	/* Extract spans from the image row-by-row: */
+	unsigned int lastRowSpan=0;
+	const PixelParam* imagePtr=image;
+	for(unsigned int y=0;y<size[1];++y)
+		{
+		/* Remember the index of the first span extracted from this row: */
+		unsigned int rowSpan=numSpans;
+		
+		/* Process the current row of pixels: */
+		unsigned int x=0;
+		while(true)
+			{
+			/* Find the next foreground pixel: */
+			for(;x<size[0]&&!foregroundSelector(x,y,*imagePtr);++x,++imagePtr)
+				;
+			
+			/* Bail out if the current row is over: */
+			if(x>=size[0])
+				break;
+			
+			/* Skip any spans from the previous row that are to the left of the current pixel: */
+			for(;lastRowSpan<rowSpan&&spans[lastRowSpan].x2<x;++lastRowSpan)
+				;
+			
+			/* Extract a span of contiguous foreground pixels: */
+			Span newSpan(x,y,*imagePtr,blobCreator);
+			for(++x,++imagePtr;x<size[0]&&foregroundSelector(x,y,*imagePtr);++x,++imagePtr)
+				newSpan.addPixel(x,y,*imagePtr,blobCreator);
+			newSpan.x2=x;
+			newSpan.parent=numSpans;
+			spans.push_back(newSpan);
+			++numSpans;
+			
+			/* Check if the new span can be merged with any spans from the previous row: */
+			unsigned int newSpanRoot=numSpans-1;
+			Span* r2=&spans[newSpanRoot];
+			for(unsigned int lrs=lastRowSpan;lrs<rowSpan&&spans[lrs].x1<=newSpan.x2;++lrs)
+				{
+				/* Find the roots of the subtrees to which the two spans belong: */
+				unsigned int root1=lrs;
+				Span* r1=&spans[root1];
+				while(root1!=r1->parent)
+					{
+					root1=r1->parent;
+					r1=&spans[root1];
+					}
+				
+				/* Merge the two spans: */
+				if(root1<newSpanRoot)
+					{
+					/* Make the first span the new root: */
+					r1->merge(*r2,blobCreator);
+					r2->parent=root1;
+					newSpanRoot=root1;
+					r2=r1;
+					}
+				else if(root1>newSpanRoot)
+					{
+					/* Make the second span the new root: */
+					r2->merge(*r1,blobCreator);
+					r1->parent=newSpanRoot;
+					}
+				}
+			}
+		
+		/* Skip any leftover spans from the previous row: */
+		lastRowSpan=rowSpan;
+		}
+	
+	/* Return all root spans as blobs: */
+	std::vector<BlobParam> result;
+	unsigned int nextBlobId=0U;
+	if(blobIdImage!=0)
+		{
+		for(unsigned int span=0;span<numSpans;++span)
+			{
+			/* Check if the span is a root span: */
+			if(spans[span].parent==span)
+				{
+				/* Assign a blob ID and store the span in the result list: */
+				spans[span].blobId=nextBlobId;
+				++nextBlobId;
+				result.push_back(spans[span]);
+				}
+			else
+				{
+				/* Point the span's parent pointer to the root of its tree: */
+				unsigned int root=spans[span].parent;
+				while(root!=spans[root].parent)
+					root=spans[root].parent;
+				spans[span].parent=root;
+				
+				/* Assign the span's blob ID from the root: */
+				spans[span].blobId=spans[root].blobId;
+				}
+			}
+		
+		/* Create the per-pixel blob ID image: */
+		unsigned int* biPtr=blobIdImage;
+		unsigned int spanIndex=0;
+		for(unsigned int y=0;y<size[1];++y)
+			{
+			if(spanIndex>=numSpans||spans[spanIndex].y>y)
+				{
+				/* Set the entire row to the invalid blob ID: */
+				for(unsigned int x=0;x<size[0];++x,++biPtr)
+					*biPtr=~0x0U;
+				}
+			else
+				{
+				unsigned int x=0;
+				unsigned int nextStart=spans[spanIndex].x1;
+				while(true)
+					{
+					/* Set pixels to the invalid blob ID until the start of the next span: */
+					for(;x<size[0]&&x<nextStart;++x,++biPtr)
+						*biPtr=~0x0U;
+					if(x==size[0])
+						break;
+					
+					/* Set pixels to the span's blob ID */
+					for(;x<spans[spanIndex].x2;++x,++biPtr)
+						*biPtr=spans[spanIndex].blobId;
+					
+					/* Go to the next span: */
+					++spanIndex;
+					if(spanIndex>=numSpans||spans[spanIndex].y>y)
+						nextStart=size[0];
+					else
+						nextStart=spans[spanIndex].x1;
+					}
+				}
+			}
+		}
+	else
+		{
+		for(unsigned int span=0;span<numSpans;++span)
+			{
+			/* Check if the span is a root span: */
+			if(spans[span].parent==span)
+				{
+				spans[span].blobId=nextBlobId;
+				++nextBlobId;
+				result.push_back(spans[span]);
+				}
+			}
+		}
+	
+	return result;
+	}
+
+template <class BlobParam,class PixelParam,class ForegroundSelectorParam,class MergeCheckerParam>
+inline
+std::vector<BlobParam>
+extractBlobs(
+	const unsigned int size[2],
+	const PixelParam* image,
+	const ForegroundSelectorParam& foregroundSelector,
+	const MergeCheckerParam& mergeChecker,
+	const typename BlobParam::Creator& blobCreator,
+	unsigned int* blobIdImage)
+	{
+	typedef ExtractBlobsSpan<BlobParam> Span;
+	std::vector<Span> spans;
+	unsigned int numSpans=0;
+	
+	/* Extract spans from the image row-by-row: */
+	unsigned int lastRowSpan=0;
+	const PixelParam* imagePtr=image;
+	for(unsigned int y=0;y<size[1];++y)
+		{
+		/* Remember the index of the first span extracted from this row: */
+		unsigned int rowSpan=numSpans;
+		
+		/* Process the current row of pixels: */
+		unsigned int x=0;
+		while(true)
+			{
+			/* Find the next foreground pixel: */
+			for(;x<size[0]&&!foregroundSelector(x,y,*imagePtr);++x,++imagePtr)
+				;
+			
+			/* Bail out if the current row is over: */
+			if(x>=size[0])
+				break;
+			
+			/* Skip any spans from the previous row that are to the left of the current pixel: */
+			for(;lastRowSpan<rowSpan&&spans[lastRowSpan].x2<x;++lastRowSpan)
+				;
+			
+			/* Extract a span of contiguous foreground pixels: */
+			Span newSpan(x,y,*imagePtr,blobCreator);
+			for(++x,++imagePtr;x<size[0]&&foregroundSelector(x,y,*imagePtr)&&mergeChecker(x-1,y,imagePtr[-1],x,y,*imagePtr);++x,++imagePtr)
+				newSpan.addPixel(x,y,*imagePtr,blobCreator);
+			newSpan.x2=x;
+			newSpan.parent=numSpans;
+			spans.push_back(newSpan);
+			++numSpans;
+			
+			/* Check if the new span can be merged with any spans from the previous row: */
+			unsigned int newSpanRoot=numSpans-1;
+			Span* r2=&spans[newSpanRoot];
+			for(unsigned int lrs=lastRowSpan;lrs<rowSpan&&spans[lrs].x1<=newSpan.x2;++lrs)
+				{
+				/* Check if the two spans contain at least two mergeable pixels: */
+				unsigned int min=Math::max(spans[lrs].x1,newSpan.x1);
+				unsigned int max=Math::min(spans[lrs].x2,newSpan.x2);
+				const PixelParam* iPtr1=image+(y-1)*size[0]+min;
+				const PixelParam* iPtr2=image+y*size[0]+min;
+				bool canMerge=false;
+				for(unsigned int sx=min;sx<max&&!canMerge;++sx,++iPtr1,++iPtr2)
+					canMerge=mergeChecker(sx,y-1,*iPtr1,sx,y,*iPtr2);
+				if(canMerge)
+					{
+					/* Find the roots of the subtrees to which the two spans belong: */
+					unsigned int root1=lrs;
+					Span* r1=&spans[root1];
+					while(root1!=r1->parent)
+						{
+						root1=r1->parent;
+						r1=&spans[root1];
+						}
+					
+					/* Merge the two spans: */
+					if(root1<newSpanRoot)
+						{
+						/* Make the first span the new root: */
+						r1->merge(*r2,blobCreator);
+						r2->parent=root1;
+						newSpanRoot=root1;
+						r2=r1;
+						}
+					else if(root1>newSpanRoot)
+						{
+						/* Make the second span the new root: */
+						r2->merge(*r1,blobCreator);
+						r1->parent=newSpanRoot;
+						}
+					}
+				}
+			}
+		
+		/* Skip any leftover spans from the previous row: */
+		lastRowSpan=rowSpan;
+		}
+	
+	/* Return all root spans as blobs: */
+	std::vector<BlobParam> result;
+	unsigned int nextBlobId=0U;
+	if(blobIdImage!=0)
+		{
+		for(unsigned int span=0;span<numSpans;++span)
+			{
+			/* Check if the span is a root span: */
+			if(spans[span].parent==span)
+				{
+				/* Assign a blob ID and store the span in the result list: */
+				spans[span].blobId=nextBlobId;
+				++nextBlobId;
+				result.push_back(spans[span]);
+				}
+			else
+				{
+				/* Point the span's parent pointer to the root of its tree: */
+				unsigned int root=spans[span].parent;
+				while(root!=spans[root].parent)
+					root=spans[root].parent;
+				spans[span].parent=root;
+				
+				/* Assign the span's blob ID from the root: */
+				spans[span].blobId=spans[root].blobId;
+				}
+			}
+		
+		/* Create the per-pixel blob ID image: */
+		unsigned int* biPtr=blobIdImage;
+		unsigned int spanIndex=0;
+		for(unsigned int y=0;y<size[1];++y)
+			{
+			if(spanIndex>=numSpans||spans[spanIndex].y>y)
+				{
+				/* Set the entire row to the invalid blob ID: */
+				for(unsigned int x=0;x<size[0];++x,++biPtr)
+					*biPtr=~0x0U;
+				}
+			else
+				{
+				unsigned int x=0;
+				unsigned int nextStart=spans[spanIndex].x1;
+				while(true)
+					{
+					/* Set pixels to the invalid blob ID until the start of the next span: */
+					for(;x<size[0]&&x<nextStart;++x,++biPtr)
+						*biPtr=~0x0U;
+					if(x==size[0])
+						break;
+					
+					/* Set pixels to the span's blob ID */
+					for(;x<spans[spanIndex].x2;++x,++biPtr)
+						*biPtr=spans[spanIndex].blobId;
+					
+					/* Go to the next span: */
+					++spanIndex;
+					if(spanIndex>=numSpans||spans[spanIndex].y>y)
+						nextStart=size[0];
+					else
+						nextStart=spans[spanIndex].x1;
+					}
+				}
+			}
+		}
+	else
+		{
+		for(unsigned int span=0;span<numSpans;++span)
+			{
+			/* Check if the span is a root span: */
+			if(spans[span].parent==span)
+				{
+				spans[span].blobId=nextBlobId;
+				++nextBlobId;
+				result.push_back(spans[span]);
+				}
+			}
+		}
+	
+	return result;
+	}
+
+}

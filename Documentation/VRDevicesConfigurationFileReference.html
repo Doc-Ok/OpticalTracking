@@ -1,0 +1,1323 @@
+<HTML>
+<HEAD>
+<TITLE>VR Device Daemon Configuration File Settings Reference</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>VR Device Daemon Configuration File Settings Reference</H1>
+
+The configuration file for Vrui's low-level input device driver, VRDevices.cfg, is a hierarchical collection of sections containing tag/value pairs not unlike the Windows registry.  The main difference is that VR device daemon configuration files are plain text, and that they contain strongly typed values from a rich set of types (see <A HREF="VruiCFGTypes.html">Vrui Configuration File Settings Value Type Reference</A>). At its outermost level, VRDevices.cfg contains any number of <EM>root sections</EM> defining the input device hardware configurations of separate complete Vrui environments. These root sections are typically named by the host name of the computer controlling input devices for the respective environment, such that Vrui's VR device daemon can automatically configure itself to the environment in which it is run at any given time.<P>
+
+In detail, the root section name is selected from the first of the following that evaluate to a non-empty string:
+<OL>
+<LI>A -rootSection &lt;root section name&gt; option given on VRDeviceDaemon's command line.</LI>
+
+<LI>The value of the HOSTNAME environment variable.</LI>
+
+<LI>The value of the HOST environment variable.</LI>
+
+<LI>The &quot;localhost&quot; string.</LI>
+</OL><P>
+
+The rest of this document lists and explains all tag/value pairs that exist within the following section types:
+<UL>
+<LI><A HREF="#rootsection">Root Section</A>
+	<UL>
+	<LI><A HREF="#devicemanagersection">Device Manager Section</A>
+		<UL>
+		<LI><A HREF="#drivermodulesections">Driver Module Sections</A>
+			<UL>
+			<LI><A HREF="#artdtracksettings">A.R.T. DTrack Settings</A>
+				<UL>
+				<LI><A HREF="#artdtrackdevicesections">A.R.T. DTrack Device Sections</A></LI>
+				</UL>
+			</LI>
+			
+			<LI><A HREF="#ascensionflockofbirdssettings">Ascension Flock of Birds Settings</A></LI>
+			
+			<LI><A HREF="#ascensionwandasettings">Ascension Wanda Settings</A></LI>
+			
+			<LI><A HREF="#fakespacepinchglovesettings">Fakespace Pinch Glove Settings</A></LI>
+			
+			<LI><A HREF="#fivedtglovesettings">5DT Glove Settings</A></LI>
+			
+			<LI><A HREF="#hiddevicesettings">HID Settings</A></LI>
+			
+			<LI><A HREF="#intersensesettings">Intersense IS-900 Settings</A>
+				<UL>
+				<LI><A HREF="#intersenseconstellationsection">Intersense IS-900 Constellation Section</A></LI>
+				
+				<LI><A HREF="#intersensestationsections">Intersense IS-900 Station Sections</A></LI>
+				</UL>
+			</LI>
+			
+			<LI><A HREF="#joysticksettings">Joystick Settings</A></LI>
+			
+			<LI><A HREF="#mousebuttonssettings">Mouse Buttons Settings</A></LI>
+			
+			<LI><A HREF="#oculusriftsettings">Oculus Rift Settings</A></LI>
+			
+			<LI><A HREF="#pctrackersettings">PC Tracker Settings</A></LI>
+			
+			<LI><A HREF="#pcwandsettings">PC Wand Settings</A></LI>
+			
+			<LI><A HREF="#polhemusfastraksettings">Polhemus Fastrak Settings</A></LI>
+			
+			<LI><A HREF="#razerhydrasettings">Razer Hydra Settings</A></LI>
+			
+			<LI><A HREF="#spaceballsettings">3D Connexion Spaceball 4000 FLX Settings</A></LI>
+			
+			<LI><A HREF="#spaceballrawsettings">3D Connexion Spaceball 4000 FLX Raw Settings</A></LI>
+			
+			<LI><A HREF="#vicontarsussettings">Vicon Tarsus Settings</A></LI>
+			
+			<LI><A HREF="#vicontarsusrawsettings">Vicon Tarsus Raw Settings</A></LI>
+			
+			<LI><A HREF="#vrpnclientsettings">VRPN Client Settings</A>
+				<UL>
+				<LI><A HREF="#vrpnsendersections">VRPN Sender Sections</A></LI>
+				</UL>
+			</LI>
+			
+			<LI><A HREF="#wiimotesettings">Wiimote Settings</A></LI>
+			
+			<LI><A HREF="#dummydevicesettings">Dummy Device Settings</A></LI>
+			
+			<LI><A HREF="#remotedevicesettings">Remote Device Settings</A></LI>
+			
+			<LI><A HREF="#calibratorsection">Calibrator Section</A>
+				<UL>
+				<LI><A HREF="#transformcalibratorsettings">Transform Calibrator Settings</A></LI>
+				
+				<LI><A HREF="#gridcalibratorsettings">Grid Calibrator Settings</A></LI>
+				</UL>
+			</LI>
+			</UL>
+		</LI>
+		
+		<LI><A HREF="#virtualdevicesections">Virtual Input Device Sections</A></LI>
+		</UL>
+	</LI>
+	
+	<LI><A HREF="#deviceserversection">Device Server Section</A></LI>
+	</UL>
+</LI>
+
+<H2><A NAME="rootsection">Root Section</A></H2>
+
+The root section contains no tag/value pairs, but only a single <A HREF="#devicemanagersection">device manager section</A>, which must be named &quot;DeviceManager,&quot; and a single <A HREF="#deviceserversection">device server section</A>, which must be named &quot;DeviceServer.&quot;
+
+<H2><A NAME="devicemanagersection">Device Manager Section</A></H2>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceDirectory</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Defines the directory from which to load device driver plug-in modules. Defaults to the VRDevices subdirectory inside the Vrui installation's plug-in directory.</TD>
+</TR>
+
+<TR>
+<TD>calibratorDirectory</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Defines the directory from which to load device calibrator plug-in modules. Defaults to the VRCalibrators subdirectory inside the Vrui installation's plug-in directory.</TD>
+</TR>
+
+<TR>
+<TD>deviceNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of names of <A HREF="#drivermodulesections">driver module sections</A>. Each section creates a device driver plug-in module. The trackers, buttons, and valuators managed by each plug-in module are inserted into the VR device daemon's flat namespace in the order in which the plug-in module sections are listed.</TD>
+</TR>
+
+<TR>
+<TD>virtualDeviceNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of names of <A HREF="#virtualdevicesections">virtual device sections</A>. Each section creates a virtual input device consisting of up to one tracker, and an arbitrary number of buttons and/or valuators. Virtual input devices are sent to device driver clients during initialization to centralize device management. Virtual input devices defined in these sections are created in addition to virtual input devices implicitly created by certain device driver modules.</TD>
+</TR>
+</TABLE>
+
+<H2><A NAME="drivermodulesections">Driver Module Sections</A></H2>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>trackerPostTransformation&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD>
+<TD>Defines a post-transformation that is applied to the &lt;index&gt;-th tracker managed by the driver module, where &lt;index&gt; is between 0 and one minus the number of trackers managed by the module. Post-transformations are applied &quot;from the right,&quot; and therefore offset a tracker's reported position, and rotate a tracker's reported coordinate frame, in the local coordinate system of the tracker.</TD>
+</TR>
+
+<TR>
+<TD>valuatorThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Defines a default threshold applied to all valuators managed by the driver module. See <A HREF="#valuatormapping">Valuator Mapping</A> for details.</TD>
+</TR>
+
+<TR>
+<TD>valuatorThreshold&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Defines a threshold applied to the &lt;index&gt;-th valuator managed by the driver module, where &lt;index&gt; is between 0 and the number of valuators managed by the module minus 1. See <A HREF="#valuatormapping">Valuator Mapping</A> for details.</TD>
+</TR>
+
+<TR>
+<TD>valuatorExponent</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Defines a default exponent applied to all valuators managed by the driver module. See <A HREF="#valuatormapping">Valuator Mapping</A> for details.</TD>
+</TR>
+
+<TR>
+<TD>valuatorExponent&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Defines a exponent applied to the &lt;index&gt;-th valuator managed by the driver module, where &lt;index&gt; is between 0 and the number of valuators managed by the module minus 1. See <A HREF="#valuatormapping">Valuator Mapping</A> for details.</TD>
+</TR>
+
+<TR>
+<TD>deviceType</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>
+Defines the type of the device driver plug-in module created by the section. The following device types are supported:<P>
+
+<DL>
+<DT>ArtDTrack</DT>
+<DD>Driver for A.R.T. DTrack optical tracking systems. Rest of the section contains <A HREF="#artdtracksettings">A.R.T. DTrack settings</A>.</DD>
+
+<DT>AscensionFlockOfBirds</DT>
+<DD>Driver for Ascension Flock of Birds electro-magnetic tracking systems. Rest of the section contains <A HREF="#ascensionflockofbirdssettings">Ascension Flock of Birds settings</A>.</DD>
+
+<DT>AscensionWanda</DT>
+<DD>Driver for button and valuator component of Ascension Wanda tracked wand. As the Wanda is just a hacked serial-port mouse, this driver can also handle many other types of serial mice. Rest of the section contains <A HREF="#ascensionwandasettings">Ascension Wanda settings</A>.</DD>
+
+<DT>FakespacePinchGlove</DT>
+<DD>Driver for Fakespace pinch gloves. Rest of the section contains <A HREF="#fakespacepinchglovesettings">Fakespace Pinch Glove settings</A>.</DD>
+
+<DT>FiveDTGlove</DT>
+<DD>Driver for various models of 5DT data gloves. Rest of the section contains <A HREF="#fivedtglovesettings">5DT Glove settings</A>.</DD>
+
+<DT>HIDDevice</DT>
+<DD>Driver for generic USB human interface devices. Rest of the section contains <A HREF="#hiddevicesettings">HID settings</A>.</DD>
+
+<DT>InterSense</DT>
+<DD>Driver for Intersense IS-900 hybrid inertial/ultrasonic tracking systems. Rest of the section contains <A HREF="#intersensesettings">Intersense IS-900 settings</A>.</DD>
+
+<DT>Joystick</DT>
+<DD>Driver for any type of joystick-like device supported by the Linux joystick kernel API. Rest of the section contains <A HREF="#joysticksettings">joystick settings</A>. <B>Note:</B> This device type is superseded by the more flexible HIDDevice device type, which supports a superset of devices via a unified API.</DD>
+
+<DT>MouseButtons</DT>
+<DD>Driver to read button events from any type of mouse-like device supported by the Linux mouse kernel API. Rest of the section contains <A HREF="#mousebuttonssettings">mouse buttons settings</A>. <B>Note:</B> This device type is superseded by the more flexible HIDDevice device type, which supports a superset of devices via a unified API.</DD>
+
+<DT>OculusRift</DT>
+<DD>Driver to read orientational tracking data from the built-in inertial tracking unit in the Oculus Rift head-mounted display. Rest of the section contains <A HREF="#oculusriftsettings">Oculus Rift settings</A>.</DD>
+
+<DT>PCTracker</DT>
+<DD>Driver for PCTracker tracking systems, originally shipped with ImmersaDesks, connected to the computer running VRDeviceDaemon via serial ports. Rest of the section contains <A HREF="#pctrackersettings">PC Tracker settings</A>.</DD>
+
+<DT>PCWand</DT>
+<DD>Driver for PCWand button and valuator devices, originally shipped with ImmersaDesks, connected to the computer running VRDeviceDaemon via serial ports. Rest of the section contains <A HREF="#pcwandsettings">PC Wand settings</A>.</DD>
+
+<DT>PolhemusFastrak</DT>
+<DD>Driver for Polhemus Fastrak electro-magnetic tracking systems. Rest of the section contains <A HREF="#polhemusfastraksettings">Polhemus Fastrak settings</A>.</DD>
+
+<DT>RazerHydraDevice</DT>
+<DD>Driver for Razer Hydra electro-magnetic desktop tracking devices. Rest of the section contains <A HREF="#razerhydrasettings">Razer Hydra settings</A>.</DD>
+
+<DT>SpaceBall</DT>
+<DD>Driver for 3DConnexion SpaceBall 4000 FLX desktop relative 6-DOF input devices. This driver module exposes one spaceball as a 6-DOF input device, i.e., the conversion from translational and rotational differential readings to absolute position and orientation is performed in the driver module. It is highly recommnded to use the SpaceBallRaw driver module instead. Rest of the section contains <A HREF="#spaceballsettings">3D Connexion Spaceball 4000 FLX settings</A>.</DD>
+
+<DT>SpaceBallRaw</DT>
+<DD>Driver for 3DConnexion SpaceBall 4000 FLX desktop relative 6-DOF input devices. This driver module exposes one spaceball as a collection of six analog axes (three translational differentials, three rotational differentials) plus twelve buttons. The conversion from translational and rotational differential readings to absolute position and orientation is performed by the Vrui run-time, which supports much more flexible uses. Rest of the section contains <A HREF="#spaceballrawsettings">3D Connexion Spaceball 4000 FLX raw settings</A>.</DD>
+
+<DT>ViconTarsus</DT>
+<DD>Driver for Vicon Tarsus optical motion capture and tracking systems. This driver module only tracks rigid bodies defined using the Tarsus control software. Rest of the section contains <A HREF="#vicontarsussettings">Vicon Tarsus settings</A>.</DD>
+
+<DT>ViconTarsusRaw</DT>
+<DD>Driver for Vicon Tarsus optical motion capture and tracking systems. This driver module tracks individual optical markers and exposes them as a set of indistinguishable 3-DOF (position only) input devices. Rest of the section contains <A HREF="#vicontarsusrawsettings">Vicon Tarsus raw settings</A>.</DD>
+
+<DT>VRPNClient</DT>
+<DD>Forwarding driver for VRPN device servers. Replicates tracker, button, and valuator data received from the VRPN server, to allow joining them with data received from other driver modules. Rest of the section contains <A HREF="#vrpnclientsettings">VRPN client settings</A>.</DD>
+
+<DT>WiimoteTracker</DT>
+<DD>Driver for Nintendo Wiimotes, either exposing button and valuators only, or providing a full 6-DOF tracking solution using a custom-made infrared tracking beacon (see <A HREF="http://idav.ucdavis.edu/~okreylos/ResDev/Wiimote">Wiimote Hacking</A>). Rest of the section contains <A HREF="#wiimotesettings">Wiimote settings</A>.</DD>
+
+<DT>DummyDevice</DT>
+<DD>Driver for &quot;dummy&quot; devices reporting constant tracker, button, and valuator states for debugging or testing purposes. Rest of the section contains <A HREF="#dummydevicesettings">dummy device settings</A>.</DD>
+
+<DT>RemoteDevice</DT>
+<DD>Forwarding driver for remote VR device daemons. Replicates tracker, button, and valuator data received from the VR device daemon, to allow joining them with data received from other driver modules. Rest of the section contains <A HREF="#remotedevicesettings">remote device settings</A>.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD>calibratorName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of the optional <A HREF="#calibratorsection">calibrator section</A> defining a calibration transformation from a device's &quot;raw&quot; tracking space to the environment's physical coordinate system. Calibrations can be used to shift, re-orient, and/or scale individual devices' coordinate systems, or straighten non-linear distortions such as those typically present in electromagnetic tracking technologies.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="valuatormapping">Valuator Mapping</A></H3>
+
+Each valuator managed by a driver module can be manipulated by a threshold and an exponent. The threshold, which must be non-negative, defines a flat region around a valuator's rest value of 0, and the exponent, which must be positive, allows having steeper slopes toward the extreme values of a valuator. Precisely, the mapping is applied in two steps. Input values are in the range from -1 to +1, with 0 being the &quot;rest value.&quot; The first step applies the threshold:
+<BLOCKQUOTE>value'&nbsp;= value<-threshold&nbsp;? (value+threshold)/(1-threshold)&nbsp;: (&nbsp;value>threshold&nbsp;? (value-threshold)/(1-threshold)&nbsp;: 0&nbsp;).</BLOCKQUOTE>
+The second step applies the exponent:
+<BLOCKQUOTE>value''&nbsp;= value'>0&nbsp;? pow(value',exponent)&nbsp;: -pow(-value',exponent).</BLOCKQUOTE>
+Larger exponents make the area close to the valuator's rest value less sensitive. See <A HREF="#Figure1">Figure&nbsp;1</A> for a graph of the mapping function.
+
+<A NAME="Figure1"><TABLE BORDER=0 WIDTH=100% CELLSPACING=16 CELLPADDING=0>
+<TR><TD ALIGN=CENTER><IMG SRC="VRDevicesValuatorMapping.png" WIDTH=466 HEIGHT=296 BORDER=0></TD></TR>
+<TR><TD><B>Figure 1:</B> Valuator mapping as a function of threshold and exponent.</TD></TR>
+</TABLE></A>
+
+<H3><A NAME="artdtracksettings">A.R.T. DTrack Settings</A></H3>
+
+This driver module receives 6-DOF tracking data and optional button and/or valuator states from Advanced Realtime Tracking's DTtrack driver software running on a remote computer connected to the host computer running VRDeviceDaemon over the Internet.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>useRemoteControl</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag whether the A.R.T. DTrack software can be remotely controlled by sending messages to its control UDP port. If set to true, the driver module will send a &quot;start tracking&quot; command when the first client connects, and send a &quot;stop tracking&quot; command when the last client disconnects. This functionality is apparently no longer supported by DTrack software. Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>serverName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Internet host name or dotted IP address of computer on which the A.R.T. DTrack software runs. Only needed if useRemoteControl is true.</TD>
+</TR>
+
+<TR>
+<TD>serverControlPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>UDP port number on which the A.R.T. DTrack software received control messages. Only needed if useRemoteControl is true.</TD>
+</TR>
+
+<TR>
+<TD>serverDataPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>UDP port number on which the A.R.T. DTrack software sends device reports.</TD>
+</TR>
+
+<TR>
+<TD>dataFormat</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Format in which device reports are sent by the A.R.T. DTrack software. Supported values:<P>
+
+<DL>
+<DT>ASCII</DT>
+<DD>Device reports are received from the A.R.T DTrack software in ASCII text format.</DD>
+
+<DT>Binary</DT>
+<DD>Device reports are received from the A.R.T DTrack software in binary format.</DD>
+</DL><P>
+
+The default format is ASCII.</TD>
+</TR>
+
+<TR>
+<TD>deviceNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of names of <A HREF="#artdtrackdevicesections">A.R.T. DTrack device sections</A>, each one defining a single 6-DOF tracked device with optional buttons and/or valuators.</TD>
+</TR>
+</TABLE>
+
+<H4><A NAME="artdtrackdevicesections">A.R.T. DTrack Device Sections</A></H4>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>reportFormat</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Format in which reports for this device are sent. Supported values:<P>
+
+<DL>
+<DT>6d</DT>
+<DD>6-DOF position and orientation only.</DD>
+
+<DT>6df</DT>
+<DD>6-DOF position and orientation and button/valuator data for flystick version 1.</DD>
+
+<DT>6df2</DT>
+<DD>6-DOF position and orientation and button/valuator data for flystick version 2.</DD>
+
+<DT>6dmt</DT>
+<DD>6-DOF position and orientation and button data.</DD>
+
+<DT>gl</DT>
+<DD>6-DOF position and orientation and finger position and orientations and finger bending angles (finger data currently ignored).</DD>
+
+<DT>3d</DT>
+<DD>3-DOF position only.</DD>
+</DL><P>
+
+The default report format is 6d.</TD>
+</TR>
+
+<TR>
+<TD>id</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Identification number of the device as configured in the A.R.T. DTrack software. Device IDs are only unique inside the same report format. Default IDs are assigned in increasing order per report format, starting from 1.</TD>
+
+<TR>
+<TD>numButtons</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of buttons included in the device's reports. Defaults to 0. Ignored for report formats 6d, gl, and 3d.</TD>
+
+<TR>
+<TD>numValuators</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of valuators included in the device's reports. Defaults to 0. Ignored for report formats 6d, 6dmt, gl, and 3d.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="ascensionflockofbirdssettings">Ascension Flock of Birds Settings</A></H3>
+
+This driver module controls either a Flock of Birds in a master/slave configuration, where only a single bird is connected to the host computer via serial cable, and the rest of the birds are connected to each other, or a single bird in stand-alone configuration. In the latter case, one driver module must be loaded for each individual bird.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of serial port device to which the Flock of Birds is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the Flock of Birds, in bits per second.</TD>
+</TR>
+
+<TR>
+<TD>masterId</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>ID of the master bird, i.e., the bird directly connected to the host computer via serial cable.</TD>
+</TR>
+
+<TR>
+<TD>firstBirdId</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>ID of the first bird in the flock.</TD>
+</TR>
+
+<TR>
+<TD>numBirds</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of birds in the flock, including an extended range controller if one is present and configured via the ercId setting.</TD>
+</TR>
+
+<TR>
+<TD>ercId</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>ID of an optional extended range controller (long-range antenna).</TD>
+</TR>
+
+<TR>
+<TD>ercTransmitterIndex</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Index of the extended range transmitter to use on an optional extended range controller.</TD>
+</TR>
+
+<TR>
+<TD>trackerRange</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Tracker range of the Flock of Birds in inches. If no extended range controller is present and configured, can be set to either 36.0 (the default) or 72.0. If an extended range controller is present and configured, the tracker range is always 144.0 inches, and this setting is ignored.</TD>
+</TR>
+
+<TR>
+<TD>trackerHemisphere</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Defines the operational hemisphere of the Flock of Birds, relative to the tracking antenna. Supported values:<P>
+
+<DL>
+<DT>Forward or +X</DT>
+<DD>Selects hemisphere of positive X coordinates.</DD>
+
+<DT>Aft or Rear or -X</DT>
+<DD>Selects hemisphere of negative X coordinates.</DD>
+
+<DT>Right or +Y</DT>
+<DD>Selects hemisphere of positive Y coordinates.</DD>
+
+<DT>Left or -Y</DT>
+<DD>Selects hemisphere of negative Y coordinates.</DD>
+
+<DT>Lower or +Z</DT>
+<DD>Selects hemisphere of positive Z coordinates.</DD>
+
+<DT>Upper or -Z</DT>
+<DD>Selects hemisphere of negative Z coordinates.</DD>
+</DL>
+The default tracker hemisphere is positive X coordinates.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="ascensionwandasettings">Ascension Wanda Settings</A></H3>
+
+This driver module receives button and valuator events from a serial-port mouse using a variety of mouse protocols; specifically, the hacked serial port mouse used inside an Ascension Wanda tracked wand compatible with the Ascension Flock of Birds 6-DOF electro-magnetic tracking system.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of serial port device to which the serial mouse is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the serial mouse, in bits per second. Defaults to 1200 bps, which is the speed used by all serial mice.</TD>
+</TR>
+
+<TR>
+<TD>mouseProtocol</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Serial port protocol used by the serial mouse. Supported values:<P>
+
+<DL>
+<DT>Microsoft</DT>
+<DD>Microsoft 2-button protocol.</DD>
+
+<DT>Microsoft3</DT>
+<DD>Microsoft 3-button protocol.</DD>
+
+<DT>Logitech</DT>
+<DD>Logitech 3-button protocol.</DD>
+
+<DT>MouseSystems</DT>
+<DD>MouseSystems 3-button protocol.</DD>
+
+<DT>Sun</DT>
+<DD>Sun Microsystems 3-button protocol.</DD>
+
+<DT>MM</DT>
+<DD>MM 3-button protocol.</DD>
+</DL>
+The default protocol is Logitech, the protocol used by the Ascension Wanda.</TD>
+</TR>
+
+<TR>
+<TD>axisConverter</TD><TD><A HREF="VruiCFGTypes.html#axissetting">axis value mapper</A></TD>
+<TD>Axis value mapper to convert from raw mouse positional deltas reported by the serial protocol to valuator values in the range [-1, 1]. This setting applies to both axes. Default value is (-34.0, 0.0, 0.0, 34.0).</TD>
+</TR>
+
+<TR>
+<TD>axisConverter0, axisConverter1</TD><TD><A HREF="VruiCFGTypes.html#axissetting">axis value mapper</A></TD>
+<TD>Separate axis value mappers for both axes. Default values for both is the mapping defined by the axisConverter setting.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="fakespacepinchglovesettings">Fakespace Pinch Glove Settings</A></H3>
+
+This driver module receives pinch events from Fakespace pinch gloves. At the moment, it only recognizes pinch events between the thumb of either hand and any number of other fingers on that same hand, and reports them as a set of eight binary buttons.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of serial port device to which the pinch glove controller is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the pinch glove controller, in bits per second.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="fivedtglovesettings">5DT Glove Settings</A></H3>
+
+This driver module converts raw finger bend values from several models (models 5, 5-W, 16, and 16-W) of 5DT-brand data gloves into binary button states by recognizing a configurable set of hand gestures, where each gesture corresponds to a button and sets the button's state to true if the gesture is recognized. The driver can also report the glove's overall pitch and roll (only for certain models) and raw finger bend values as valuators.<P>
+
+The driver defines three custom configuration file setting data types:<P>
+
+<DL>
+<DT><A NAME="sensorstate">Sensor state</A></DT>
+<DD>Ternary joint sensor state, encoded as an enumerant taking the values Straight, Relaxed, or Bent.</DD>
+
+<DT><A NAME="bendcalibrator">Bend calibrator</A></DT>
+<DD>Defines a broken-line value mapper from raw finger bend values to a ternary joint <A HREF="#sensorstate">sensor state</A>. Encoded as a <A HREF="VruiCFGTypes.html#list">list</A> of four <A HREF="VruiCFGTypes.html#integer">integers</A> (min, straightMax, bentMin, max), where raw values between min and straightMax define a straight joint, values between straightMax and bentMin defined a relaxed joint, and values between bentMin and max define a bent joint.</DD>
+
+<DT><A NAME="gesture">Gesture</A></DT>
+<DD>A gesture is defined as a set of joint sensors that each have to be in a specified sensor state to trigger the gesture. Encoded as a <A HREF="VruiCFGTypes.html#list">list</A> of (&lt;joint index&gt;, &lt;joint state&gt;) pairs, where &lt;joint index&gt; is an <A HREF="VruiCFGTypes.html#integer">integer</A>, and &lt;joint state&gt; is a ternary <A HREF="#sensorstate">sensor state</A>.</DD>
+</DL><P>
+
+<H5>Example Gesture Definitions</H5>
+
+For the sake of discussion, assume a data glove with five joints, corresponding to thumb, index finger, middle finger, ring finger, and pinky, respectively. Then, a &quot;pistol gesture&quot; would be specified as ((0, Straight), (1, Straight), (2, Bent), (3, Bent), (4, Bent)), meaning that thumb and index finger must be straight, and the other fingers must be bent for the gesture to trigger.<P>
+
+If a joint is omitted from a gesture, its state will not influence whether the gesture is triggered or not. For example, to assign five independent &quot;virtual buttons&quot; to the five fingers, one would define five gestures ((0, Bent)), ..., ((4, Bent)).<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of serial port device to which the data glove controller is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the data glove controller, in bits per second. Defaults to 9600 bps for wireless glove models and 19200 bps for wired glove models.</TD>
+</TR>
+
+<TR>
+<TD>model</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Data glove's model number, either 5 or 16.</TD>
+</TR>
+
+<TR>
+<TD>wireless</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Selects the glove's wireless (-W) or wired submodel.</TD>
+</TR>
+
+<TR>
+<TD>left</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Overrides the handedness of the glove. Default is the handedness reported by the glove during initialization.</TD>
+</TR>
+
+<TR>
+<TD>reportRawValues</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Requests reporting raw finger bend values as valuators, normalized to the [-1, 1] range using each joint sensor's bend calibrator as defined in the bendCalibration&lt;sensor index&gt; setting.</TD>
+</TR>
+
+<TR>
+<TD>reportPitchRoll</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Requests reporting pitch and roll angles as valuators, normalized to the [-1, 1] range. Is ignored if the configured glove model does not have pitch/roll sensors.</TD>
+</TR>
+
+<TR>
+<TD>bendCalibration0, ..., bendCalibration&lt;numSensors-1&gt;</TD><TD><A HREF="#bendcalibrator">bend calibrator</A></TD>
+<TD>Converters from raw joint sensor values to ternary sensor states (straight, relaxed, bent) using a broken line model for each sensor (number of sensors depends on glove model). Default to (0, 64, 191, 255) for model 5 gloves, and (0, 1024, 3071, 4095) for model 16 gloves.</TD>
+</TR>
+
+<TR>
+<TD>gestures</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="#gesture">gestures</A></TD>
+<TD>Defines a set of gestures represented as binary buttons. The state of the button corresponding to a gesture is set to true if all joint sensors defining a gesture are in the required state.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="hiddevicesettings">HID Settings</A></H3>
+
+This driver module controls a standard USB Human Interface Device (HID), such a a keyboard, mouse, joystick, or gamepad, and represents it as a collection of buttons and/or valuators, i.e., analog axes.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceFileName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Selects a device by a its device file name such as /dev/input/eventX.</TD>
+</TR>
+
+<TR>
+<TD>deviceVendorProductId</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Selects a device by its USB vendor and product IDs, specified as two four-digit hexadecimal numbers separated by a colon.</TD>
+</TR>
+
+<TR>
+<TD>deviceName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Selects a device by its USB device name.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="intersensesettings">Intersense IS-900 Settings</A></H3>
+
+This driver module controls an Intersense IS-900 hybrid inertial/acoustic 6-DOF tracking system, connected to the host computer running VRDeviceDaemon either via a serial cable or an Ethernet connection.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>serialPortName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Device file name of the serial port to which the InterSense base station is connected, such as /dev/ttyS0. Alternatively, the InterSense base station can be connected via Ethernet, in which case the ethernetHostName tag must be specified.</TD>
+</TR>
+
+<TR>
+<TD>serialPortBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port transmission rate configured in the InterSense base station, when using serial port connection. Defaults to 115200 [bps].</TD>
+</TR>
+
+<TR>
+<TD>ethernetHostName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Host name or dotted IP address of the InterSense base station when connected via Ethernet. Alternatively, the InterSense base station can be connected via serial port, in which case the serialPortName tag must be specified.</TD>
+</TR>
+
+<TR>
+<TD>ethernetPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>TCP port number on which the InterSense base station sends reports when connected via Ethernet.</TD>
+</TR>
+
+<TR>
+<TD>resetDevice</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to force a software reset on the InterSense base station when loading the driver module. Should be left to false (the default) unless necessary.</TD>
+</TR>
+
+<TR>
+<TD>probeConstellation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>If true, downloads the InterSense base station's current constellation configuration (number and position of all ultrasound emitters) when loading the driver module. This is only a sanity check, as the constellation will not be printed or written to a file.</TD>
+</TR>
+
+<TR>
+<TD>uploadConstellationConfiguration</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of an <A HREF="#intersenseconstellationsection">Intersense IS-900 constellation section</A>. If specified, the driver module will load a constellation configuration (number and position of all ultrasound emitters) from the subsection of the given name, and upload it to the InterSense base station when loading the driver module. This is sometimes necessary with InterSense units that suffer from selective amnesia.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="intersensestationnames">stationNames</A></TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of names of <A HREF="#intersensestationsections">Intersense IS-900 station sections</A>, each one defining a single tracked device with optional buttons and/or valuators.</TD>
+</TR>
+
+<TR>
+<TD>enableLEDs</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable the blinking LEDs indicating the InterSense's transmitter activity. Defaults to true.</TD>
+</TR>
+</TABLE>
+
+<H4><A NAME="intersenseconstellationsection">Intersense IS-900 Constellation Section</A></H4>
+
+Intersense IS-900 constellation sections define one custom configuration file setting data type:<P>
+
+<DL>
+<DT><A NAME="transmitter">Transmitter</A></DT>
+<DD>3D position and emission direction of a single ultrasound transmitter in an Intersense IS-900 constellation configuration. Encoded as a <A HREF="VruiCFGTypes.html#point">point</A> defining the 3D position, followed by a comma and a <A HREF="VruiCFGTypes.html#vector">vector</A> defining the 3D emission direction.</DD>
+</DL><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>numTransmitters</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of ultrasound transmitters in this constellation.</TD>
+</TR>
+
+<TR>
+<TD>transmitterIdBase</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>ID of the first transmitter in this constellation. Defaults to 5001.</TD>
+</TR>
+
+<TR>
+<TD>unitSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Conversion factor from the measurement unit used to specify transmitter positions in this constellation to meters, the unit expected by the InterSense firmware. For example, if transmitter positions in the constellation section are specified in inches, unitSize must be 0.0254. Defaults to 1.0, i.e., positions are specified in meters.</TD>
+</TR>
+
+<TR>
+<TD>MCF&lt;transmitter index&gt;</TD><TD><A HREF="#transmitter">transmitter</A></TD>
+<TD>Position and emission direction of one ultrasound transmitter. &lt;transmitter index&gt; is a 1-based index.</TD>
+</TR>
+</TABLE>
+
+<H4><A NAME="intersensestationsections">Intersense IS-900 Station Sections</A></H4>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>id</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>ID of the configured station on the InterSense base station. Defaults to the one-based index of the station in the <A HREF="#intersensestationnames">stationNames</A> list.</TD>
+</TR>
+
+<TR>
+<TD>numButtons</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of buttons on the device corresponding to the configured station. Should be 0 for head and hand trackers, and 6 for wand devices. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>joystick</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag indicating whether the device corresponding to the configured station has a joystick. Should be false for head and hand trackers, and true for wand devices. Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>predictionTime</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Motion prediction time interval for the configured station in milliseconds. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>perceptualEnhancement</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Switch to select a &quot;perceptual enhancement&quot; mode for the configured station. See Intersense IS-900 user's manual for details. Defaults to 2.</TD>
+</TR>
+
+<TR>
+<TD>rotationalSensitivity</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Switch to select &quot;rotational sensitivity&quot; for the configured station. See Intersense IS-900 user's manual for details. Defaults to 3.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="joysticksettings">Joystick Settings</A></H3>
+
+This driver module represents a joystick with an arbitrary number of buttons and analog axes, using the Linux joystick kernel interface. This driver module is obsolete. Use the more flexible <A HREF="#hiddevicesettings">HID module</A> instead.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>joystickDeviceFile</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of the joystick device file to open, such as /dev/input/js0.</TD>
+</TR>
+
+<TR>
+<TD>axisGain&lt;axis index&gt;</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Gain factor (exponent) for each of the joystick's analog axes, where &lt;axis index&gt; is the zero-based axis index. Is a redundant implementation of the second <A HREF="#valuatormapping">valuator mapping</A> step.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="mousebuttonssettings">Mouse Buttons Settings</A></H3>
+
+This driver module reads mouse button states using the Linux mouse kernel interface, i.e., bypassing the X server. This driver module is obsolete. Use the more flexible <A HREF="#hiddevicesettings">HID module</A> instead.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>mouseDeviceFile</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of the mouse device file to open, such as /dev/input/mouse0.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="oculusriftsettings">Oculus Rift Settings</A></H3>
+
+This driver module represents the built-in inertial orientational tracker of an Oculus Rift head-mounted display. It sets the device to a fixed position in 3D space, with an optional pivot point to simulate the wearer's neck joints.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceIndex</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Index of Oculus Rift device to which to connect, where 0 is the first device connected to the computer. Defaults to 0 to connect to the first Oculus Rift device.</TD>
+</TR>
+
+<TR>
+<TD>accelCorrection</TD><TD><A HREF="VruiCFGTypes.html#atransform">affine transformation</A></TD>
+<TD>Correction transformation for the Oculus Rift's three-axis linear accelerometer.</TD>
+</TR>
+
+<TR>
+<TD>magCorrection</TD><TD><A HREF="VruiCFGTypes.html#atransform">affine transformation</A></TD>
+<TD>Correction transformation for the Oculus Rift's three-axis magnetometer. Contains what is elsewhere known as &quot;hard iron&quot; and &quot;soft iron&quot; correction.</TD>
+</TR>
+
+<TR>
+<TD>neckPivot</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD>
+<TD>Position of the neck pivot joint in HMD-relative coordinates.</TD>
+</TR>
+
+<TR>
+<TD>driftCorrectionWeight</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Weight of orientation drift correction. Larger values correct drift faster, but lead to more jitter and vertical axis tilt during head motions. The default value is 0.0001.</TD>
+</TR>
+
+<TR>
+<TD>useMagnetometer</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable the use of the Oculus Rift's built-in three-axis magnetometer for yaw drift correction. Requires a magnetometer correction matrix. If enabled, the X axis of the HMD-relative coordinate system will be locked to magnetic north.</TD>
+</TR>
+
+<TR>
+<TD>motionPredictionDelta</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Amount of angular motion prediction in seconds, to account for inherent lag in the display system.</TD>
+</TR>
+
+<TR>
+<TD>updateRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Rate at which tracker updates are sent to the device manager, and to connected clients. Resulting rate in Hz is 1000/updateRate.</TD>
+</TR>
+
+<TR>
+<TD>deviceName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name to use for the virtual input device representing the Oculus Rift's head tracker. Defaults to "OculusRift."</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="pctrackersettings">PC Tracker Settings</A></H3>
+
+This driver module reads tracking data exposed through the custom tracking data server used in original ImmersaDesks. If you still have one of those, and it's still working, good for you. Works together with the <A HREF="#pcwandsettings">PC Wand</A> module.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of the serial port device node to which the tracking server is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the PCTracker server in bits per second.</TD>
+</TR>
+
+<TR>
+<TD>trackerRange</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Maximum tracker range from the tracking antenna in inches. Must match the value configured in the PCTracker server. Defaults to 36.0.</TD>
+</TR>
+
+<TR>
+<TD>numTrackers</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of 6-DOF trackers tracked by the PCTracker server.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="pcwandsettings">PC Wand Settings</A></H3>
+
+This driver module reads button and joystick data exposed through the custom wand data server used in original ImmersaDesks. If you still have one of those, and it's still working, good for you. Works together with the <A HREF="#pctrackersettings">PC Tracker</A> module.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of the serial port device node to which the tracking server is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the PCTracker server in bits per second.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="polhemusfastraksettings">Polhemus Fastrak Settings</A></H3>
+
+This driver module controls a Polhemus Fastrak 6-DOF electromagnetic tracking device connected to the host computer running VRDeviceDaemon via a serial cable.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>devicePort</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name of serial port device to which the Fastrak is connected, such as /dev/ttyS0.</TD>
+</TR>
+
+<TR>
+<TD>deviceBaudRate</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Serial port speed of the Fastrak in bits per second. </TD>
+</TR>
+
+<TR>
+<TD>numReceivers</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Total number of receivers (6-DOF tracked devices) connected to the Fastrak. Defaults to 4.</TD>
+</TR>
+
+<TR>
+<TD>stylusEnabled</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag whether the first receiver connected to the Fastrak is a stylus device with a single button. Defaults to true.</TD>
+</TR>
+
+<TR>
+<TD>resetDevice</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag whether to perform a software reset on the Fastrak when the driver module is loaded. Should not be enabled unless necessary. Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>trackerHemisphere</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Defines the operational hemisphere of the Fastrak, relative to the tracking antenna. Supported values:<P>
+
+<DL>
+<DT>+X</DT>
+<DD>Selects hemisphere of positive X coordinates.</DD>
+
+<DT>-X</DT>
+<DD>Selects hemisphere of negative X coordinates.</DD>
+
+<DT>+Y</DT>
+<DD>Selects hemisphere of positive Y coordinates.</DD>
+
+<DT>-Y</DT>
+<DD>Selects hemisphere of negative Y coordinates.</DD>
+
+<DT>+Z</DT>
+<DD>Selects hemisphere of positive Z coordinates.</DD>
+
+<DT>-Z</DT>
+<DD>Selects hemisphere of negative Z coordinates.</DD>
+</DL>
+The default tracker hemisphere is positive X coordinates.</TD>
+</TR>
+
+<TR>
+<TD>stylusTipOffset</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD>
+<TD>If defined, offset vector from the stylus' receiver to the stylus' tip in stylus-local coordinates. If not defined, uses the stylus tip offset stored in the Fastrak's firmware.</TD>
+</TR>
+
+<TR>
+<TD>enableMetalCompensation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable fixed metal compensation in the Fastrak's firmware. Defaults to false.</TD>
+</TR>
+</TR>
+
+</TABLE>
+
+<H3><A NAME="razerhydrasettings">Razer Hydra Settings</A></H3>
+
+This driver module controls a Razer Hydra two-handed electromagnetic 6-DOF desktop tracking system.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceIndex</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Index of Razer Hydra device to which to connect, where 0 selects the first device. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>unitInches</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>If set to true, selects inches (25.4mm) as positional measurement unit. Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>unitMMs</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>If set to true, selects millimeters as positional measurement unit. Defaults to false.</TD></TD>
+</TR>
+
+<TR>
+<TD>unitFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Defines an arbitrary conversion factor from native Razer Hydra measurement units (millimeters) to physical coordinate units. For example, a value of 1.0 would select millimeters as unit, a value of 1.0/25.4=0.03937008 would select inches. Defaults to 1.0.</TD>
+</TR>
+
+<TR>
+<TD>applyInterleaveFilter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Applies a first-stage interleave filter to merge the time-multiplexed partial tracking streams of the two tracked handles. Defaults to true.</TD>
+</TR>
+
+<TR>
+<TD>applyLowpassFilter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Applies a second-stage low-pass filter to tracking streams of the two tracked handles. Defaults to true.</TD>
+</TR>
+
+<TR>
+<TD>lowpassFilterStrength</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Sets the strength of the second-stage low-pass filter. Higher values remove more jitter, but lead to higher tracking latency. Defaults to 24.0.</TD>
+</TR>
+
+<TR>
+<TD>deviceNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly two <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>Defines the name of the two virtual input devices describing the Razer Hydra's left and right handle, respectively. Defaults to (RazerHydraLeft, RazerHydraRight).</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="spaceballsettings">3D Connexion Spaceball 4000 FLX Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD></TD><TD><A HREF="VruiCFGTypes.html#"></A></TD>
+<TD></TD>
+</TABLE>
+
+<H3><A NAME="spaceballrawsettings">3D Connexion Spaceball 4000 FLX Raw Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD></TD><TD><A HREF="VruiCFGTypes.html#"></A></TD>
+<TD></TD>
+</TABLE>
+
+<H3><A NAME="vicontarsussettings">Vicon Tarsus Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD></TD><TD><A HREF="VruiCFGTypes.html#"></A></TD>
+<TD></TD>
+</TABLE>
+
+<H3><A NAME="vicontarsusrawsettings">Vicon Tarsus Raw Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD></TD><TD><A HREF="VruiCFGTypes.html#"></A></TD>
+<TD></TD>
+</TABLE>
+
+<H3><A NAME="vrpnclientsettings">VRPN Client Settings</A></H3>
+
+This driver module receives 6-DOF tracking data and button/valuator states from a VRPN server running on a (remote) computer connected to the host computer running VRDeviceDaemon via the Internet.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>serverName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Host name or dotted IP address of the (remote) computer running the VRPN server.</TD>
+</TR>
+
+<TR>
+<TD>serverPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>TCP port number of the VRPN server's control socket. Defaults to 3883.</TD>
+</TR>
+
+<TR>
+<TD>flipZAxis</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to flip the Z axis of all received positions and orientations, to work with VRPN servers that use left-handed coordinate systems (Vrui requires right-handed coordinates). Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>senderNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of names of <A HREF="#vrpnsendersections">VRPN sender sections</A>, each one defining any combination of 6-DOF trackers, buttons, and/or valuators. The sender section names must match the corresponding senders defined by the VRPN server.</TD>
+</TR>
+
+<TR>
+<TD>defaultPosition</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD>
+<TD>Default position/orientation to assign to senders with invalid current states.</TD>
+</TR>
+</TABLE>
+
+<H4><A NAME="vrpnsendersections">VRPN Sender Sections</A></H4>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>numTrackers</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of 6-DOF trackers reported by this sender. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>numButtons</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of buttons reported by this sender. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>numValuators</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of valuators reported by this sender. Defaults to 0.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="wiimotesettings">Wiimote Settings</A></H3>
+
+This driver module represents a single Nintendo Wii controller (&quot;Wiimote&quot;) with optional Nunchuk attachment as a collection of buttons and valuators, and can optionally track a Wiimote in position and orientation using a custom-built IR tracking beacon (see <A HREF="http://idav.ucdavis.edu/~okreylos/ResDev/Wiimote">Wiimote Hacking</A>).<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Bluetooth device name (double quote-enclosed colon-separated list of six two-digit hexadecimal numbers, e.g., &quot;00:1F:C5:21:CA:46&quot;) of the Wiimote. If no device name is given, the driver module will connect to the first Wiimote device it finds in discoverable mode.</TD>
+</TR>
+
+<TR>
+<TD>ledMask</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Bitmask to enable/disable each of the four LEDs along the bottom edge of the Wiimote while the driver module is active, i.e., while data is streamed to at least one connected client. The mask values for the four LEDs are 1, 2, 4, 8 from left to right. Defaults to 1, i.e., only the leftmost LED lights up.</TD>
+</TR>
+
+<TR>
+<TD>enableTracker</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable 6-DOF tracking using the Wiimote's built-in accelerometers and a custom-built IR tracking beacond consisting of four LEDs. Defaults to false.</TD>
+</TR>
+
+<TR>
+<TD>cameraCenter</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly two <A HREF="VruiCFGTypes.html#number">numbers</A></TD>
+<TD>Position of the Wiimote's camera's focus point in pixel coordinates on its CCD, given as (&lt;center x&gt;, &lt;center y&gt;). X values are in the range [0, 1024), y values are in the range [0, 768). Defaults to (512, 384).</TD>
+</TR>
+
+<TR>
+<TD>cameraFocalLength</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Focal length of the Wiimote's camera in pixel units. Defaults to 1280.0.</TD>
+</TR>
+
+<TR>
+<TD>homeTransform</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD>
+<TD>Position and orientation of the Wiimote when held in the &quot;default&quot; location. Forms the starting point for iterative tracking. Defaults to identity.</TD>
+</TR>
+
+<TR>
+<TD>targetPoints</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly four <A HREF="VruiCFGTypes.html#point">points</A></TD>
+<TD>If enableTracker is true, this setting defines the positions of the four IR LEDs comprising the tracking beacon in an arbitrary local coordinate system, using an arbitrary unit of measurement. Positions and orientations reported from the tracking driver will use the same coordinate system and unit of measurement as the target points. For reliable tracking, the four target points, and therefore the four IR LEDs, must be non-coplanar.</TD>
+</TR>
+
+<TR>
+<TD>targetTransformation</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD>
+<TD>A transformation from the target's local coordinate system, as used in the targetPoints setting, to the tracking coordinate system. A convenience to simplify setting up the same tracking beacon in different positions and orientations relative to Vrui's physical coordinate system. Defaults to identity.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="dummydevicesettings">Dummy Device Settings</A></H3>
+
+This driver module creates &quot;dummy&quot; trackers, buttons, and valuators with fixed positions/orientations and states, to aid in application development and debugging.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>numTrackers</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of dummy trackers.</TD>
+</TR>
+
+<TR>
+<TD>trackerState&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD>
+<TD>Position and orientation of the &lt;index&gt;-th dummy tracker, where &lt;index&gt; is between 0 and numTrackers-1.</TD>
+</TR>
+
+<TR>
+<TD>numButtons</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of dummy buttons.</TD>
+</TR>
+
+<TR>
+<TD>buttonState&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>State of the &lt;index&gt;-th dummy button, where &lt;index&gt; is between 0 and numButtons-1.</TD>
+</TR>
+
+<TR>
+<TD>numValuators</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of dummy valuators.</TD>
+</TR>
+
+<TR>
+<TD>valuatorState&lt;index&gt;</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>State of the &lt;index&gt;-th dummy valuator, where &lt;index&gt; is between 0 and numValuators-1. Valuator values must be between -1 and +1, where 0 is considered the &quot;rest value.&quot;</TD>
+</TR>
+
+<TR>
+<TD>sleepTime</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Time between (redundant) state updates of all trackers, buttons, and valuators managed by the driver module in microseconds.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="remotedevicesettings">Remote Device Settings</A></H3>
+
+This driver module receives tracker, button, and valuator data from a (remote) VRDeviceDaemon, and repeats the remote daemon's data into this daemon's data space.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>serverName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Internet host name or dotted IP address of computer running the (remote) VRDeviceDaemon instance.</TD>
+</TR>
+
+<TR>
+<TD>serverPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>TCP port number of the (remote) VRDeviceDaemon instance's listening socket.</TD>
+</TR>
+</TABLE>
+
+<H2><A NAME="calibratorsection">Calibrator Section</A></H2>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>type</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Defines the type of the calibrator object that transforms raw tracker positions and orientations received from a driver plug-in module into calibrated positions and orientations in the Vrui environment's physical coordinate system. The following calibrator types are supported:<P>
+
+<DL>
+<DT>TransformCalibrator</DT>
+<DD>Calibrator which applies a fixed orthogonal transformation (translation + rotation + uniform scaling) to raw tracker positions and orientations. The rest of the section contains <A HREF="#transformcalibratorsettings">transform calibrator settings</A>.</DD>
+
+<DT>GridCalibrator</DT>
+<DD>Calibrator which applies a non-linear grid-based calibration to raw tracker positions and orientations, giving it the ability to &quot;straighten out&quot; the warped tracking fields typically produced by electro-magnetic tracking systems. The rest of the section contains <A HREF="#gridcalibratorsettings">grid calibrator settings</A>.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD>calibratePositions</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable or disable calibration of tracker positions. Default value is true.</TD>
+</TR>
+
+<TR>
+<TD>calibrateOrientations</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable or disable calibration of tracker orientations. Default value is true.</TD>
+</TR>
+
+<TR>
+<TD>calibrateVelocities</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD>
+<TD>Flag to enable or disable calibration of tracker linear and angular velocities. Default value is true.</TD>
+</TR>
+
+</TABLE>
+
+<H3><A NAME="transformcalibratorsettings">Transform Calibrator Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>transformation</TD><TD><A HREF="VruiCFGTypes.html#ogtransform">orthogonal transformation</A></TD>
+<TD>Defines an orthogonal transformation (translation + rotation + scaling) that is applied to all trackers belonging to a device driver module. Calibration transformations are applied &quot;from the left,&quot; meaning that they offset the position or orientation of trackers in physical space. A scaling component can be used to convert between different units of measurement. For example, &quot;scale 39.37008&quot; converts from positions in meters to positions in inches.</TD>
+</TR>
+</TABLE>
+
+<H3><A NAME="gridcalibratorsettings">Grid Calibrator Settings</A></H3>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+</TABLE>
+
+<H2><A NAME="virtualdevicesections">Virtual Input Device Sections</A></H2>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>name</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD>
+<TD>Name for the virtual input device. Must be unique in device manager's namespace.</TD>
+</TR>
+
+<TR>
+<TD>trackType</TD><TD><A HREF="VruiCFGTypes.html#enumerant">enumerant</A></TD>
+<TD>Type of tracking data collected for the device. The following tracking types are supported:
+<DL>
+<DT>None</DT>
+<DD>Device has no tracking data.</DD>
+
+<DT>3D</DT>
+<DD>Device has only positional tracking data.</DD>
+
+<DT>Ray</DT>
+<DD>Device has positional tracking data plus a pointing direction.</DD>
+
+<DT>6D</DT>
+<DD>Device has positional and orientational tracking data.</DD>
+</DL>
+The default value is &quot;None.&quot;</TD>
+</TR>
+
+<TR>
+<TD>rayDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD>
+<TD>Direction vector of the device's pointing ray in device-local coordinates. Defaults to (0.0, 1.0, 0.0).</TD>
+</TD>
+</TR>
+
+<TR>
+<TD>rayStart</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD>
+<TD>Position along the device's pointing ray in physical coordinate units from which the ray is considered valid. A value of 0.0 starts the ray at the device's position; positive values move the ray start forward, negative values move it backwards. Defaults to 0.0.</TD>
+</TR>
+
+<TR>
+<TD>trackerIndex</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>For devices with trackType other than &quot;None,&quot; index of the device's tracker in the device manager's global tracker list.</TD>
+</TR>
+
+<TR>
+<TD>numButtons</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of buttons on the device. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>buttonNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of descriptive names for the device's buttons. If the list contains less than numButtons names, the rest of the names are of the form Button&lt;index&gt;, where &lt;index&gt; starts at 0 for the first button. Extra names in the list are silently ignored. Defaults to the empty list, i.e., all buttons have default Button&lt;index&gt; names.</TD>
+</TR>
+
+<TR>
+<TD>buttonIndexBase</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Index of the device's first button in the device manager's global button list. Assumes that the device's numButtons buttons are consecutively numbered.</TD>
+</TR>
+
+<TR>
+<TD>buttonIndices</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly numButtons <A HREF="VruiCFGTypes.html#integer">integers</A></TD>
+<TD>List of indices of the device's buttons in the device manager's global button list. Required if the buttonIndexBase tag is not present.</TD>
+</TR>
+
+<TR>
+<TD>numValuators</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Number of valuators on the device. Defaults to 0.</TD>
+</TR>
+
+<TR>
+<TD>valuatorNames</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#string">strings</A></TD>
+<TD>List of descriptive names for the device's valuators. If the list contains less than numValuators names, the rest of the names are of the form Valuator&lt;index&gt;, where &lt;index&gt; starts at 0 for the first valuator. Extra names in the list are silently ignored. Defaults to the empty list, i.e., all valuators have default Valuator&lt;index&gt; names.</TD>
+</TR>
+
+<TR>
+<TD>valuatorIndexBase</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>Index of the device's first valuator in the device manager's global valuator list. Assumes that the device's numValuators valuators are consecutively numbered.</TD>
+</TR>
+
+<TR>
+<TD>valuatorIndices</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly numValuators <A HREF="VruiCFGTypes.html#integer">integers</A></TD>
+<TD>List of indices of the device's valuators in the device manager's global valuator list. Required if the valuatorIndexBase tag is not present.</TD>
+</TR>
+</TR>
+</TABLE>
+
+<H2><A NAME="deviceserversection">Device Server Section</A></H2>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>serverPort</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD>
+<TD>TCP port number on which the VR device daemon will listen for incoming connections from device clients. To receive connections from clients on remote hosts, the local computer's firewall must allow access to this TCP port. Defaults to a kernel-assigned &quot;random&quot; number.</TD>
+</TR>
+</TABLE>
+
+</BODY>
+</HTML>

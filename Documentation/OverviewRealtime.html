@@ -1,0 +1,39 @@
+<HTML>
+<HEAD>
+<TITLE>Realtime -- Real-time Alarm Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Realtime&nbsp;-- Real-time Alarm Library</H1>
+
+The Realtime library contains abstraction classes to offer an asynchronous real-time alarm notification system for applications. It is a wrapper around the Linux librt real-time library, and might be implemented less efficiently on other operating systems.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the Realtime library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>Time.h</DT>
+<DD>Time.h defines several classes to represent absolute times measured by a variety of POSIX clocks, and relative time differences.
+<DL>
+<DT>TimeVector</DT>
+<DD>A class to represent differences between time points measured by the same POSIX clock.</DD>
+
+<DT>TimePointRealtime</DT>
+<DD>A class to represent absolute time points measured from the real-time clock, in seconds since the epoch (January 1st, 1970, 12:00 midnight).</DD>
+
+<DT>TimePointMonotonic</DT>
+<DD>A class to represent absolute time points measured from the monotonic clock, in seconds since some unspecified time in the past.</DD>
+</DL></DD>
+
+<DT>Timer.h</DT>
+<DD>Timer is a class for high-resolution timing and thread suspension using a nanosecond-resolution monotonic system clock.</DD>
+
+<DT>AlarmTimer.h</DT>
+<DD>AlarmTimer is a wrapper class around per-process real-time events. It handles timer resource management and event handling.</DD>
+</DL>
+
+</BODY>
+</HTML>

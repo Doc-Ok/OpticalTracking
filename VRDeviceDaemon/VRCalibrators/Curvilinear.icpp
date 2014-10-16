@@ -1,0 +1,414 @@
+/***********************************************************************
+Curvilinear - Base class for vertex-centered curvilinear data sets
+containing arbitrary value types (scalars, vectors, tensors, etc.).
+Copyright (c) 2004-2010 Oliver Kreylos
+
+This file is part of the Vrui VR Device Driver Daemon (VRDeviceDaemon).
+
+The Vrui VR Device Driver Daemon is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Vrui VR Device Driver Daemon is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Vrui VR Device Driver Daemon; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define CURVILINEAR_IMPLEMENTATION
+
+#include <VRDeviceDaemon/VRCalibrators/Curvilinear.h>
+
+#include <Misc/ThrowStdErr.h>
+#include <Math/Math.h>
+#include <Geometry/AffineCombiner.h>
+
+namespace Visualization {
+
+/*************************************
+Methods of class Curvilinear::Locator:
+*************************************/
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Point
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::transformCellPosition(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::CellPosition& cellPos) const
+	{
+	/* Perform multilinear interpolation: */
+	Point p[numCellVertices>>1]; // Array of intermediate interpolation points
+	int interpolationDimension=dimension-1;
+	int numSteps=numCellVertices>>1;
+	for(int pi=0;pi<numSteps;++pi)
+		{
+		const GridVertex* vPtr=cellBase+grid->vertexOffsets[pi];
+		p[pi]=Geometry::affineCombination(vPtr[0].pos,vPtr[1].pos,cellPos[interpolationDimension]);
+		}
+	for(int i=1;i<dimension;++i)
+		{
+		--interpolationDimension;
+		numSteps>>=1;
+		for(int pi=0;pi<numSteps;++pi)
+			p[pi]=Geometry::affineCombination(p[pi],p[pi+numSteps],cellPos[interpolationDimension]);
+		}
+	
+	/* Return final result: */
+	return p[0];
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::Matrix
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::calcTransformDerivative(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::CellPosition& cellPos) const
+	{
+	Matrix result=Matrix::zero;
+	
+	/* Calculate columns of Jacobian matrix: */
+	for(int i=0;i<dimension;++i)
+		{
+		/* Calculate cell's edge vectors for current dimension: */
+		int iMask=1<<i;
+		for(int v0=0;v0<numCellVertices;++v0)
+			if((v0&iMask)==0)
+				{
+				/* Calculate edge vector and convex combination weight: */
+				int v1=v0|iMask;
+				Vector d=cellBase[grid->vertexOffsets[v1]].pos-cellBase[grid->vertexOffsets[v0]].pos;
+				Scalar weight=Scalar(1);
+				for(int j=0;j<dimension;++j)
+					if(j!=i)
+						{
+						int jMask=1<<j;
+						if(v0&jMask)
+							weight*=cellPos[j];
+						else
+							weight*=Scalar(1)-cellPos[j];
+						}
+				
+				/* Add weighted vector to Jacobian matrix: */
+				for(int j=0;j<dimension;++j)
+					result(j,i)+=d[j]*weight;
+				}
+		}
+	
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::Locator(
+	void)
+	:grid(0)
+	{
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::Locator(
+	const Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>* sGrid,
+	typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Scalar sEpsilon)
+	:grid(sGrid),cellBase(0),epsilon(sEpsilon),epsilon2(Math::sqr(epsilon))
+	{
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+void
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::setEpsilon(
+	typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Scalar newEpsilon)
+	{
+	epsilon=newEpsilon;
+	epsilon2=Math::sqr(epsilon);
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+bool
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::isValid(
+	void) const
+	{
+	return grid!=0&&cellBase!=0;
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+bool
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::locatePoint(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Point& position,
+	bool traceHint)
+	{
+	/* If traceHint parameter is false or locator is invalid, start searching from scratch: */
+	if(!traceHint||cellBase==0)
+		{
+		/* Start searching from cell whose cell center is closest to query position: */
+		cell=grid->cellCenterTree.findClosestPoint(position).value;
+		cellBase=grid->vertices.getAddress(cell);
+		
+		/* Initialize local cell position: */
+		for(int i=0;i<dimension;++i)
+			cellPos[i]=Scalar(0.5);
+		}
+	
+	/* Perform Newton-Raphson iteration until it converges and the current cell contains the query point: */
+	while(true)
+		{
+		/* Calculate f(x_i): */
+		Vector fi=transformCellPosition(cellPos)-position;
+		
+		/* Stop iteration if f(x_i) is small enough: */
+		if(Geometry::sqr(fi)<epsilon2)
+			break;
+		
+		/* Calculate f'(x_i): */
+		Matrix fpi=calcTransformDerivative(cellPos);
+		
+		/* Calculate x_{i+1}: */
+		CellPosition step=fi/fpi;
+		for(int i=0;i<3;++i)
+			cellPos[i]-=step[i];
+		
+		/* Move to the cell containing x_{i+1}: */
+		for(int i=0;i<dimension;++i)
+			{
+			while(cell[i]>0&&cellPos[i]<Scalar(0))
+				{
+				cellPos[i]+=Scalar(1);
+				--cell[i];
+				cellBase-=grid->vertexStrides[i];
+				}
+			while(cell[i]<grid->numVertices[i]-2&&cellPos[i]>Scalar(1))
+				{
+				cellPos[i]-=Scalar(1);
+				++cell[i];
+				cellBase+=grid->vertexStrides[i];
+				}
+			}
+		}
+	
+	/* Check if the final cell contains the query position: */
+	bool result=true;
+	for(int i=0;i<dimension;++i)
+		if(cellPos[i]<Scalar(0)||cellPos[i]>Scalar(1))
+			result=false;
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Value
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::calcValue(
+	void) const
+	{
+	/* Perform multilinear interpolation: */
+	Value v[numCellVertices>>1]; // Array of intermediate interpolation values
+	int interpolationDimension=dimension-1;
+	int numSteps=numCellVertices>>1;
+	for(int vi=0;vi<numSteps;++vi)
+		{
+		const GridVertex* vPtr=cellBase+grid->vertexOffsets[vi];
+		v[vi]=Interpolator::interpolate(vPtr[0].value,vPtr[1].value,cellPos[interpolationDimension]);
+		}
+	for(int i=1;i<dimension;++i)
+		{
+		--interpolationDimension;
+		numSteps>>=1;
+		for(int vi=0;vi<numSteps;++vi)
+			v[vi]=Interpolator::interpolate(v[vi],v[vi+numSteps],cellPos[interpolationDimension]);
+		}
+	
+	/* Return final result: */
+	return v[0];
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Value
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator::calcValue(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Point& position,
+	bool traceHint)
+	{
+	/* Locate the given position: */
+	if(!locatePoint(position,traceHint))
+		Misc::throwStdErr("Locator position outside of data set domain");
+	
+	/* Return the interpolated value: */
+	return calcValue();
+	}
+
+/****************************
+Methods of class Curvilinear:
+****************************/
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Curvilinear(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Index& sNumVertices,
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Point* sVertexPositions,
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Value* sVertexValues)
+	:numVertices(sNumVertices),vertices(sNumVertices),
+	 locatorEpsilon(Scalar(1.0e-4))
+	{
+	/* Initialize vertex stride array: */
+	for(int i=0;i<dimension;++i)
+		vertexStrides[i]=vertices.getIncrement(i);
+	
+	/* Initialize vertex offset array: */
+	for(int i=0;i<numCellVertices;++i)
+		{
+		/* Vertex indices are, as usual, bit masks of a vertex' position in cell coordinates: */
+		vertexOffsets[i]=0;
+		for(int j=0;j<dimension;++j)
+			if(i&(1<<j))
+				vertexOffsets[i]+=vertexStrides[j];
+		}
+	
+	/* Copy source vertex positions, if present: */
+	if(sVertexPositions!=0)
+		{
+		/* Copy all grid vertex positions: */
+		int totalNumVertices=vertices.getNumElements();
+		GridVertex* vPtr=vertices.getArray();
+		for(int i=0;i<totalNumVertices;++i)
+			vPtr[i].pos=sVertexPositions[i];
+		
+		/* Finalize grid structure: */
+		finalizeGrid();
+		}
+	
+	/* Copy source vertex values, if present: */
+	if(sVertexValues!=0)
+		{
+		/* Copy all grid vertex values: */
+		int totalNumVertices=vertices.getNumElements();
+		GridVertex* vPtr=vertices.getArray();
+		for(int i=0;i<totalNumVertices;++i)
+			vPtr[i].value=sVertexValues[i];
+		}
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Curvilinear(
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Index& sNumVertices,
+	const typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::GridVertex* sVertices)
+	:numVertices(sNumVertices),vertices(sNumVertices),
+	 locatorEpsilon(Scalar(1.0e-4))
+	{
+	/* Initialize vertex stride array: */
+	for(int i=0;i<dimension;++i)
+		vertexStrides[i]=vertices.getIncrement(i);
+	
+	/* Initialize vertex offset array: */
+	for(int i=0;i<numCellVertices;++i)
+		{
+		/* Vertex indices are, as usual, bit masks of a vertex' position in cell coordinates: */
+		vertexOffsets[i]=0;
+		for(int j=0;j<dimension;++j)
+			if(i&(1<<j))
+				vertexOffsets[i]+=vertexStrides[j];
+		}
+	
+	/* Copy source vertices, if present: */
+	if(sVertices!=0)
+		{
+		/* Copy all grid vertices: */
+		int totalNumVertices=vertices.getNumElements();
+		GridVertex* vPtr=vertices.getArray();
+		for(int i=0;i<totalNumVertices;++i)
+			vPtr[i]=sVertices[i];
+		
+		/* Finalize grid structure: */
+		finalizeGrid();
+		}
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::~Curvilinear(
+	void)
+	{
+	/* Nothing to do, incidentally... */
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+void
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::finalizeGrid(
+	void)
+	{
+	/* Create array containing all cell centers and cell indices: */
+	int totalNumCells=1;
+	for(int i=0;i<dimension;++i)
+		totalNumCells*=numVertices[i]-1;
+	CellCenter* ccPtr=cellCenterTree.createTree(totalNumCells);
+	
+	/* Calculate all cell centers: */
+	Index index;
+	for(int i=0;i<dimension;++i)
+		index[i]=0;
+	while(index[0]<numVertices[0]-1)
+		{
+		/* Get pointer to cell's base vertex: */
+		const GridVertex* cellBase=vertices.getAddress(index);
+		
+		/* Calculate cell's center point: */
+		typename Point::AffineCombiner cc;
+		for(int i=0;i<numCellVertices;++i)
+			cc.addPoint(cellBase[vertexOffsets[i]].pos);
+		
+		/* Store cell center and pointer: */
+		*ccPtr=CellCenter(cc.getPoint(),index);
+		++ccPtr;
+		
+		/* Go to next cell: */
+		int incDim;
+		for(incDim=dimension-1;index[incDim]==numVertices[incDim]-2&&incDim>0;--incDim)
+			index[incDim]=0;
+		++index[incDim];
+		}
+	
+	/* Create the cell center tree: */
+	cellCenterTree.releasePoints();
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+void
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::setLocatorEpsilon(
+	typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Scalar newLocatorEpsilon)
+	{
+	locatorEpsilon=newLocatorEpsilon;
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Box
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::getDomainBox(
+	void) const
+	{
+	/* Calculate bounding box of all grid vertices: */
+	Box result=Box::empty;
+	int totalNumVertices=vertices.getNumElements();
+	const GridVertex* vPtr=vertices.getArray();
+	for(int i=0;i<totalNumVertices;++i,++vPtr)
+		result.addPoint(vPtr->pos);
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam,class ValueParam,class InterpolatorParam>
+inline
+typename Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::Locator
+Curvilinear<ScalarParam,dimensionParam,ValueParam,InterpolatorParam>::getLocator(
+	void) const
+	{
+	return Locator(this,locatorEpsilon);
+	}
+
+}

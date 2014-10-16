@@ -1,0 +1,77 @@
+<HTML>
+<HEAD>
+<TITLE>IO&nbsp;- I/O Support Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>IO&nbsp;- I/O Support Library</H1>
+
+The IO library contains abstraction classes for file I/O. It is used extensively throughout the higher-level libraries.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>File.h</DT>
+<DD>File is an abstract base class to support high-performance endianness-safe binary read/write access to data sources and sinks of various types.</DD>
+
+<DT>SeekableFile.h</DT>
+<DD>SeekableFile is a base class derived from IO::File to indicate files whose read and write positions can be changed via seek... methods.</DD>
+
+<DT>StandardFile.h</DT>
+<DD>StandardFile is a concrete class to support high-performance access to standard files.</DD>
+
+<DT>MemMappedFile.h</DT>
+<DD>MemMappedFile is a concrete class for read/write access to memory-mapped files, mostly to simplify resource management.</DD>
+
+<DT>FixedMemoryFile.h</DT>
+<DD>FixedMemoryFile is a concrete class to support high-performance reading from temporary files represented as fixed-size in-memory buffers.</DD>
+
+<DT>VariableMemoryFile.h</DT>
+<DD>VariableMemoryFile is a concrete class to support high-performance writing to temporary files represented as linked lists of in-memory buffers.</DD>
+
+<DT>GzippedFile.h</DT>
+<DD>GzippedFile is a concrete class for read access to gzip-compressed files.</DD>
+
+<DT>GzipFilter.h</DT>
+<DD>GzipFilter is a class to layer on-the-fly gzip compression or decompression over an underlying IO::File object.</DD>
+
+<DT>SeekableFilter.h</DT>
+<DD>SeekableFilter is a class to convert a streaming IO::File object into a seekable IO::SeekableFile object via in-memory caching.</DD>
+
+<DT>ReadAheadFilter.h</DT>
+<DD>ReadAheadFilter is an adapter for IO::File objects to provide read throughput via background read-ahead. It's especially useful for high-latency base files such as IO::GzipFilter.</DD>
+
+<DT>Directory.h</DT>
+<DD>Directory is an abstract base class to access directory-like objects in a generic fashion.</DD>
+
+<DT>StandardDirectory.h</DT>
+<DD>StandardDirectory is a concrete class derived from IO::Directory to read standard filesystem directories.</DD>
+
+<DT>OpenFile.h</DT>
+<DD>OpenFile.h contains namespace-global functions to open files using appropriate concrete implementations of the IO::File abstraction.</DD>
+
+<DT>IFFChunk.h</DT>
+<DD>IFFChunk is a class to read container files in IFF (Interchange File Format) format using an IO::File abstraction.</DD>
+
+<DT>ZipArchive.h</DT>
+<DD>ZipArchive is a class representing ZIP archive files, using a IO::SeekableFile abstraction to represent the ZIP archive, and granting read access to files stored in a ZIP archive using IO::File abstractions.</DD>
+
+<DT>XBaseTable.h</DT>
+<DD>XBaseTable is a class to read from database tables in XBase (dBASE III, dBASE IV, FoxPro, Clipper,...) format. It currently only supports basic dBASE III data types, and no memo fields.</DD>
+
+<DT>TokenSource.h</DT>
+<DD>TokenSource is a class to split the character stream from an object derived from IO::File into a stream of tokens, with flexible definitions of syntactic character classes.</DD>
+
+<DT>ValueSource.h</DT>
+<DD>ValueSource is a class to split the character stream from an object derived from IO::File into a stream of strings or numbers, with flexible definitions of syntactic character classes.</DD>
+
+<DT>CSVSource.h</DT>
+<DD>CSVSource is a class implementing a comma-separated value file structure over objects derived from IO::File.</DD>
+</DL>
+
+<DT>FileMonitor.h</DT>
+<DD>FileMonitor is a class to asynchronously monitor changes to selected files or directories in an OS-independent fashion. Currently only implemented for Linux with kernel >= 2.6.13 and glibc >= 2.5, using the inotify service.</DD>
+
+</BODY>
+</HTML>

@@ -1,0 +1,459 @@
+========================================================================
+README for Vrui version 3.2, build 001
+Copyright (c) 1998-2014 Oliver Kreylos
+========================================================================
+
+Overview
+========
+
+Vrui is a C++ software development toolkit for highly interactive
+virtual reality applications, with a focus on portability between vastly
+different virtual reality environments, from laptop or desktop computers
+to CAVEs and other fully immersive systems. More information about Vrui
+can be found at http://idav.ucdavis.edu/~okreylos/ResDev/Vrui or
+http://www.keckcaves.org.
+
+Vrui's development was supported by the University of California, Davis,
+by the UC Davis W.M. Keck Center for Active Visualization in the Earth
+Sciences (KeckCAVES, http://www.keckcaves.org), the W.M. Keck
+Foundation, and the National Science Foundation.
+
+Requirements
+============
+
+On all operating systems, Vrui is based on the X Window System (X11) and
+OpenGL. On Mac OS X, X11 is an optional component and can be installed
+from the installation media. To build Vrui from source on Mac OS X, it
+may be necessary to install the optional xcode component from the
+installation media. On Linux, we strongly recommend installing
+appropriate vendor-supplied OpenGL drivers (such as those released by
+Nvidia or ATI/AMD) for optimal 3D graphics performance.
+
+Vrui uses additional libraries if it detects them on the local system,
+such as libpng, libjpeg, and libtiff to read/write images in PNG, JPEG,
+and TIFF formats, respectively, and OpenAL to render three-dimensional
+sound. On Mac OS X, libpng, libjpeg, and libtiff need to be downloaded
+from their respective repositories and built from source. On Linux,
+OpenAL might not be installed by default and needs to be installed via
+the distribution's package manager.
+
+Quick Installation Guide for the Impatient
+==========================================
+
+(Replace <build> by the current Vrui build number.)
+
+0. (Install required packages, if necessary or desired.)
+
+1. Create src directory in home directory and change into it:
+   > mkdir ~/src
+   > cd ~/src
+
+2. Download and unpack the Vrui tarball:
+   > curl <download path>/Vrui-<version>-<build>.tar.gz | tar xfz -
+
+3. Change into Vrui base directory:
+   > cd Vrui-<version>-<build>
+
+4. Build Vrui inside the Vrui base directory:
+   > make
+   or, for multi-processor machines
+   > make -j<number of CPUs>
+
+5. Install Vrui into Vrui-<version> in home directory:
+   > make install
+
+6. If there are error messages during the build, read below.
+
+Building and Running Vrui Example Applications
+----------------------------------------------
+
+1. Change into example application directory:
+   > cd ~/src/Vrui-<version>-<build>/ExamplePrograms
+
+2. Build example applications:
+   > make
+
+3. (On MacOS X: Start X11.)
+
+4. Run Earth renderer:
+   > ./bin/ShowEarthModel
+
+5. Read about Vrui's default user interface in HTML documentation in
+   ~/Vrui-<version>/share/doc.
+
+Detailed Installation notes
+===========================
+
+Installation is performed via the central makefile in the
+Vrui-<version>-<build> base directory. The makefile attempts to auto-
+detect the configuration of the host computer, and manual changes are
+typically not required to build Vrui. In general, we recommend to build
+Vrui using an unchanged makefile, and only make changes if there are
+problems or errors during the build, or if advanced users have very
+specific needs.
+
+The one makefile setting that might need to be adjusted is the Vrui
+installation path at the very beginning of the makefile. By default,
+Vrui installs itself into ~/Vrui-<version>. This can be changed either
+by editing the makefile, or, better, by passing the installation
+directory on make's command line:
+
+> make INSTALLDIR=<path>
+
+NOTE: It is important *not* to install Vrui into the same directory in
+which it is built. A typical installation would download the source
+tarball into a special "source" directory, say ~/src, and extract it
+from there, resulting in the sources being in
+~/src/Vrui-<version>-<build>. Then Vrui can be installed in
+~/Vrui-<version> (the default) without any problems. After installation,
+the source tarball and the ~/src/Vrui-<version>-<build> directory can in
+principle be deleted.
+
+Here is a diagram of the directory structure described above:
+
+~ (home directory)
+  |
+  +- src (unpack Vrui tarball from in here)
+  | |
+  | +- Vrui-<version>-<build> (package root directory, run "make" in
+  |   | here)
+  |   |
+  |   +- COPYING, VERSION, HISTORY, README
+  |   |
+  |   +- makefile
+  |   |
+  |   +- BuildRoot (Vrui's build system)
+  |   |
+  |   +- <Vrui component directories>
+  |   |
+  |   +- ExamplePrograms (Vrui example program source
+  |   |  codes)
+  |   |
+  |   +- d (dependency files, created by "make")
+  |   |
+  |   +- o (object files, created by "make")
+  |   |
+  |   +- lib / lib64 (library files and plug-ins,
+  |   |  created by "make")
+  |   |
+  |   +- bin (executable files, created by "make")
+  |
+  +- Vrui-<version> (created by "make install")
+    |
+    +- include (Vrui development header files)
+    |
+    +- lib / lib64 (library files and plug-ins)
+    |
+    +- bin (Vrui driver and utility programs)
+    |
+    +- etc (Vrui configuration files)
+    |
+    +- share (font definitions, texture images, etc.)
+      |
+      +- GLFonts, Shaders, Textures
+      |
+      +- make (Vrui's build system)
+      |
+      +- doc (HTML documentation)
+
+Root Installation Directory
+---------------------------
+
+The root installation directory is set by changing the value of
+INSTALLDIR at the top of the makefile, or by passing INSTALLDIR=<desired
+installation directory> on make's command line. Vrui installs itself in
+the usual subdirectories under the root installation directory:
+
+- include: Contains header files for Vrui development
+- lib or lib64: Contains shared libraries and Vrui plug-ins
+- bin: Contains executables
+- etc: Contains configuration files
+- share: Contains resource files (texture fonts etc.)
+
+If the root installation directory is set to /usr/local, Vrui will drop
+right into an existing Linux installation. However, to simplify removing
+a Vrui installation (there is no make uninstall yet), it is recommended
+to install Vrui in its private root directory, such as
+/usr/local/Vrui-<version>. If installed this way, it can be cleanly
+uninstalled by simply removing the root installation directory.
+
+If the root installation directory is set to /usr, Vrui will almost (but
+not quite) follow the UNIX installation conventions. Concretely,
+configuration files will end up in /usr/etc and not in /etc. If the
+latter is desired, the additional SYSTEMINSTALL parameter needs to be
+added to make's command line, and INSTALLDIR must be set to the empty
+string:
+
+> make SYSTEMINSTALL=1 INSTALLDIR=
+
+Fine-tuning Installation Directories
+------------------------------------
+
+Normally, Vrui installation is controlled by the INSTALLDIR variable
+defining the root installation directory, and the optional SYSTEMINSTALL
+flag to create a standard-conformant root level installation. If more
+fine-tuning is required to install Vrui in a pre-existing directory
+hierarchy, Vrui's component directories can be specified individually:
+
+HEADERINSTALLDIR: root directory for include files. Installation will
+  create subdirectories Misc, Threads, Plugins, Vrui, ...
+
+LIBINSTALLDIR: directory for shared library files.
+
+EXECUTABLEINSTALLDIR: directory for executable files.
+
+PLUGININSTALLDIR: root directory for tool and vislet plug-ins.
+  Installation will create subdirectories VRTools, VRVislets, VRDevices
+  and VRCalibrators.
+
+ETCINSTALLDIR: directory for configuration files.
+
+SHAREINSTALLDIR: root directory for non-executable files. Installation
+  will create subdirectories GLFonts, Shaders, and Textures.
+
+PKGCONFIGINSTALLDIR: directory for Vrui's pkg-config file (Vrui.pc).
+
+DOCINSTALLDIR: directory for Vrui's HTML documentation.
+
+MAKEINSTALLDIR: directory for Vrui's build system.
+
+Preparing Binary Packages
+-------------------------
+
+Many operating systems contain package managers to distribute software
+as binaries for simplified installation and management. It is
+straightforward to build Vrui into such packages, but the details depend
+on the particular operating system version.
+
+The one thing all packagers have in common is that the software must be
+built in a "fake root" environment. Meaning, while the software is
+intended to end up in, say, /etc, /usr/bin, /usr/lib, ..., during
+package preparation the software has to be copied into a hierarchy under
+some base directory, such as ~/packages/etc, ~/packages/usr/bin, ...
+
+This can be achieved by using the final installation directory during
+compilation and linking, and using the "fake root" directory during
+installation. For example:
+
+> make INSTALLDIR= SYSTEMINSTALL=1
+> make INSTALLDIR=$HOME/packages SYSTEMINSTALL=1 install
+
+will configure the software to be run from /etc, /usr/bin, etc., but
+will install the files in the same hierarchy underneath ~/packages.
+
+Path to the C++ Compiler
+------------------------
+
+The compiler is selected in the file BuildRoot/SystemDefinitions. The
+compiler suite's base directory is set by changing the GNUC_BASEDIR
+variable, or by passing GNUC_BASEDIR=<gcc base directory> on make's
+command line. The default C++ compiler is /usr/bin/g++.
+
+Note about g++ version 4.1.0 and greater
+----------------------------------------
+
+Starting with version 4.1.0, g++ no longer injects friend functions
+defined inside a class declaration into the surrounding namespace. The
+build system (BuildRoot/SystemDefinitions and BuildRoot/BasicMakefile)
+contains code to detect the compiler version and add the
+-ffriend-injection flag to the compiler's command line if the version
+number is greater or equal 4.1.0. However, if compiling the example
+programs in ExamplePrograms generates error messages about undeclared
+functions, the flag -ffriend-injection needs to be manually added to the
+compiler command line when building Vrui and Vrui-based applications.
+The best place to add the flag is to the end of CSYSFLAGS at the
+beginning of BuildRoot/SystemDefinitions before building. Alternatively,
+the flag can be added to CFLAGS inside the example programs' build
+directories after Vrui has been built/installed.
+
+Machine Endianness
+------------------
+
+Vrui contains support for reading/writing binary files with automatic
+endianness conversion, and sending/receiving data over TCP pipes with
+automatic network endianness detection and endianness conversion. For
+this to work, the OS must offer an include file that sets the #define
+macros __LITTLE_ENDIAN, __BIG_ENDIAN, and __BYTE_ORDER. __BYTE_ORDER
+must be equal to __LITTLE_ENDIAN on little-endian machines, and equal to
+__BIG_ENDIAN on big-endian machines. The Misc/Endianness.h header file
+includes the appropriate system header files for Linux and Mac OS X, but
+might need to be adapted for other operating systems.
+
+Support for PNG, JPEG, and TIFF
+-------------------------------
+
+The image handling library that is part of the Vrui toolkit supports
+reading and writing image files in PNG, JPEG, and TIFF formats. These
+features are based on the libpng, libjpeg, and libtiff libraries,
+respectively. If the host computer does not contain either of these
+libraries, support for PNG, JPEG, or TIFF images can be disabled
+separately in the makefile by setting IMAGES_USE_PNG, IMAGES_USE_JPEG,
+or IMAGES_USE_TIFF to 0, respectively. The Vrui makefile now contains
+code to automatically detect whether libpng, libjpeg, and/or libtiff are
+installed, and sets these three variables accordingly. More precisely,
+the makefile looks for png.h, jpeglib.h, and tiffio.h in /usr/include
+and /usr/local/include. If either library is installed in a different
+directory on the host system, the makefile variables need to be set
+manually, and the paths to the libraries need to be adjusted in
+BuildRoot/Packages.
+
+Vrui uses the PNG (Portable Network Graphics) image file format to save
+screenshots taken from a Vrui application window using the image
+handling library. If that library is not configured to support PNG
+images (see above), Vrui will automatically fall back to saving
+screenshots in binary PPM format.
+
+Support for ALSA and SPEEX
+--------------------------
+TBW.
+
+Support for Video4Linux2, DC1394, and Theora
+--------------------------------------------
+TBW.
+
+Support for OpenAL
+------------------
+
+Vrui contains full support for spatial audio using the OpenAL 3D sound
+API. Since OpenAL is not yet widely used, this support can be disabled
+in the makefile, removing dependency on the OpenAL header files and
+libraries. To disable OpenAL support, the value of the
+SYSTEM_HAVE_OPENAL variable can be set to 0. The Vrui makefile now
+contains code to automatically detect whether OpenAL is installed on the
+host system by looking for AL/al.h in /usr/include and
+/usr/local/include. If OpenAL is installed elsewhere, the
+SYSTEM_HAVE_OPENAL makefile variable needs to be set manually, and the
+paths to OpenAL need to be adjusted in BuildRoot/Packages.
+
+Support for shared-memory multi-pipe rendering systems
+------------------------------------------------------
+
+As of version 1.0-035, Vrui contains a mechanism to optimally run on
+shared-memory multi-pipe rendering systems such as SGI Onyx or Prism, or
+newer multi-CPU computers with multiple graphics cards. Support for
+multithreaded rendering is enabled by setting GLSUPPORT_USE_TLS to 1 in
+the makefile. Since this somewhat impacts rendering performance, it is
+recommended to only enable multithreaded support if (one of) the target
+VR environments requires it.
+
+If the host compiler and run-time environment do not support a __thread
+storage class for thread-local storage, SYSTEM_HAVE_TLS in
+BuildRoot/SystemDefinitions must be set to 0 to fall back to POSIX
+thread-local storage (for an additional performance penalty).
+
+Building and Installing Vrui
+============================
+
+The easiest way to install Vrui is to cd to the Vrui-<version>-<build>
+root directory, and type make, followed by make install. If the root
+installation directory (see above) is a system directory, make install
+has to be run as root. In that case, it is safer to first run make
+(which will build in the current directory) as a non-root user, and
+afterwards become root and run make install.
+
+Source-specific settings
+------------------------
+
+Vrui contains a few settings that might need to be adapted due to
+different operating system or OpenGL versions. The settings that
+typically cause trouble can be changed from within the main makefile
+(they are listed in a section towards the beginning). If Vrui fails to
+build with compiler errors, that is the first place to look. The
+makefile lists which sources cause trouble, and how to address them.
+
+Building debug version
+----------------------
+
+The Vrui libraries and executables are by default built without
+debugging information and with full optimization (-O3). It is possible
+to build Vrui with full debugging information and without optimization
+by defining the DEBUG variable in the makefile. The easiest way to
+achieve this is to pass DEBUG=1 on the make command line, i.e., to type
+"make DEBUG=1" followed by "make DEBUG=1 install". Vrui is set up such
+that debug and non-debug versions can coexist in the same installation
+directory.
+
+To make full use of the debugger, the Vrui application itself needs to
+be compiled/linked with debugging information as usual. The easiest way
+to achieve this is to use Vrui's included build system, in which case
+passing "DEBUG=1" to an application makefile will set everything up
+correctly.
+
+Building Example Vrui Applications
+==================================
+
+The ExamplePrograms directory in the Vrui-<version>-<build> base
+directory contains several small example programs, and two larger
+applications in their own directories (MeshEditor and VRMLViewer).
+
+ExamplePrograms contains several very simple Vrui applications to show
+the basic development approach, and ShowEarthModel, one "realistic"
+application to visualize global earthquake distributions.
+MeshEditor contains a prototypical and fairly complex VR surface editing
+application, and VRMLViewer contains a stand-alone viewer for simple
+VRML files (it does not support VRML's full specification) that mostly
+serves as an example of how higher-level scene graph functionality can
+be layered on top of the Vrui API.
+
+All applications can be built by running make in their respective
+directories. If Vrui was not installed in its default location
+(~/Vrui-<version>), the VRUI_MAKEDIR variable at the top of each
+makefile needs to be changed to the directory named "make" under Vrui's
+root installation directory.
+
+The example application makefiles show how to create debug/release
+versions without changing the makefile by respecting the DEBUG make
+command line argument ("make DEBUG=1") in the same way as the toolkit
+build itself.
+
+Building Vrui Applications
+==========================
+
+During installation, Vrui installs its own build system in
+$(INSTALLDIR)/share/make. Vrui-based projects can benefit from this
+build system by using a makefile following the template makefile
+included in the build system directory. The makefiles provided with the
+Vrui example applications show how this should be done, and how it
+results in simple makefiles that build on any environment with a
+properly installed version of Vrui.
+
+For compatibility with previous versions of Vrui, Vrui also creates a
+makefile fragment (Vrui.makeinclude or Vrui.makeinclude.debug) in
+$(INSTALLDIR)/share/make. The appropriate fragment should be included
+by the makefiles of all legacy Vrui-based projects to simplify compiling
+and linking.
+
+Alternatively, Vrui creates a pkg-config metafile during build,
+Share/Vrui.pc. This metafile can be copied to a location recognized by
+pkg-config, such as /usr/lib(64)/pkgconfig, and can then be used to
+retrieve compiler and linker flags required to build Vrui applications,
+as in
+g++ -o Foo `pkg-config Vrui --cflags` Foo.cpp `pkg-config Vrui --libs`
+
+Running Vrui Applications
+=========================
+
+Vrui applications are started in the usual fashion, by typing the
+executable name from the directory containing the executable, and
+providing any required command line parameters. Vrui applications will
+configure themselves to the machine on which they are running by reading
+an appropriate root section in the Vrui.cfg configuration file in the
+installation's etc directory. The root section is determined by the
+following cascade:
+
+1. By default, Vrui reads the section that has the same name as the
+   local machine (as reported by hostname).
+
+2. If an environment variable VRUI_ROOTSECTION exists, Vrui will use its
+   value as the root section
+
+3. If an application's command line contains the arguments
+   -rootSection <section name>, Vrui will use <section name> as the root
+   section.
+
+4. If the root section selected by the above cascade does not exist in
+   the configuration file, Vrui will fall back to the root section
+   compiled into the library (defaults to "Desktop").
+
+The HTML pages in $(INSTALLDIR)/share/doc contain additional information
+about configuring, running, and using Vrui applications.

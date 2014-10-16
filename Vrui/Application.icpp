@@ -1,0 +1,169 @@
+/***********************************************************************
+Application - Base class for Vrui application objects.
+Copyright (c) 2004-2013 Oliver Kreylos
+
+This file is part of the Virtual Reality User Interface Library (Vrui).
+
+The Virtual Reality User Interface Library is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+The Virtual Reality User Interface Library is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Virtual Reality User Interface Library; if not, write to the
+Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define VRUI_APPLICATION_IMPLEMENTATION
+
+#include <Vrui/Application.h>
+
+#include <Vrui/Vrui.h>
+
+namespace Vrui {
+
+/**********************************************
+Methods of class Application::EventToolFactory:
+**********************************************/
+
+template <class DerivedApplicationParam>
+inline
+Application::EventToolFactory<DerivedApplicationParam>::EventToolFactory(
+	const char* sClassName,
+	const char* sDisplayName,
+	ToolFactory* parentClass,
+	typename Application::EventToolFactory<DerivedApplicationParam>::DerivedApplication* sApplication,
+	typename Application::EventToolFactory<DerivedApplicationParam>::EventCallbackMethod sEventCallbackMethod,
+	typename Application::EventID sEventId)
+	:EventToolFactoryBase(sClassName,*getToolManager(),sEventId),
+	 displayName(sDisplayName),
+	 application(sApplication),
+	 eventCallbackMethod(sEventCallbackMethod)
+	{
+	/* Initialize the tool's layout: */
+	layout.setNumButtons(1);
+	
+	/* Add the tool factory to the class hierarchy: */
+	if(parentClass!=0)
+		{
+		parentClass->addChildClass(this);
+		addParentClass(parentClass);
+		}
+	}
+
+template <class DerivedApplicationParam>
+inline
+Application::EventToolFactory<DerivedApplicationParam>::~EventToolFactory(
+	void)
+	{
+	}
+
+template <class DerivedApplicationParam>
+inline
+const char*
+Application::EventToolFactory<DerivedApplicationParam>::getName(
+	void) const
+	{
+	return displayName.c_str();
+	}
+
+template <class DerivedApplicationParam>
+inline
+const char*
+Application::EventToolFactory<DerivedApplicationParam>::getButtonFunction(
+	int buttonSlotIndex) const
+	{
+	return "Trigger Event";
+	}
+
+template <class DerivedApplicationParam>
+inline
+Vrui::Tool*
+Application::EventToolFactory<DerivedApplicationParam>::createTool(
+	const ToolInputAssignment& inputAssignment) const
+	{
+	return new CreatedTool(this,inputAssignment);
+	}
+
+template <class DerivedApplicationParam>
+inline
+void
+Application::EventToolFactory<DerivedApplicationParam>::destroyTool(
+	Vrui::Tool* tool) const
+	{
+	delete tool;
+	}
+
+/***************************************
+Methods of class Application::EventTool:
+***************************************/
+
+template <class DerivedApplicationParam>
+inline
+Application::EventTool<DerivedApplicationParam>::EventTool(
+	const ToolFactory* sFactory,
+	const ToolInputAssignment& inputAssignment)
+	:EventToolBase(sFactory,inputAssignment),
+	 factory(dynamic_cast<const Factory*>(sFactory))
+	{
+	}
+
+template <class DerivedApplicationParam>
+inline
+const ToolFactory*
+Application::EventTool<DerivedApplicationParam>::getFactory(
+	void) const
+	{
+	return factory;
+	}
+
+template <class DerivedApplicationParam>
+inline
+std::string
+Application::EventTool<DerivedApplicationParam>::getName(
+	void) const
+	{
+	return factory->displayName;
+	}
+
+template <class DerivedApplicationParam>
+inline
+void
+Application::EventTool<DerivedApplicationParam>::buttonCallback(
+	int buttonSlotIndex,InputDevice::ButtonCallbackData* cbData)
+	{
+	/* Call the event callback with the event ID and the "press" flag: */
+	(factory->application->*(factory->eventCallbackMethod))(factory->getEventId(),cbData);
+	}
+
+/****************************
+Methods of class Application:
+****************************/
+
+template <class DerivedApplicationParam>
+inline
+void Application::addEventTool(
+	const char* toolName,
+	ToolFactory* parentClass,
+	DerivedApplicationParam* application,
+	typename Application::EventToolFactory<DerivedApplicationParam>::EventCallbackMethod eventCallbackMethod,
+	typename Application::EventID eventId)
+	{
+	typedef EventToolFactory<DerivedApplicationParam> ETF;
+	
+	/* Create a new event tool factory class: */
+	char* toolClassName=createEventToolClassName();
+	ETF* toolFactory=new ETF(toolClassName,toolName,parentClass,application,eventCallbackMethod,eventId);
+	delete[] toolClassName;
+	
+	/* Register the tool factory class with the tool manager: */
+	getToolManager()->addClass(toolFactory,ToolManager::defaultToolFactoryDestructor);
+	}
+
+}

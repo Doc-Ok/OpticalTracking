@@ -1,0 +1,582 @@
+/***********************************************************************
+AffineTransformation - Class for general affine transformations.
+Copyright (c) 2001-2011 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_AFFINETRANSFORMATION_IMPLEMENTATION
+
+#include <Geometry/AffineTransformation.h>
+
+#include <Geometry/TranslationTransformation.h>
+#include <Geometry/RotationTransformation.h>
+#include <Geometry/OrthonormalTransformation.h>
+#include <Geometry/UniformScalingTransformation.h>
+#include <Geometry/OrthogonalTransformation.h>
+#include <Geometry/ScalingTransformation.h>
+#include <Geometry/MatrixHelperFunctions.h>
+
+namespace Geometry {
+
+/***********************************************
+Methods of class AffineTransformationOperations:
+***********************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::V
+AffineTransformationOperations<ScalarParam,dimensionParam>::transform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::V& v)
+	{
+	V result;
+	for(int i=0;i<dimensionParam;++i)
+		{
+		ScalarParam c(0);
+		for(int j=0;j<dimensionParam;++j)
+			c+=m(i,j)*v[j];
+		result[i]=c;
+		}
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::P
+AffineTransformationOperations<ScalarParam,dimensionParam>::transform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::P& p)
+	{
+	P result;
+	for(int i=0;i<dimensionParam;++i)
+		{
+		ScalarParam c=m(i,dimensionParam);
+		for(int j=0;j<dimensionParam;++j)
+			c+=m(i,j)*p[j];
+		result[i]=c;
+		}
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::HV
+AffineTransformationOperations<ScalarParam,dimensionParam>::transform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::HV& hv)
+	{
+	HV result;
+	for(int i=0;i<dimensionParam;++i)
+		{
+		ScalarParam c(0);
+		for(int j=0;j<=dimensionParam;++j)
+			c+=m(i,j)*hv[j];
+		result[i]=c;
+		}
+	result[dimensionParam]=hv[dimensionParam];
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::V
+AffineTransformationOperations<ScalarParam,dimensionParam>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::V& v)
+	{
+	/* Create the extended matrix: */
+	double temp[dimensionParam][dimensionParam+2];
+	for(int i=0;i<dimensionParam;++i)
+		{
+		for(int j=0;j<=dimensionParam;++j)
+			temp[i][j]=double(m(i,j));
+		temp[i][dimensionParam+1]=double(v[i]);
+		}
+	
+	/* Perform Gaussian elimination with column pivoting on the extended matrix: */
+	gaussElimination<dimensionParam,dimensionParam+2>(temp);
+	
+	/* Return the result vector: */
+	V result;
+	for(int i=dimensionParam-1;i>=0;--i)
+		{
+		for(int j=i+1;j<dimensionParam;++j)
+			temp[i][dimensionParam+1]-=temp[i][j]*temp[j][dimensionParam+1];
+		temp[i][dimensionParam+1]/=temp[i][i];
+		result[i]=ScalarParam(temp[i][dimensionParam+1]);
+		}
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::P
+AffineTransformationOperations<ScalarParam,dimensionParam>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::P& p)
+	{
+	/* Create the extended matrix: */
+	double temp[dimensionParam][dimensionParam+2];
+	for(int i=0;i<dimensionParam;++i)
+		{
+		for(int j=0;j<=dimensionParam;++j)
+			temp[i][j]=double(m(i,j));
+		temp[i][dimensionParam+1]=double(p[i]);
+		}
+	
+	/* Perform Gaussian elimination with column pivoting on the extended matrix: */
+	gaussElimination<dimensionParam,dimensionParam+2>(temp);
+	
+	/* Return the result point: */
+	P result;
+	for(int i=dimensionParam-1;i>=0;--i)
+		{
+		for(int j=i+1;j<dimensionParam;++j)
+			temp[i][dimensionParam+1]-=temp[i][j]*temp[j][dimensionParam+1];
+		temp[i][dimensionParam+1]-=temp[i][dimensionParam];
+		temp[i][dimensionParam+1]/=temp[i][i];
+		result[i]=ScalarParam(temp[i][dimensionParam+1]);
+		}
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+typename AffineTransformationOperations<ScalarParam,dimensionParam>::HV
+AffineTransformationOperations<ScalarParam,dimensionParam>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,dimensionParam>::HV& hv)
+	{
+	/* Create the extended matrix: */
+	double temp[dimensionParam][dimensionParam+2];
+	for(int i=0;i<dimensionParam;++i)
+		{
+		for(int j=0;j<=dimensionParam;++j)
+			temp[i][j]=double(m(i,j));
+		temp[i][dimensionParam+1]=double(hv[i]);
+		}
+	
+	/* Perform Gaussian elimination with column pivoting on the extended matrix: */
+	gaussElimination<dimensionParam,dimensionParam+2>(temp);
+	
+	/* Return the result homogenuous vector: */
+	HV result;
+	result[dimensionParam]=hv[dimensionParam];
+	for(int i=dimensionParam-1;i>=0;--i)
+		{
+		for(int j=i+1;j<dimensionParam;++j)
+			temp[i][dimensionParam+1]-=temp[i][j]*temp[j][dimensionParam+1];
+		temp[i][dimensionParam+1]-=temp[i][dimensionParam]*double(hv[dimensionParam]);
+		temp[i][dimensionParam+1]/=temp[i][i];
+		result[i]=ScalarParam(temp[i][dimensionParam+1]);
+		}
+	return result;
+	}
+
+template <class ScalarParam>
+inline
+typename AffineTransformationOperations<ScalarParam,3>::V
+AffineTransformationOperations<ScalarParam,3>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,3>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,3>::V& v)
+	{
+	double sub[3][3];
+	calcSubdeterminants(m,sub);
+	double det=double(m(0,0))*sub[0][0]+double(m(1,0))*sub[1][0]+double(m(2,0))*sub[2][0];
+	
+	return V(ScalarParam((sub[0][0]*double(v[0])+sub[1][0]*double(v[1])+sub[2][0]*double(v[2]))/det),
+	         ScalarParam((sub[0][1]*double(v[0])+sub[1][1]*double(v[1])+sub[2][1]*double(v[2]))/det),
+	         ScalarParam((sub[0][2]*double(v[0])+sub[1][2]*double(v[1])+sub[2][2]*double(v[2]))/det));
+	}
+
+template <class ScalarParam>
+inline
+typename AffineTransformationOperations<ScalarParam,3>::P
+AffineTransformationOperations<ScalarParam,3>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,3>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,3>::P& p)
+	{
+	double sub[3][3];
+	calcSubdeterminants(m,sub);
+	double det=double(m(0,0))*sub[0][0]+double(m(1,0))*sub[1][0]+double(m(2,0))*sub[2][0];
+	
+	double temp[3];
+	for(int i=0;i<3;++i)
+		temp[i]=double(p[i])-double(m(i,3));
+	
+	return P(ScalarParam((sub[0][0]*temp[0]+sub[1][0]*temp[1]+sub[2][0]*temp[2])/det),
+	         ScalarParam((sub[0][1]*temp[0]+sub[1][1]*temp[1]+sub[2][1]*temp[2])/det),
+	         ScalarParam((sub[0][2]*temp[0]+sub[1][2]*temp[1]+sub[2][2]*temp[2])/det));
+	}
+
+template <class ScalarParam>
+inline
+typename AffineTransformationOperations<ScalarParam,3>::HV
+AffineTransformationOperations<ScalarParam,3>::inverseTransform(
+	const typename AffineTransformationOperations<ScalarParam,3>::M& m,
+	const typename AffineTransformationOperations<ScalarParam,3>::HV& hv)
+	{
+	double sub[3][3];
+	calcSubdeterminants(m,sub);
+	double det=double(m(0,0))*sub[0][0]+double(m(1,0))*sub[1][0]+double(m(2,0))*sub[2][0];
+	
+	double temp[3];
+	for(int i=0;i<3;++i)
+		temp[i]=double(hv[i])-double(m(i,3))*double(hv[3]);
+	
+	return HV(ScalarParam((sub[0][0]*temp[0]+sub[1][0]*temp[1]+sub[2][0]*temp[2])/det),
+	          ScalarParam((sub[0][1]*temp[0]+sub[1][1]*temp[1]+sub[2][1]*temp[2])/det),
+	          ScalarParam((sub[0][2]*temp[0]+sub[1][2]*temp[1]+sub[2][2]*temp[2])/det),
+	          hv[3]);
+	}
+
+/*****************************************************
+Helper class to calculate inverse of n x (n+1) matrix:
+*****************************************************/
+
+namespace {
+
+template <class ScalarParam,int dimensionParam>
+class MatrixInverter
+	{
+	/* Methods: */
+	public:
+	inline static void invertInPlace(Matrix<ScalarParam,dimensionParam,dimensionParam+1>& matrix)
+		{
+		/* Create the extended matrix: */
+		double temp[dimensionParam][(dimensionParam+1)*2];
+		for(int i=0;i<dimensionParam;++i)
+			for(int j=0;j<=dimensionParam;++j)
+				{
+				temp[i][j]=matrix(i,j);
+				temp[i][dimensionParam+1+j]=i==j?1.0:0.0;
+				}
+		
+		/* Perform Gaussian elimination with column pivoting on the extended matrix: */
+		gaussElimination<dimensionParam,(dimensionParam+1)*2>(temp);
+		
+		/* Calculate the result matrix: */
+		for(int i=dimensionParam-1;i>=0;--i)
+			{
+			for(int j=0;j<dimensionParam;++j)
+				{
+				for(int k=i+1;k<dimensionParam;++k)
+					temp[i][dimensionParam+1+j]-=temp[i][k]*temp[k][dimensionParam+1+j];
+				temp[i][dimensionParam+1+j]/=temp[i][i];
+				matrix(i,j)=ScalarParam(temp[i][dimensionParam+1+j]);
+				}
+			temp[i][2*dimensionParam+1]-=temp[i][dimensionParam];
+			for(int k=i+1;k<dimensionParam;++k)
+				temp[i][2*dimensionParam+1]-=temp[i][k]*temp[k][2*dimensionParam+1];
+			temp[i][2*dimensionParam+1]/=temp[i][i];
+			matrix(i,dimensionParam)=ScalarParam(temp[i][2*dimensionParam+1]);
+			}
+		}
+	};
+
+template <class ScalarParam>
+class MatrixInverter<ScalarParam,2>
+	{
+	/* Methods: */
+	public:
+	inline static void invertInPlace(Matrix<ScalarParam,2,3>& matrix)
+		{
+		/* Copy the matrix: */
+		double m[2][3];
+		for(int i=0;i<2;++i)
+			for(int j=0;j<=2;++j)
+				m[i][j]=double(matrix(i,j));
+		
+		/* Calculate the matrix' determinant: */
+		double det=m[0][0]*m[1][1]-m[1][0]*m[0][1];
+		
+		/* Calculate the inverse using Kramer's rule: */
+		matrix(0,0)=ScalarParam(m[1][1]/det);
+		matrix(0,1)=ScalarParam(-m[0][1]/det);
+		matrix(0,2)=ScalarParam((m[0][1]*m[1][2]-m[1][1]*m[0][2])/det);
+		matrix(1,0)=ScalarParam(-m[1][0]/det);
+		matrix(1,1)=ScalarParam(m[0][0]/det);
+		matrix(1,2)=ScalarParam((m[1][0]*m[0][2]-m[0][0]*m[1][2])/det);
+		}
+	};
+
+template <class ScalarParam>
+class MatrixInverter<ScalarParam,3>
+	{
+	/* Methods: */
+	public:
+	inline static void invertInPlace(Matrix<ScalarParam,3,4>& matrix)
+		{
+		/* Copy the matrix: */
+		double m[3][4];
+		for(int i=0;i<3;++i)
+			for(int j=0;j<=3;++j)
+				m[i][j]=double(matrix(i,j));
+		
+		/* Calculate the matrix' subdeterminants: */
+		double sub[3][3];
+		sub[0][0]=m[1][1]*m[2][2]-m[2][1]*m[1][2];
+		sub[0][1]=m[1][2]*m[2][0]-m[2][2]*m[1][0];
+		sub[0][2]=m[1][0]*m[2][1]-m[2][0]*m[1][1];
+		sub[1][0]=m[2][1]*m[0][2]-m[0][1]*m[2][2];
+		sub[1][1]=m[2][2]*m[0][0]-m[0][2]*m[2][0];
+		sub[1][2]=m[2][0]*m[0][1]-m[0][0]*m[2][1];
+		sub[2][0]=m[0][1]*m[1][2]-m[1][1]*m[0][2];
+		sub[2][1]=m[0][2]*m[1][0]-m[1][2]*m[0][0];
+		sub[2][2]=m[0][0]*m[1][1]-m[1][0]*m[0][1];
+		
+		/* Calculate the matrix' determinant: */
+		double det=m[0][0]*sub[0][0]+m[1][0]*sub[1][0]+m[2][0]*sub[2][0];
+		
+		/* Calculate the inverse using Kramer's rule: */
+		for(int i=0;i<3;++i)
+			{
+			double sum=0.0;
+			for(int j=0;j<3;++j)
+				{
+				matrix(i,j)=ScalarParam(sub[j][i]/det);
+				sum-=sub[j][i]*m[j][3];
+				}
+			matrix(i,3)=ScalarParam(sum/det);
+			}
+		}
+	};
+
+}
+
+/*********************************************
+Static elements of class AffineTransformation:
+*********************************************/
+
+template <class ScalarParam,int dimensionParam>
+const int AffineTransformation<ScalarParam,dimensionParam>::dimension;
+template <class ScalarParam,int dimensionParam>
+const AffineTransformation<ScalarParam,dimensionParam> AffineTransformation<ScalarParam,dimensionParam>::identity; // Default constructor created identity transformation!
+
+/*************************************
+Methods of class AffineTransformation:
+*************************************/
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const TranslationTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const RotationTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const OrthonormalTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const UniformScalingTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const OrthogonalTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class SourceScalarParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>::AffineTransformation(
+	const ScalingTransformation<SourceScalarParam,dimensionParam>& source)
+	:matrix(Scalar(1))
+	{
+	source.writeMatrix(matrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>
+AffineTransformation<ScalarParam,dimensionParam>::rotateAround(
+	const typename AffineTransformation<ScalarParam,dimensionParam>::Point& pivot,
+	const typename AffineTransformation<ScalarParam,dimensionParam>::Rotation& sRotation)
+	{
+	Matrix sMatrix=Matrix::one;
+	sRotation.writeMatrix(sMatrix);
+	for(int i=0;i<dimension;++i)
+		{
+		sMatrix(i,dimension)=pivot[i];
+		for(int j=0;j<dimensionParam;++j)
+			sMatrix(i,dimension)-=sMatrix(i,j)*pivot[j];
+		}
+	return AffineTransformation(sMatrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>
+AffineTransformation<ScalarParam,dimensionParam>::scaleAround(
+	const typename AffineTransformation<ScalarParam,dimensionParam>::Point& pivot,
+	typename AffineTransformation<ScalarParam,dimensionParam>::Scalar sScaling)
+	{
+	Matrix sMatrix=Matrix::one;
+	for(int i=0;i<dimension;++i)
+		sMatrix(i,i)=sScaling;
+	for(int i=0;i<dimension;++i)
+		sMatrix(i,dimension)=pivot[i]-sScaling*pivot[i];
+	return AffineTransformation(sMatrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>
+AffineTransformation<ScalarParam,dimensionParam>::scaleAround(
+	const typename AffineTransformation<ScalarParam,dimensionParam>::Point& pivot,
+	const typename AffineTransformation<ScalarParam,dimensionParam>::Scale& sScaling)
+	{
+	Matrix sMatrix=Matrix::one;
+	for(int i=0;i<dimension;++i)
+		sMatrix(i,i)=sScaling[i];
+	for(int i=0;i<dimension;++i)
+		sMatrix(i,dimension)=pivot[i]-sScaling[i]*pivot[i];
+	return AffineTransformation(sMatrix);
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>&
+AffineTransformation<ScalarParam,dimensionParam>::operator*=(
+	const AffineTransformation<ScalarParam,dimensionParam>& other)
+	{
+	Scalar temp[dimension][dimension+1];
+	for(int i=0;i<dimension;++i)
+		{
+		for(int j=0;j<dimension;++j)
+			{
+			temp[i][j]=Scalar(0);
+			for(int k=0;k<dimension;++k)
+				temp[i][j]+=matrix(i,k)*other.matrix(k,j);
+			}
+		temp[i][dimension]=matrix(i,dimension);
+		for(int k=0;k<dimension;++k)
+			temp[i][dimension]+=matrix(i,k)*other.matrix(k,dimension);
+		}
+	for(int i=0;i<dimension;++i)
+		for(int j=0;j<=dimension;++j)
+			matrix(i,j)=temp[i][j];
+	return *this;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>&
+AffineTransformation<ScalarParam,dimensionParam>::leftMultiply(
+	const AffineTransformation<ScalarParam,dimensionParam>& other)
+	{
+	Scalar temp[dimension][dimension+1];
+	for(int i=0;i<dimension;++i)
+		{
+		for(int j=0;j<dimension;++j)
+			{
+			temp[i][j]=Scalar(0);
+			for(int k=0;k<dimension;++k)
+				temp[i][j]+=other.matrix(i,k)*matrix(k,j);
+			}
+		temp[i][dimension]=other.matrix(i,dimension);
+		for(int k=0;k<dimension;++k)
+			temp[i][dimension]+=other.matrix(i,k)*matrix(k,dimension);
+		}
+	for(int i=0;i<dimension;++i)
+		for(int j=0;j<=dimension;++j)
+			matrix(i,j)=temp[i][j];
+	return *this;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>
+operator*(
+	const AffineTransformation<ScalarParam,dimensionParam>& t1,
+	const AffineTransformation<ScalarParam,dimensionParam>& t2)
+	{
+	AffineTransformation<ScalarParam,dimensionParam> result;
+	for(int i=0;i<dimensionParam;++i)
+		{
+		for(int j=0;j<dimensionParam;++j)
+			{
+			ScalarParam sum(0);
+			for(int k=0;k<dimensionParam;++k)
+				sum+=t1.matrix(i,k)*t2.matrix(k,j);
+			result.matrix(i,j)=sum;
+			}
+		ScalarParam sum=t1.matrix(i,dimensionParam);
+		for(int k=0;k<dimensionParam;++k)
+			sum+=t1.matrix(i,k)*t2.matrix(k,dimensionParam);
+		result.matrix(i,dimensionParam)=sum;
+		}
+	return result;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>&
+AffineTransformation<ScalarParam,dimensionParam>::doInvert(
+	void)
+	{
+	MatrixInverter<Scalar,dimension>::invertInPlace(matrix);
+	
+	return *this;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+AffineTransformation<ScalarParam,dimensionParam>
+invert(
+	const AffineTransformation<ScalarParam,dimensionParam>& t)
+	{
+	AffineTransformation<ScalarParam,dimensionParam> result=t;
+	MatrixInverter<ScalarParam,dimensionParam>::invertInPlace(result.matrix);
+	
+	return result;
+	}
+
+}

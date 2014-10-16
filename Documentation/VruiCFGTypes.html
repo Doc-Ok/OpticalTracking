@@ -1,0 +1,209 @@
+<HTML>
+<HEAD>
+<TITLE>Vrui Configuration File Settings Value Type Reference</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Vrui Configuration File Settings Value Type Reference</H1>
+
+This document defines all value types used in Vrui configuration files.<P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Type Name</TH><TH>Description</TH></TR>
+
+<TR>
+<TD><A NAME="boolean">boolean</A></TD>
+<TD>Logical value; can be set to the literals <B>true</B> or <B>false</B>.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="enumerant">enumerant</A></TD>
+<TD>One out of a fixed set of possible choices, expressed as literals. Allowed literal values are listed in the setting's description.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="keyname">key name</A></TD>
+<TD>Name of a key on the keyboard, expressed as a literal. Labeled keys have their own names, and the following "special" key names are recognized: <B>Space</B>, <B>Tab</B>, <B>Return</B>, <B>Backspace</B>, <B>Left</B>, <B>Up</B>, <B>Right</B>, <B>Down</B>, <B>PageUp</B>, <B>PageDown</B>, <B>Home</B>, <B>End</B>, <B>Insert</B>, <B>Delete</B>, <B>Num0</B>, <B>Num1</B>, <B>Num2</B>, <B>Num3</B>, <B>Num4</B>, <B>Num5</B>, <B>Num6</B>, <B>Num7</B>, <B>Num8</B>, <B>Num9</B>, <B>Num/</B>, <B>Num*</B>, <B>Num-</B>, <B>Num+</B>, <B>NumEnter</B>, <B>NumSep</B>, <B>LeftShift</B>, <B>RightShift</B>, <B>CapsLock</B>, <B>LeftCtrl</B>, <B>RightCtrl</B>, <B>LeftAlt</B>, <B>RightAlt</B>, <B>LeftMeta</B>, <B>RightMeta</B>, <B>LeftSuper</B>, <B>RightSuper</B>, <B>LeftHyper</B>, <B>RightHyper</B>, <B>F1</B>, <B>F2</B>, <B>F3</B>, <B>F4</B>, <B>F5</B>, <B>F6</B>, <B>F7</B>, <B>F8</B>, <B>F9</B>, <B>F10</B>, <B>F11</B>, <B>F12</B>, <B>Esc</B>, <B>Print</B>, <B>ScrollLock</B>, <B>Pause</B>, <B>Menu</B>.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="qualifiedkeyname">qualified key name</A></TD>
+<TD>Name identifying a combination of a keyboard key and a set of currently pressed modifier keys, expressed as a sequence of any number of modifier key names followed by a non-modifier key name, separated by plus signs (<B>+</B>). Supported modifier key names are <B>Shift</B>, <B>Ctrl</B>, <B>Alt</B>, <B>Meta</B>, <B>Super</B>, <B>Hyper</B>.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="integer">integer</A></TD>
+<TD>Positive or negative integer number. Consists of an optional plus or minus sign, followed by a sequence of at least one decimal digits.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="number">number</A></TD>
+<TD>Positive or negative floating-point number. Consists of an optional plus or minus sign, followed by a sequence of at least one decimal digit defining the number's integer part, and an optional dot followed by a sequence of at least one decimal digits defining the number's fractional part.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="string">string</A></TD>
+<TD>A sequence of characters enclosed in double quotes. Strings support C-style escape sequences using the backslash escape charater; e.g., \t gets translated to a TAB character, \" is a double quote, and \\ is a backslash. If a string only contains letters, digits, underscores, or escape sequences, the quotes are optional.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="list">list</A></TD>
+<TD>A list of values of another arbitrary setting value type. A list is encoded as a pair of parentheses containing a comma-separated list of an arbitrary number of values.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="point">point</A></TD>
+<TD>A point in 3D affine space, encoded as a <A HREF="#list">list</A> of exactly three <A HREF="#number">numbers</A> (x, y, and z components).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="vector">vector</A></TD>
+<TD>A vector in 3D affine space, encoded as a <A HREF="#list">list</A> of exactly three <A HREF="#number">numbers</A> (x, y, and z components).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="plane">plane</A></TD>
+<TD>An oriented plane (half-space) in 3D affine space, encoded as a <A HREF="#vector">vector</A> (non-normalized normal vector) followed by a comma and a <A HREF="#number">number</A> (origin distance in terms of normal vector length).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="matrix">3x3 matrix</A></TD>
+<TD>A projective transformation in 2D projective space, encoded as a <A HREF="#list">list</A> of exactly three <A HREF="#vector">vectors</A>, which are interpreted as the matrix' column vectors.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="trackerstate">tracker state</A></TD>
+<TD>
+A position and orientation in 3D affine space, encoded as a sequence of basic transformations separated by multiplication signs. The basic transformations are:
+<DL>
+<DT><B>identity</B></DT>
+<DD>Denotes an identity transformation.</DD>
+
+<DT><B>translate</B> &lt;<EM>translation</EM>&gt;</DT>
+<DD>Translates the coordinate system by the given translation <A HREF="#vector">vector</A>.</DD>
+
+<DT><B>rotate</B> &lt;<EM>axis</EM>&gt;<B>,</B> &lt;<EM>angle</EM>&gt;</DT>
+<DD>Rotates the coordinate system about its own origin around the given non-normalized axis <A HREF="#vector">vector</A>, by the given angle <A HREF="#number">number</A> in degrees.</DD>
+
+<DT><B>rotateAround</B> &lt;<EM>pivot</EM>&gt;<B>,</B> &lt;<EM>axis</EM>&gt;<B>,</B> &lt;<EM>angle</EM>&gt;</DT>
+<DD>Rotates the coordinate system about the given pivot <A HREF="#point">point</A> around the given non-normalized axis <A HREF="#vector">vector</A>, by the given angle <A HREF="#number">number</A> in degrees.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD><A NAME="ogtransform">orthogonal transformation</A></TD>
+<TD>
+A transformation consisting of any combination of translations, rotations, and uniform scalings, encoded as a sequence of basic transformations separated by multiplication signs. The basic transformations are:
+<DL>
+<DT><B>identity</B></DT>
+<DD>Denotes an identity transformation.</DD>
+
+<DT><B>translate</B> &lt;<EM>translation</EM>&gt;</DT>
+<DD>Translates the coordinate system by the given translation <A HREF="#vector">vector</A>.</DD>
+
+<DT><B>rotate</B> &lt;<EM>axis</EM>&gt;<B>,</B> &lt;<EM>angle</EM>&gt;</DT>
+<DD>Rotates the coordinate system about its own origin around the given non-normalized axis <A HREF="#vector">vector</A>, by the given angle <A HREF="#number">number</A> in degrees.</DD>
+
+<DT><B>rotateAround</B> &lt;<EM>pivot</EM>&gt;<B>,</B> &lt;<EM>axis</EM>&gt;<B>,</B> &lt;<EM>angle</EM>&gt;</DT>
+<DD>Rotates the coordinate system about the given pivot <A HREF="#point">point</A> around the given non-normalized axis <A HREF="#vector">vector</A>, by the given angle <A HREF="#number">number</A> in degrees.</DD>
+
+<DT><B>scale</B> &lt;<EM>factor</EM>&gt;</DT>
+<DD>Scales the coordinate system about its own origin by the scaling factor <A HREF="#number">number</A>.</DD>
+
+<DT><B>scaleAround</B> &lt;<EM>pivot</EM>&gt;<B>,</B> &lt;<EM>factor</EM>&gt;</DT>
+<DD>Scales the coordinate system about the given pivot <A HREF="#point">point</A> by the scaling factor <A HREF="#number">number</A>.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD><A NAME="atransform">affine transformation</A></TD>
+<TD>An affine transformation in 3D affine space, encoded as a <A HREF="#list">list</A> of exactly four <A HREF="#vector">vectors</A>, which are interpreted as the column vectors of the transformation's 3x4 matrix.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="color">color</A></TD>
+<TD>An RGB color with opacity component, encoded as a <A HREF="#list">list</A> of three or four <A HREF="#number">numbers</A> (red, green, blue, and (optional) opacity components, scaled from 0.0 to&nbsp;1.0). If the opacity component is missing, it is initialized to 1.0.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="material">material</A></TD>
+<TD>An OpenGL material property, encoded as a pair of curly braces containing a sequence of semicolon-terminated component settings. Omitted components are set to the OpenGL default values. The available component settings are:
+<DL>
+<DT><B>Ambient&nbsp;=</B> &lt;<EM>ambient color</EM>&gt;</DT><DD>Ambient <A HREF="#color">color</A> of the material.</DD>
+
+<DT><B>Diffuse&nbsp;=</B> &lt;<EM>diffuse color</EM>&gt;</DT><DD>Diffuse <A HREF="#color">color</A> of the material.</DD>
+
+<DT><B>AmbientDiffuse&nbsp;=</B> &lt;<EM>ambient and diffuse color</EM>&gt;</DT><DD>Ambient and diffuse <A HREF="#color">color</A> of the material.</DD>
+
+<DT><B>Specular&nbsp;=</B> &lt;<EM>specular color</EM>&gt;</DT><DD>Specular <A HREF="#color">color</A> of the material.</DD>
+
+<DT><B>Shininess&nbsp;=</B> &lt;<EM>shininess</EM>&gt;</DT><DD>Shininess exponent <A HREF="#number">number</A> of the material.</DD>
+
+<DT><B>Emission&nbsp;=</B> &lt;<EM>emissive color</EM>&gt;</DT><DD>Emissive <A HREF="#color">color</A> of the material.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD><A NAME="glyphtype">glyph type</A></TD>
+<TD>
+Type of a 3D icon, encoded as a literal. Available values:
+<DL>
+<DT><B>None</B></DT><DD>No icon.</DD>
+
+<DT><B>Cone</B></DT><DD>A cone with the apex at the origin, oriented along the y&nbsp;axis.</DD>
+
+<DT><B>Cube</B></DT><DD>A cube centered around the origin.</DD>
+
+<DT><B>Sphere</B></DT><DD>A sphere centered around the origin.</DD>
+
+<DT><B>Crossball</B></DT><DD>A sphere centered around the origin, with three cylinders oriented along the x, y, and z axes, respectively.</DD>
+
+<DT><B>Box</B></DT><DD>A "wireframe" box composed of oblong rectangles as edges and cubes as vertices.</DD>
+
+<DT><B>Cursor</B></DT><DD>A regular 2D mouse cursor, projected onto the screen directly behind the input device from the eye position.</DD>
+</DL>
+</TD>
+</TR>
+
+<TR>
+<TD><A NAME="screenprotector">screen protector</A></TD>
+<TD>Description of a sphere around an input device that triggers a visual alarm when touching a protected display screen. Encoded as a set of parentheses containing a <A HREF="#string">string</A> (the name of an input device), followed by a comma and a <A HREF="#point">point</A> (the center of the sphere in the device's coordinate system), followed by a comma and a <A HREF="#number">number</A> (the radius of the sphere).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="windowpoint">window point</A></TD>
+<TD>A point in 2D window space, encoded as a <A HREF="#list">list</A> of exactly two <A HREF="#number">numbers</A> (x and y components, scaled from 0.0 to&nbsp;1.0).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="windowsize">window size</A></TD>
+<TD>The size of a display window in pixel units, encoded as a <A HREF="#list">list</A> of exactly two <A HREF="#integer">integers</A>.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="windowposition">window position</A></TD>
+<TD>The position and size of a display window in pixel units, encoded as a <A HREF="#list">list</A> of exactly two <A HREF="#integer">integers</A> (window position), followed by a comma and a <A HREF="#list">list</A> of exactly two <A HREF="#integer">integers</A> (window size).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="axissetting">axis value mapper</A></TD>
+<TD>Defines a mapping from a device's raw absolute or relative axis values to the range [-1, 1] used by Vrui, using a &quot;broken line&quot; model. Encoded as a list of exactly four <A HREF="#number">numbers</A>: the raw value mapped to -1, a pair of raw values defining a &quot;flat zone&quot; such that all raw values between the first and second are mapped to zero, and the raw value mapped to 1.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="axisdescriptor">axis descriptor</A></TD>
+<TD>Mapping from a tool valuator to a translational or rotational axis on a navigation tool. Encoded as a pair of parentheses containing an <A HREF="#integer">integer</A> (the index of the mapped valuator), followed by a comma and a <A HREF="#vector">vector</A> (the rotation axis or translation vector).</TD>
+</TR>
+
+<TR>
+<TD><A NAME="featureassignment">feature assignment</A></TD>
+<TD>A list of input device features (buttons or valuators) to use in a tool binding. Encoded as an opening parenthesis, followed by a <A HREF="#string">string</A> defining the name of the input device containing all following features, followed by a comma, followed by an arbitrary number of comma-separated <A HREF="integer">strings</A> defining the names of the button or valuator features on the input device to be used in a binding, followed by a closing parenthesis.</TD>
+</TR>
+</TABLE>
+
+</BODY>
+</HTML>

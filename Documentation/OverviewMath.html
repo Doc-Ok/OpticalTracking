@@ -1,0 +1,47 @@
+<HTML>
+<HEAD>
+<TITLE>Math -- Mathematics Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Math&nbsp;-- Mathematics Library</H1>
+
+The Math library contains functions providing overloaded entry points for the standard C math library and convenient ways to generate random numbers, and classes providing type-safe ways to get math constants and numerical type limits.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Math.h</DT>
+<DD>Math.h contains overloaded entry points for standard C math functions, and some convenience functions.</DD>
+
+<DT>Constants.h</DT>
+<DD>Constants.h defines a generic class Constants containing numerical limits of atomic types and mathematical constants for floating-point types.</DD>
+
+<DT>Interval.h</DT>
+<DD>Interval is a class representing fully closed intervals, templatized by the underlying scalar type. Interval provides constructors, comparison operators, set arithmetic on intervals, and some interval arithmetic operators.</DD>
+
+<DT>Matrix.h</DT>
+<DD>Matrix is a class representing double-valued matrices of dynamic sizes, and a general set of linear algebra operations.</DD>
+
+<DT>Random.h</DT>
+<DD>Random.h contains convenience functions to create random numbers of different distributions.</DD>
+
+<DT>Noise.h</DT>
+<DD>Noise is a class implementing Ken Perlin's improved 3D band-limited noise function, following his 2002 SIGGRAPH paper. The static Noise::noise method is templatized by scalar type. Client code can #define MATH_NOISE_NONSTANDARD_TEMPLATES to inline the noise method, for a small speed boost.</DD>
+
+<DT>BrokenLine.h</DT>
+<DD>BrokenLine is a class describing constant piecewise linear mappings from a source interval to the interval [-1, 1] using a &quot;broken line&quot; model with two linear ramps and a flat &quot;dead zone&quot; in the middle.</DD>
+
+<DT>Histogram.h</DT>
+<DD>Histogram is a class to represent histograms of values of arbitrary scalar types.</DD>
+
+<DT>MathMarshallers.h</DT>
+<DD>MathMarshallers contains specializations of the Misc::Marshaller templatized class for objects from the Math library.</DD>
+
+<DT>MathValueCoders.h</DT>
+<DD>MathValueCoders contains specializations of the Misc::ValueCoder templatized class for objects from the Math library.</DD>
+</DL>
+
+</BODY>
+</HTML>

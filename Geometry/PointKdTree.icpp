@@ -1,0 +1,482 @@
+/***********************************************************************
+PointKdTree - Class to store k-dimensional points in a kd-tree.
+Copyright (c) 2003-2010 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_POINTKDTREE_IMPLEMENTATION
+
+#include <Geometry/PointKdTree.h>
+
+#include <Misc/Utility.h>
+#include <Misc/PriorityHeap.h>
+#include <Math/Constants.h>
+
+namespace Geometry {
+
+namespace {
+
+/*****************
+Utility functions:
+*****************/
+
+template <class PointParam>
+inline
+void
+sortPoints(
+	int numPoints,
+	PointParam points[],
+	int sortDimension)
+	{
+	if(numPoints>1)
+		{
+		/* Find the point array's median along the split dimension: */
+		typename PointParam::Scalar median=points[numPoints/2-1][sortDimension];
+
+		/* Perform one Quicksort-like sweep of the array to separate it into left and right: */
+		int l=0;
+		int r=numPoints-1;
+		while(true)
+			{
+			while(l<numPoints&&points[l][sortDimension]<median)
+				++l;
+			while(r>=0&&points[r][sortDimension]>median)
+				--r;
+			if(l<r)
+				{
+				Misc::swap(points[l],points[r]);
+				++l;
+				--r;
+				}
+			else
+				break;
+			}
+		
+		/* Recurse on the left and right arrays: */
+		sortPoints(r+1,points,sortDimension);
+		sortPoints(numPoints-(r+1),points+(r+1),sortDimension);
+		}
+	}
+
+template <class ScalarParam,class PointParam>
+inline
+ScalarParam
+findMedian(
+	int numPoints,
+	PointParam points[],
+	int sortDimension,
+	ScalarParam heap[])
+	{
+	/* Create heap from array of points: */
+	for(int heapSize=0;heapSize<numPoints;++heapSize)
+		{
+		/* Add next point to heap: */
+		heap[heapSize]=points[heapSize][sortDimension];
+		int element=heapSize;
+		while(element>0)
+			{
+			/* Enforce heap property locally at element: */
+			int parent=element>>1;
+			if(heap[parent]<=heap[element]) // Heap property already valid?
+				break; // Done
+			
+			/* Swap elements element and parent: */
+			Misc::swap(heap[parent],heap[element]);
+			
+			/* Move up the heap: */
+			element=parent;
+			}
+		}
+	
+	/* Remove the numPoints/2 smallest elements from the heap: */
+	int endHeapSize=numPoints>>1;
+	for(int heapSize=numPoints-1;heapSize>endHeapSize;--heapSize)
+		{
+		/* Move last element in heap to top of heap: */
+		heap[0]=heap[heapSize];
+		
+		/* Enforce heap property locally while moving down the heap: */
+		int parent=0;
+		while(true)
+			{
+			/* Find smallest element in parent's heap triple: */
+			int min=parent;
+			int left=parent<<1;
+			if(left<heapSize&&heap[left]<heap[min])
+				min=left;
+			int right=left+1;
+			if(right<heapSize&&heap[right]<heap[min])
+				min=right;
+			
+			if(min==parent) // Heap already in order
+				break; // Done
+			
+			/* Swap smallest element with parent: */
+			Misc::swap(heap[parent],heap[min]);
+			
+			/* Move down the heap: */
+			parent=min;
+			}
+		}
+	
+	/* Median element is now first element in heap: */
+	return heap[0];
+	}
+
+}
+
+/******************************************
+Static elements of class PointKdTree::Node:
+******************************************/
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+Misc::PoolAllocator<typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Node> PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Node::nodeAllocator;
+
+/**********************************
+Methods of class PointKdTree::Node:
+**********************************/
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Node::Node(
+	int numPoints,
+	typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::StoredPoint points[],
+	int splitDimension,
+	typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Scalar heap[])
+	:left(0),right(0)
+	{
+	/* Find median of point coordinates: */
+	int nodeIndex=(numPoints-1)/2;
+	Scalar median=findMedian(numPoints,points,splitDimension,heap);
+	
+	/* Split array into left and right points using one (modified) Quicksort sweep: */
+	int l=0;
+	int r=numPoints-1;
+	while(true)
+		{
+		while(l<numPoints&&points[l][splitDimension]<median)
+			++l;
+		while(r>=0&&points[r][splitDimension]>=median)
+			--r;
+		
+		if(l>r)
+			break;
+		
+		Misc::swap(points[l],points[r]);
+		++l;
+		--r;
+		}
+	r=numPoints-1;
+	while(true)
+		{
+		while(l<numPoints&&points[l][splitDimension]==median)
+			++l;
+		while(r>=0&&points[r][splitDimension]>median)
+			--r;
+		
+		if(l>r)
+			break;
+		
+		Misc::swap(points[l],points[r]);
+		++l;
+		--r;
+		}
+	
+	/* Store element nodeIndex in this node: */
+	point=points[nodeIndex];
+	
+	/* Create left and right subtrees: */
+	++splitDimension;
+	if(splitDimension==dimension)
+		splitDimension=0;
+	if(nodeIndex>0)
+		left=new Node(nodeIndex,points,splitDimension,heap);
+	if(nodeIndex<numPoints-1)
+		right=new Node(numPoints-(nodeIndex+1),points+(nodeIndex+1),splitDimension,heap);
+	}
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+void
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Node::insertPoint(
+	const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::StoredPoint& newPoint,
+	int splitDimension)
+	{
+	if(newPoint[splitDimension]<point[splitDimension])
+		{
+		/* Insert point in left subtree: */
+		if(left!=0)
+			{
+			++splitDimension;
+			if(splitDimension==dimension)
+				splitDimension=0;
+			left->insertPoint(newPoint,splitDimension);
+			}
+		else
+			left=new Node(newPoint);
+		}
+	else
+		{
+		/* Insert point in right subtree: */
+		if(right!=0)
+			{
+			++splitDimension;
+			if(splitDimension==dimension)
+				splitDimension=0;
+			right->insertPoint(newPoint,splitDimension);
+			}
+		else
+			right=new Node(newPoint);
+		}
+	}
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::TreeStats
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Node::getTreeStatistics(
+	void) const
+	{
+	TreeStats result;
+	result.numNodes=1;
+	result.depth=0;
+	
+	if(left!=0)
+		{
+		TreeStats leftStats=left->getTreeStatistics();
+		result.numNodes+=leftStats.numNodes;
+		if(result.depth<leftStats.depth+1)
+			result.depth=leftStats.depth+1;
+		}
+	
+	if(right!=0)
+		{
+		TreeStats rightStats=right->getTreeStatistics();
+		result.numNodes+=rightStats.numNodes;
+		if(result.depth<rightStats.depth+1)
+			result.depth=rightStats.depth+1;
+		}
+	
+	return result;
+	}
+
+/****************************
+Methods of class PointKdTree:
+****************************/
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::TreeStats
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::getTreeStatistics(
+	void) const
+	{
+	if(root!=0)
+		return root->getTreeStatistics();
+	else
+		{
+		TreeStats result;
+		result.numNodes=0;
+		result.depth=-1;
+		return result;
+		}
+	}
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::StoredPoint&
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::findClosePoint(
+	const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Point& queryPosition) const
+	{
+	const Node* nPtr=root;
+	int splitDimension=0;
+	while(true)
+		{
+		/* Decide which way to go: */
+		if(queryPosition[splitDimension]<nPtr->point[splitDimension])
+			{
+			/* Go left: */
+			if(nPtr->left!=0)
+				nPtr=nPtr->left;
+			else
+				break;
+			}
+		else
+			{
+			/* Go right: */
+			if(nPtr->right!=0)
+				nPtr=nPtr->right;
+			else
+				break;
+			}
+		
+		++splitDimension;
+		if(splitDimension==dimension)
+			splitDimension=0;
+		}
+	
+	return nPtr->point;
+	}
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::StoredPoint&
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::findClosestPoint(
+	const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Point& queryPosition) const
+	{
+	const StoredPoint* resultPtr=0;
+	Scalar bestDist=Math::Constants<Scalar>::max;
+	
+	/* Create a traversal box enclosing the entire space: */
+	Traversal rootTraversal;
+	for(int i=0;i<dimension;++i)
+		{
+		rootTraversal.min[i]=Math::Constants<Scalar>::min;
+		rootTraversal.max[i]=Math::Constants<Scalar>::max;
+		}
+	rootTraversal.splitDimension=0;
+	
+	/*******************************************************************
+	Setting the queue's start size and size increment to 1024 is a hack.
+	We need some intelligent method to determine a good initial size -
+	some algorithm analysis is in order!
+	*******************************************************************/
+	
+	/* Create a priority queue to traverse closest nodes first: */
+	Misc::PriorityHeap<QueueEntry> queue(1024);
+	
+	/* Put the root node into the queue: */
+	queue.insert(QueueEntry(root,rootTraversal,queryPosition));
+	while(!queue.isEmpty())
+		{
+		/* Get the next element from the queue: */
+		QueueEntry entry=queue.getSmallest();
+		
+		if(entry.minDist>=bestDist) // Early termination - the closest entry is already too far away
+			break;
+		
+		queue.removeSmallest();
+		
+		/* Check the node itself: */
+		Scalar dist=sqrDist(entry.node->point,queryPosition);
+		if(bestDist>dist)
+			{
+			resultPtr=&entry.node->point;
+			bestDist=dist;
+			}
+		
+		/* Traverse its children: */
+		if(entry.node->left!=0)
+			{
+			Traversal leftTraversal=entry.traversal;
+			leftTraversal.max[leftTraversal.splitDimension]=entry.node->point[leftTraversal.splitDimension];
+			++leftTraversal.splitDimension;
+			if(leftTraversal.splitDimension==dimension)
+				leftTraversal.splitDimension=0;
+			QueueEntry newEntry(entry.node->left,leftTraversal,queryPosition);
+			if(newEntry.minDist<bestDist)
+				queue.insert(newEntry);
+			}
+		if(entry.node->right!=0)
+			{
+			Traversal rightTraversal=entry.traversal;
+			rightTraversal.min[rightTraversal.splitDimension]=entry.node->point[rightTraversal.splitDimension];
+			++rightTraversal.splitDimension;
+			if(rightTraversal.splitDimension==dimension)
+				rightTraversal.splitDimension=0;
+			QueueEntry newEntry(entry.node->right,rightTraversal,queryPosition);
+			if(newEntry.minDist<bestDist)
+				queue.insert(newEntry);
+			}
+		}
+	
+	return *resultPtr;
+	}
+
+template <class ScalarParam,int dimensionParam,class StoredPointParam>
+inline
+typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::ClosePointSet&
+PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::findClosestPoints(
+	const typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::Point& queryPosition,
+	typename PointKdTree<ScalarParam,dimensionParam,StoredPointParam>::ClosePointSet& closestPoints) const
+	{
+	/* Clear result point set: */
+	closestPoints.clear();
+	
+	/* Create a traversal box enclosing the entire space: */
+	Traversal rootTraversal;
+	for(int i=0;i<dimension;++i)
+		{
+		rootTraversal.min[i]=Math::Constants<Scalar>::min;
+		rootTraversal.max[i]=Math::Constants<Scalar>::max;
+		}
+	rootTraversal.splitDimension=0;
+	
+	/*******************************************************************
+	Setting the queue's start size and size increment to 1024 is a hack.
+	We need some intelligent method to determine a good initial size -
+	some algorithm analysis is in order!
+	*******************************************************************/
+	
+	/* Create a priority queue to traverse closest nodes first: */
+	Misc::PriorityHeap<QueueEntry> queue(1024);
+	
+	/* Put the root node into the queue: */
+	queue.insert(QueueEntry(root,rootTraversal,queryPosition));
+	while(!queue.isEmpty())
+		{
+		/* Get the next element from the queue: */
+		QueueEntry entry=queue.getSmallest();
+		
+		if(entry.minDist>=closestPoints.getMaxSqrDist()) // Early termination - the closest entry is already too far away
+			break;
+		
+		queue.removeSmallest();
+		
+		/* Check the node itself: */
+		Scalar dist2=sqrDist(entry.node->point,queryPosition);
+		closestPoints.insertPoint(entry.node->point,dist2);
+		
+		/* Traverse its children: */
+		if(entry.node->left!=0)
+			{
+			Traversal leftTraversal=entry.traversal;
+			leftTraversal.max[leftTraversal.splitDimension]=entry.node->point[leftTraversal.splitDimension];
+			++leftTraversal.splitDimension;
+			if(leftTraversal.splitDimension==dimension)
+				leftTraversal.splitDimension=0;
+			QueueEntry newEntry(entry.node->left,leftTraversal,queryPosition);
+			if(newEntry.minDist<closestPoints.getMaxSqrDist())
+				queue.insert(newEntry);
+			}
+		if(entry.node->right!=0)
+			{
+			Traversal rightTraversal=entry.traversal;
+			rightTraversal.min[rightTraversal.splitDimension]=entry.node->point[rightTraversal.splitDimension];
+			++rightTraversal.splitDimension;
+			if(rightTraversal.splitDimension==dimension)
+				rightTraversal.splitDimension=0;
+			QueueEntry newEntry(entry.node->right,rightTraversal,queryPosition);
+			if(newEntry.minDist<closestPoints.getMaxSqrDist())
+				queue.insert(newEntry);
+			}
+		}
+	
+	return closestPoints;
+	}
+
+}

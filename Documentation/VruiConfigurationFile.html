@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<TITLE>The Vrui Configuration File</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>The Vrui Configuration File</H1>
+
+<P>The Vrui configuration file (Vrui.cfg in the installation's etc directory) contains all run-time adjustable settings of the Vrui toolkit, and is how Vrui adapts itself to any VR environment from a desktop system to a high-end VR system like a CAVE. All these environments run the exact same version of the Vrui toolkit and the same applications; they only differ in their configuration file settings.</P>
+
+<P>The Vrui configuration file (from now on referred to as Vrui.cfg) is organized as a tree of named sections, each one containing tag/value pairs (similar to the Windows registry), stored in a human-readable plain text file. Any lines starting with a hash mark (&quot;#&quot;) are considered comments and ignored. Sections inside Vrui.cfg are bracketed by lines containing only &quot;section &lt;name&gt;&quot; and &quot;endsection&quot;, respectively. A tag/value pair is a single line, starting with the tag name and followed by the value string. Multiline value strings can be achieved by ending lines with a single backslash, which will ignore the line break following the backslash, and treat the next line as a continuation of the current one. The format of the value string depends on the data type of the setting associated with the tag; for example, a boolean setting can have &quot;true&quot; or &quot;false&quot; as values, whereas a vector setting has a value string such as &quot;(1.0, -2.0, 0.5)&quot;. String values can be enclosed in double quotes to allow spaces and other special characters. The full set of data types used by all components of the Vrui toolkit is detailed in the <A HREF="VruiCFGTypes.html">Vrui Configuration File Settings Value Type Reference</A>.</P>
+
+<H2>Vrui Initialization</H2>
+
+<P>When the Vrui toolkit initializes itself, it gathers its configuration data from one or more configuration files. First, Vrui loads its system configuration file, which should contain settings defining the layout of the local VR environment, and environment-appropriate user interface bindings. The system configuration file is always called Vrui.cfg, and is usually stored in an etc/ directory inside Vrui's installation directory, such as $HOME/Vrui-&lt;version&gt;/etc or /usr/local/Vrui-&lt;version&gt;/etc, or in /etc/Vrui-&lt;version&gt; for package-managed system-wide Vrui installations. The system configuration file should be adapted by a system administrator to the VR environment(s) available from the local system, and should not be edited by users.</P>
+
+<P>After reading the system configuration file, Vrui merges the contents of any number of additional configuration files into its configuration space. When merging a configuration file, tag/value pairs from a merged file override any previous values of the same tags. As a special function, merged configuration files can append new items to the ends of values of list type by using the special &quot;+=&quot; operator between a tag and the list of new items to append to the tag's previous values. The merging mechanism allows users to adapt parts of Vrui's configuration to their own needs, while still reflecting changes made to configuration files &quot;higher up&quot; in the chain.</P>
+
+<P>First, the Vrui toolkit tries merging a per-user global configuration file. This is always called Vrui.cfg, and stored in a fixed location somewhere in the user's home directory. On Linux, it is stored in $HOME/.config/Vrui-&lt;version&gt;, on Mac OS&nbsp;X, it is stored in $HOME/Library/Preferences/Vrui-&lt;version&gt;. The per-user global configuration file should be used to adapt application-independent settings such as default tool bindings.</P>
+
+<P>Second, the Vrui toolkit tries merging a per-application configuration file. The name and location of this file is defined by the VRUI_CONFIGFILE environment variable, and defaults to ./Vrui.cfg if that environment variable is undefined or empty. In other words, by default the Vrui toolkit tries loading a file called Vrui.cfg in the current directory when a Vrui application is started. Per-application configuration files should, as the name implies, be used to adapt application-specific settings, such as binding application-specific tools, or changing window background color or backplane distance.</P>
+
+<P>Finally, an arbitrary number of additional configuration files can be merged into Vrui's configuration space by listing their names on an application's command line, each one preceded by the -mergeConfig tag. These files are merged in the order in which they are listed on the command line. When parsing a configuration file name to be merged, the Vrui toolkit first appends a &quot;.cfg&quot; suffix to the given name if it doesn't already have that suffix. It then looks for a configuration file of the given name inside the system configuration file directory, merges it if it exists, and then does the same in the per-user configuration directory. Finally, it treats the given configuration file name as a path name starting in the current directory when the Vrui application is started. Command-line merged configuration files are primarily meant to enable optional features of a VR environment, such as additional input or output devices. The Vrui distribution contains several &quot;patch&quot; configuration files in its system configuration directory, to enable features such as joysticks, spaceballs, 3D input devices, or head-mounted displays. For example, to run an application instance on an Oculus Rift HMD with a Razer Hydra 6-DOF input device, one would add -mergeConfig OculusRift -mergeConfig RazerHydra to the application's command line.</P>
+
+<P>In short, the Vrui toolkit establishes its configuration space as follows:
+<OL>
+<LI>Load Vrui.cfg from system configuration directory.</LI>
+
+<LI>Merge Vrui.cfg from per-user configuration directory.</LI>
+
+<LI>If VRUI_CONFIGDIR is set and non-empty, merge file named by VRUI_CONFIGDIR starting from current directory; otherwise, merge Vrui.cfg from current directory.</LI>
+
+<LI>For each file name requested by a -mergeConfig option:
+  <OL>
+  <LI>Append .cfg suffix to name if not already there.</LI>
+	
+  <LI>Merge named file from system configuration directory.</LI>
+	
+  <LI>Merge named file from per-user configuration directory.</LI>
+	
+  <LI>Merge named file starting from current directory.</LI>
+  </OL>
+</LI>
+</OL></P>
+
+<P>After merging all configuration files, Vrui determines the configuration's root section. This root section is always inside the &quot;Vrui&quot; section at the very root of Vrui.cfg, and its name is determined by a sequence of steps:
+<OL>
+<LI>If a -rootSection &lt;name&gt; switch is given on the application's command line, Vrui uses the given name as the root section name.</LI>
+
+<LI>If an environment variable VRUI_ROOTSECTION exists, Vrui uses its value as the root section name.</LI>
+
+<LI>If the &quot;Vrui&quot; section contains a section that has the same name as the local machine name (as defined by the environment variables HOSTNAME or, if HOSTNAME is not defined or empty, HOST), Vrui uses that section as the root section.</LI>
+
+<LI>If all else fails, Vrui uses the &quot;Desktop&quot; section inside the &quot;Vrui&quot; section as the root section</LI>
+</OL>
+This mechanism of selecting root sections supports location-independent development: in a lab setting where users have a single account shared between several desktop systems and several virtual reality environments, they only have to build the Vrui toolkit and their applications once. Each VR environment has its own root section named after the local system in Vrui.cfg, and when an application is started on any pre-configured system, it will find the appropriate settings. In other words, a single application will run in VR mode when started from a VR environment's controlling terminal, and run in desktop mode when started from any &quot;unknown&quot; computer.</P>
+
+<H2>Vrui Configuration Components</H2>
+
+<P>The Vrui toolkit's configuration space defines all aspects of a VR environment, most importantly the screens, viewers, windows, and input devices comprising it (see <A HREF="VruiEnvironmentComponents.html">Components Defining a Vrui VR Environment</A>, but also more user-centric aspects such as default font sizes, interaction parameters, and the set of default tools bound to input devices on application start-up. The full set of configuration settings understood by the Vrui run-time itself, and by all plug-in tool classes, are listed and described in detail in the <A HREF="VruiConfigurationFileReference.html">Vrui Configuration File Settings Reference</A> and <A HREF="VruiToolConfigurationFileReference.html">Vrui Tool Configuration File Settings Reference</A>, respectively.</P>
+
+<P>In general, Vrui's hierarchical configuration space uses explicit referencing. This means that there are no &quot;well-known&quot; subsections, but all subsections to be used are named explicitly via settings somewhere higher up in the hierarchy. The only exception to this rule are the root sections themselves, as described above. For example, in order to configure its tool manager, Vrui's run-time does not look for a subsection called &quot;Tools,&quot; but for a tag called &quot;tools&quot; in the root section. That tag's value is the name of the subsection containing tool manager settings (as it happens, the value of the &quot;tools&quot; tag in Vrui's &quot;Desktop&quot; root section <EM>is</EM> &quot;Tools&quot;, but that's not the point). The rationale behind explicit referencing is to allow end users to make large-scale changes to Vrui's behavior my making small changes to Vrui's configuration file, or by merging in small &quot;patch&quot; configuration files.</P>
+
+<P>Here is an overview of an environment's configuration tree:
+<DL>
+<DT>Root section</DT>
+<DD>The root section, selected at application start-up as described above, contains fundamental core settings such as cluster mode master switch and parameters, definition of the physical coordinate system in which the VR environment is defined, visual parameters such as glyph and font sizes, environment background color, front- and backplane distance, and user interface parameters. For a full list of settings and detailed descriptions, see the <A HREF="VruiConfigurationFileReference.html">Vrui Configuration File Settings Reference</A>.
+
+<P></P>
+Additionally, the root section contains tags referencing the first-level subsections defining the environment's components:
+	<DL>
+	<DT>inputDeviceAdapterNames</DT>
+	<DD>List of names of subsections defining input device adapters. Each input device adapter receives event data from a single input device source, such as mouse and keyboard, or an external low-level device driver for VR input devices.</DD>
+
+	<DT>inputDeviceDataSaver</DT>
+	<DD>Optional name of the subsection defining how incoming input device data is written to an archive file for subsequent analysis or playback. If the tag doesn't exist, input device data is not archived (the default).</DD>
+
+	<DT>viewerNames</DT>
+	<DD>List of names of subsections defining viewers, i.e., the virtual &quot;eyes&quot; observing virtual objects in the VR environment.</DD>
+
+	<DT>screenNames</DT>
+	<DD>List of names of subsections defining screens, i.e., the light-emitting surfaces that are used as scaffolding to prop up virtual objects floating above them.</DD>
+
+	<DT>windowNames or node&lt;index&gt;WindowNames</DT>
+	<DD>List of names of subsections defining windows, i.e., the OpenGL glue binding together viewers and screens in the viewer/screen camera model. windowNames is used in single-system environments, node&lt;index&gt;WindowNames is used in cluster environments.</DD>
+
+	<DT>listenerNames</DT>
+	<DD>List of names of subsections defining listeners, i.e., the virtual &quot;ears&quot; observing virtual objects in the VR environment.</DD>
+
+	<DT>soundContextName or node&lt;index&gt;SoundContextName</DT>
+	<DD>Name of the subsection defining a sound context, the sound equivalent of a window, using OpenAL to render spatial sound. soundContextName is used in single-system environments, node&lt;index&gt;SoundContextName is used in cluster environments.</DD>
+
+	<DT>tools</DT>
+	<DD>Name of the subsection configuring the tool manager, the run-time entity responsible for creating, binding, and destroying tools, which in turn bind input device events to application behavior.
+	
+	<P></P>
+	
+	The tool manager section has two important types of subsections. The first type contain class-wide settings for plug-in tool classes, referenced by the name of each loaded tool class. The second type are tool binding sections, which list the set of tools to be created at application start-up. The default tool binding section is referenced by the &quot;defaultTools&quot; tag. For a full list of available tool classes, their configuration settings and binding slots, see the <A HREF="VruiToolConfigurationFileReference.html">Vrui Tool Configuration File Settings Reference</A>.</DD>
+
+	<DT>vislets</DT>
+	<DD>Name of the subsection configuring the vislet manager, the run-time entity responsible for vislets, i.e., small independent components that run inside of Vrui applications.</DD>
+	</DL>
+	
+For full details on these subsections, and the settings and sub-subsections inside them, see the <A HREF="VruiConfigurationFileReference.html">Vrui Configuration File Settings Reference</A>.</DD>
+</DL></P>
+
+</BODY>
+</HTML>

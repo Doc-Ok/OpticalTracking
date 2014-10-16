@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<TITLE>Comm -- Communications Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Comm&nbsp;-- Communications Library</H1>
+
+The Comm library contains classes to simplify communications via serial ports, UDP and TCP sockets, and a mechanism for reliable high-performance one-to-many communications using UDP multicast.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>UDPSocket.h</DT>
+<DD>UDPSocket is a class representing a UDP socket. It can create either a listening socket on the local computer, or connect to a listening socket on a remote computer. It supports unreliable sending/receiving of binary data.</DD>
+
+<DT>TCPSocket.h</DT>
+<DD>TCPSocket is a class representing a TCP socket. It can create either a listening socket on the local computer, or connect to a listening socket on a remote computer. It supports reliable exchange of binary data.</DD>
+
+<DT>Pipe.h</DT>
+<DD>Pipe is a base class derived from IO::File for classes implementing communication pipe semantics. Provides means to negotiate endianness, wait for arriving data, and wait for pending data to be drained.</DD>
+
+<DT>SerialPort.h</DT>
+<DD>SerialPort is a concrete derived class of Comm::Pipe to support high-performance access to serial ports.</DD>
+
+<DT>ListeningTCPSocket.h</DT>
+<DD>ListeningTCPSocket is a support class representing TCP half-sockets that can accept incoming connections. Passed to objects derived from BufferedTCPSocket to create a server-side TCP connection.</DD>
+
+<DT>NetPipe.h</DT>
+<DD>NetPipe is a base class derived from Comm::Pipe for classes implementing Internet socket connections. Provides means to query local and remote port numbers and Internet addresses.</DD>
+
+<DT>TCPPipe.h</DT>
+<DD>TCPPipe is a concrete derived class of Comm::Pipe to support high-performance access to TCP sockets.</DD>
+
+<DT>HttpFile.h</DT>
+<DD>HttpFile is a concrete derived class of IO::File to support high-performance read access to remote files via the HTTP/1.1 protocol.</DD>
+
+<DT>OpenFile.h</DT>
+<DD>OpenFile.h declares convenience functions to open local or remote files.</DD>
+</DL>
+
+</BODY>
+</HTML>

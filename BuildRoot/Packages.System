@@ -1,0 +1,308 @@
+########################################################################
+# Packages.System - List of system packages that can be included/linked
+# into projects.
+# Copyright (c) 1999-2013 Oliver Kreylos
+# Mac OS X adaptation copyright (c) 2006 Braden Pellett
+#
+# This file is part of the WhyTools Build Environment.
+# 
+# The WhyTools Build Environment is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+# 
+# The WhyTools Build Environment is distributed in the hope that it will
+# be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with the WhyTools Build Environment; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# 02111-1307 USA
+########################################################################
+
+# The Mac OS X core foundation framework
+COREFOUNDATION_BASEDIR = 
+COREFOUNDATION_DEPENDS = 
+COREFOUNDATION_INCLUDE = -F/System/Library/Frameworks/CoreFoundation
+COREFOUNDATION_LIBDIR  = 
+COREFOUNDATION_LIBS    = -framework CoreFoundation
+
+# The Mac OS X I/O kit framework
+IOKIT_BASEDIR = 
+IOKIT_DEPENDS = COREFOUNDATION
+IOKIT_INCLUDE = -F/System/Library/Frameworks/IOKit
+IOKIT_LIBDIR  = 
+IOKIT_LIBS    = -framework IOKit
+
+# The dynamic linker package
+DL_BASEDIR = /usr
+DL_DEPENDS = 
+DL_INCLUDE = -I$(DL_BASEDIR)/$(INCLUDEEXT)
+DL_LIBDIR  = -L$(DL_BASEDIR)/$(LIBEXT)
+ifneq ($(SYSTEM_SEPARATE_LIBDL),0)
+  DL_LIBS  = -ldl
+else
+  DL_LIBS  = 
+endif
+
+# The Linux real time package
+RT_BASEDIR = /usr
+RT_DEPENDS = 
+RT_INCLUDE = -I$(RT_BASEDIR)/$(INCLUDEEXT)
+RT_LIBDIR  = -L$(RT_BASEDIR)/$(LIBEXT)
+RT_LIBS    = -lrt
+
+# The pthreads package
+PTHREADS_BASEDIR = /usr
+PTHREADS_DEPENDS = 
+PTHREADS_INCLUDE = -I$(PTHREADS_BASEDIR)/$(INCLUDEEXT)
+PTHREADS_LIBDIR  = -L$(PTHREADS_BASEDIR)/$(LIBEXT)
+ifneq ($(SYSTEM_SEPARATE_LIBPTHREAD),0)
+  PTHREADS_LIBS  = -lpthread
+else
+  PTHREADS_LIBS  = 
+endif
+
+# The ZLIB compression package
+ZLIB_BASEDIR =  /usr
+ZLIB_DEPENDS = 
+ZLIB_INCLUDE = 
+ZLIB_LIBDIR  = 
+ZLIB_LIBS    = -lz
+
+# The PNG image package
+PNG_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh png.h libpng.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+PNG_DEPENDS = 
+PNG_INCLUDE = -I$(PNG_BASEDIR)/$(INCLUDEEXT)
+PNG_LIBDIR  = -L$(PNG_BASEDIR)/$(LIBEXT)
+PNG_LIBS    = -lpng
+
+# The JPEG encoding/decoding package
+JPEG_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh jpeglib.h libjpeg.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+JPEG_DEPENDS = 
+JPEG_INCLUDE = -I$(JPEG_BASEDIR)/$(INCLUDEEXT)
+JPEG_LIBDIR  = -L$(JPEG_BASEDIR)/$(LIBEXT)
+JPEG_LIBS    = -ljpeg
+
+# The TIFF encoding/decoding package
+TIFF_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh tiffio.h libtiff.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+TIFF_DEPENDS = 
+TIFF_INCLUDE = -I$(TIFF_BASEDIR)/$(INCLUDEEXT)
+TIFF_LIBDIR  = -L$(TIFF_BASEDIR)/$(LIBEXT)
+TIFF_LIBS    = -ltiff
+
+# The ALSA low-level sound library
+ALSA_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh alsa/asoundlib.h libasound.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+ALSA_DEPENDS = 
+ALSA_INCLUDE = -I$(ALSA_BASEDIR)/$(INCLUDEEXT)
+ALSA_LIBDIR  = -L$(ALSA_BASEDIR)/$(LIBEXT)
+ALSA_LIBS    = -lasound
+
+# The Mac OS X core audio framework
+COREAUDIO_BASEDIR = 
+COREAUDIO_DEPENDS = COREFOUNDATION
+COREAUDIO_INCLUDE = -F/System/Library/Frameworks/CoreAudio
+COREAUDIO_LIBDIR  = 
+COREAUDIO_LIBS    = -framework CoreAudio
+
+# The Mac OS X audio toolbox framework
+AUDIOTOOLBOX_BASEDIR = 
+AUDIOTOOLBOX_DEPENDS = COREAUDIO COREFOUNDATION
+AUDIOTOOLBOX_INCLUDE = -F/System/Library/Frameworks/AudioToolbox
+AUDIOTOOLBOX_LIBDIR  = 
+AUDIOTOOLBOX_LIBS    = -framework AudioToolbox
+
+# The Video4Linux2 video library
+V4L2_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh linux/videodev2.h None $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+V4L2_DEPENDS = 
+V4L2_INCLUDE = -I$(V4L2_BASEDIR)/$(INCLUDEEXT)
+V4L2_LIBDIR  = -L$(V4L2_BASEDIR)/$(LIBEXT)
+V4L2_LIBS    = 
+
+# The DC1394 IEEE 1394 (Firewire) DCAM video library
+DC1394_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh dc1394/dc1394.h libdc1394.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+DC1394_DEPENDS = 
+DC1394_INCLUDE = -I$(DC1394_BASEDIR)/$(INCLUDEEXT)
+DC1394_LIBDIR  = -L$(DC1394_BASEDIR)/$(LIBEXT)
+DC1394_LIBS    = -ldc1394
+
+# The speex speech encoding/decoding library
+SPEEX_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh speex/speex.h libspeex.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+SPEEX_DEPENDS = 
+SPEEX_INCLUDE = -I$(SPEEX_BASEDIR)/$(INCLUDEEXT)
+SPEEX_LIBDIR  = -L$(SPEEX_BASEDIR)/$(LIBEXT)
+SPEEX_LIBS    = -lspeex
+
+# The ogg multimedia container library
+OGG_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh ogg/ogg.h libogg.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+OGG_DEPENDS = 
+OGG_INCLUDE = -I$(OGG_BASEDIR)/$(INCLUDEEXT)
+OGG_LIBDIR  = -L$(OGG_BASEDIR)/$(LIBEXT)
+OGG_LIBS    = -logg
+
+# The Theora video codec library
+THEORA_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh theora/theoraenc.h libtheoraenc.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+THEORA_DEPENDS = OGG
+THEORA_INCLUDE = -I$(THEORA_BASEDIR)/$(INCLUDEEXT)
+THEORA_LIBDIR  = -L$(THEORA_BASEDIR)/$(LIBEXT)
+THEORA_LIBS    = -ltheoraenc -ltheoradec
+
+# The device event library
+UDEV_BASEDIR = /usr
+UDEV_DEPENDS = 
+UDEV_INCLUDE = 
+UDEV_LIBDIR  = 
+UDEV_LIBS    = -ludev
+
+# The user-level USB library, version 1.0
+LIBUSB1_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh libusb-1.0/libusb.h libusb-1.0.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+LIBUSB1_DEPENDS = 
+LIBUSB1_INCLUDE = -I$(LIBUSB1_BASEDIR)/$(INCLUDEEXT)
+LIBUSB1_LIBDIR  = -L$(LIBUSB1_BASEDIR)/$(LIBEXT)
+LIBUSB1_LIBS    = -lusb-1.0
+LIBUSB1_HAS_TOPOLOGY_CALLS = $(shell $(VRUI_MAKEDIR)/FindInHeader.sh $(LIBUSB1_BASEDIR)/$(INCLUDEEXT)/libusb-1.0/libusb.h libusb_get_parent)
+
+# The user-level Bluetooth library
+BLUETOOTH_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh bluetooth/bluetooth.h libbluetooth.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+BLUETOOTH_DEPENDS = 
+BLUETOOTH_INCLUDE = -I$(BLUETOOTH_BASEDIR)/$(INCLUDEEXT)
+BLUETOOTH_LIBDIR  = -L$(BLUETOOTH_BASEDIR)/$(LIBEXT)
+BLUETOOTH_LIBS    = -lbluetooth
+
+# The basic X11 package without any toolkits/widget sets
+X11_BASEDIR = /usr
+X11_DEPENDS = 
+X11_INCLUDE = 
+X11_LIBDIR  = -L$(SYSTEM_X11_LIBDIR)
+X11_LIBS    = -lX11
+
+# The XRANDR X11 extension package
+XRANDR_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh X11/extensions/Xrandr.h libXrandr.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+XRANDR_DEPENDS = X11
+XRANDR_INCLUDE = -I$(XRANDR_BASEDIR)/$(INCLUDEEXT)
+XRANDR_LIBDIR  = -L$(XRANDR_BASEDIR)/$(LIBEXT)
+XRANDR_LIBS    = -lXrandr
+
+# The basic OpenGL package without window system bindings and add-on packages
+ifneq ($(SYSTEM_GL_WITH_X11),0)
+  GL_BASEDIR = /usr/X11R6
+else
+  GL_BASEDIR = /usr
+endif
+GL_DEPENDS   = 
+GL_INCLUDE   = -I$(GL_BASEDIR)/$(INCLUDEEXT)
+GL_LIBDIR    = -L$(GL_BASEDIR)/$(LIBEXT)
+GL_LIBS      = -lGL
+ifeq ($(SYSTEM_DARWIN_VERSION),10.5)
+  GL_LIBS   += -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+endif
+
+# The OpenGL utility package
+ifneq ($(SYSTEM_GL_WITH_X11),0)
+  GLU_BASEDIR = /usr/X11R6
+else
+  GLU_BASEDIR = /usr
+endif
+GLU_DEPENDS   = GL
+GLU_INCLUDE   = -I$(GLU_BASEDIR)/$(INCLUDEEXT)
+GLU_LIBDIR    = -L$(GLU_BASEDIR)/$(LIBEXT)
+GLU_LIBS      = -lGLU
+
+# The OpenAL audio library package
+ifneq ($(SYSTEM_OPENAL_FRAMEWORK),0)
+  # Use the OpenAL framework provided on Mac OS X
+  OPENAL_BASEDIR = 
+  OPENAL_DEPENDS = PTHREADS
+  OPENAL_INCLUDE = -F/System/Library/Frameworks/OpenAL
+  OPENAL_LIBDIR  = 
+  OPENAL_LIBS    = -framework OpenAL
+else
+  # Use the standard OpenAL library
+  OPENAL_BASEDIR = $(shell $(VRUI_MAKEDIR)/FindLibrary.sh AL/al.h libopenal.$(DSOFILEEXT) $(INCLUDEEXT) $(LIBEXT) $(SYSTEM_PACKAGE_SEARCH_PATHS))
+  OPENAL_DEPENDS = PTHREADS
+  OPENAL_INCLUDE = -I$(OPENAL_BASEDIR)/$(INCLUDEEXT)
+  OPENAL_LIBDIR  = -L$(OPENAL_BASEDIR)/$(LIBEXT)
+  OPENAL_LIBS    = -lopenal
+endif
+
+#
+# Auto-detect the availability of optional system packages:
+#
+
+ifneq ($(strip $(LIBUSB1_BASEDIR)),)
+  SYSTEM_HAVE_LIBUSB1 = 1
+else
+  SYSTEM_HAVE_LIBUSB1 = 0
+endif
+
+ifneq ($(strip $(PNG_BASEDIR)),)
+  SYSTEM_HAVE_LIBPNG = 1
+else
+  SYSTEM_HAVE_LIBPNG = 0
+endif
+
+ifneq ($(strip $(JPEG_BASEDIR)),)
+  SYSTEM_HAVE_LIBJPEG = 1
+else
+  SYSTEM_HAVE_LIBJPEG = 0
+endif
+
+ifneq ($(strip $(TIFF_BASEDIR)),)
+  SYSTEM_HAVE_LIBTIFF = 1
+else
+  SYSTEM_HAVE_LIBTIFF = 0
+endif
+
+ifneq ($(strip $(ALSA_BASEDIR)),)
+  SYSTEM_HAVE_ALSA = 1
+else
+  SYSTEM_HAVE_ALSA = 0
+endif
+
+ifneq ($(strip $(SPEEX_BASEDIR)),)
+  SYSTEM_HAVE_SPEEX = 1
+else
+  SYSTEM_HAVE_SPEEX = 0
+endif
+
+ifeq ($(SYSTEM),DARWIN)
+  SYSTEM_HAVE_OPENAL = 1
+else
+  ifneq ($(strip $(OPENAL_BASEDIR)),)
+    SYSTEM_HAVE_OPENAL = 1
+  else
+    SYSTEM_HAVE_OPENAL = 0
+  endif
+endif
+
+ifneq ($(strip $(V4L2_BASEDIR)),)
+  SYSTEM_HAVE_V4L2 = 1
+else
+  SYSTEM_HAVE_V4L2 = 0
+endif
+
+ifneq ($(strip $(DC1394_BASEDIR)),)
+  SYSTEM_HAVE_DC1394 = 1
+else
+  SYSTEM_HAVE_DC1394 = 0
+endif
+
+ifneq ($(strip $(THEORA_BASEDIR)),)
+  SYSTEM_HAVE_THEORA = 1
+else
+  SYSTEM_HAVE_THEORA = 0
+endif
+
+ifneq ($(strip $(BLUETOOTH_BASEDIR)),)
+  SYSTEM_HAVE_BLUETOOTH = 1
+else
+  SYSTEM_HAVE_BLUETOOTH = 0
+endif
+
+ifneq ($(strip $(XRANDR_BASEDIR)),)
+  SYSTEM_HAVE_XRANDR = 1
+else
+  SYSTEM_HAVE_XRANDR = 0
+endif

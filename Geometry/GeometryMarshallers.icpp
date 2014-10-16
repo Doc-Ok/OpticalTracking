@@ -1,0 +1,557 @@
+/***********************************************************************
+GeometryMarshallers - Marshaller classes for templatized geometry
+objects.
+Copyright (c) 2010 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_GEOMETRYMARSHALLERS_IMPLEMENTATION
+
+#include <Geometry/GeometryMarshallers.h>
+
+#include <Misc/StandardMarshallers.h>
+#include <Misc/ArrayMarshallers.h>
+#include <Geometry/ComponentArray.h>
+#include <Geometry/Vector.h>
+#include <Geometry/Point.h>
+#include <Geometry/HVector.h>
+#include <Geometry/Box.h>
+#include <Geometry/Ray.h>
+#include <Geometry/Plane.h>
+#include <Geometry/Matrix.h>
+#include <Geometry/Rotation.h>
+#include <Geometry/OrthonormalTransformation.h>
+#include <Geometry/OrthogonalTransformation.h>
+#include <Geometry/AffineTransformation.h>
+#include <Geometry/ProjectiveTransformation.h>
+
+namespace Misc {
+
+/**********************************************************************************
+Methods of class Marshaller<Geometry::ComponentArray<ScalarParam,dimensionParam> >:
+**********************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::ComponentArray<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::ComponentArray<ScalarParam,dimensionParam>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getComponents(),dimension);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::ComponentArray<ScalarParam,dimensionParam> >::write(
+	const Geometry::ComponentArray<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getComponents(),dimension,sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::ComponentArray<ScalarParam,dimensionParam>
+Marshaller<Geometry::ComponentArray<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	FixedArrayMarshaller<Scalar>::read(result.getComponents(),dimension,source);
+	return result;
+	}
+
+/**************************************************************************
+Methods of class Marshaller<Geometry::Vector<ScalarParam,dimensionParam> >:
+**************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::Vector<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::Vector<ScalarParam,dimensionParam>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getComponents(),dimension);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Vector<ScalarParam,dimensionParam> >::write(
+	const Geometry::Vector<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getComponents(),dimension,sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::Vector<ScalarParam,dimensionParam>
+Marshaller<Geometry::Vector<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	FixedArrayMarshaller<Scalar>::read(result.getComponents(),dimension,source);
+	return result;
+	}
+
+/*************************************************************************
+Methods of class Marshaller<Geometry::Point<ScalarParam,dimensionParam> >:
+*************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::Point<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::Point<ScalarParam,dimensionParam>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getComponents(),dimension);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Point<ScalarParam,dimensionParam> >::write(
+	const Geometry::Point<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getComponents(),dimension,sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::Point<ScalarParam,dimensionParam>
+Marshaller<Geometry::Point<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	FixedArrayMarshaller<Scalar>::read(result.getComponents(),dimension,source);
+	return result;
+	}
+
+/***************************************************************************
+Methods of class Marshaller<Geometry::HVector<ScalarParam,dimensionParam> >:
+***************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::HVector<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::HVector<ScalarParam,dimensionParam>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getComponents(),dimension+1);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::HVector<ScalarParam,dimensionParam> >::write(
+	const Geometry::HVector<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getComponents(),dimension+1,sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::HVector<ScalarParam,dimensionParam>
+Marshaller<Geometry::HVector<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	FixedArrayMarshaller<Scalar>::read(result.getComponents(),dimension+1,source);
+	return result;
+	}
+
+/***********************************************************************
+Methods of class Marshaller<Geometry::Box<ScalarParam,dimensionParam> >:
+***********************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::Box<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::Box<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Point>::getSize(value.min)+Marshaller<Point>::getSize(value.max);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Box<ScalarParam,dimensionParam> >::write(
+	const Geometry::Box<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Point>::write(value.min,sink);
+	Marshaller<Point>::write(value.max,sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::Box<ScalarParam,dimensionParam>
+Marshaller<Geometry::Box<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	result.min=Marshaller<Point>::read(source);
+	result.max=Marshaller<Point>::read(source);
+	return result;
+	}
+
+/***********************************************************************
+Methods of class Marshaller<Geometry::Ray<ScalarParam,dimensionParam> >:
+***********************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::Ray<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::Ray<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Point>::getSize(value.getOrigin())+Marshaller<Vector>::getSize(value.getDirection());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Ray<ScalarParam,dimensionParam> >::write(
+	const Geometry::Ray<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Point>::write(value.getOrigin(),sink);
+	Marshaller<Vector>::write(value.getDirection(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::Ray<ScalarParam,dimensionParam>
+Marshaller<Geometry::Ray<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Point origin=Marshaller<Point>::read(source);
+	Vector direction=Marshaller<Vector>::read(source);
+	return Value(origin,direction);
+	}
+
+/*************************************************************************
+Methods of class Marshaller<Geometry::Plane<ScalarParam,dimensionParam> >:
+*************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::Plane<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::Plane<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Vector>::getSize(value.getNormal())+Marshaller<Scalar>::getSize(value.getOffset());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Plane<ScalarParam,dimensionParam> >::write(
+	const Geometry::Plane<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Vector>::write(value.getNormal(),sink);
+	Marshaller<Scalar>::write(value.getOffset(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::Plane<ScalarParam,dimensionParam>
+Marshaller<Geometry::Plane<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Vector normal=Marshaller<Vector>::read(source);
+	Scalar offset=Marshaller<Scalar>::read(source);
+	return Value(normal,offset);
+	}
+
+/****************************************************************************************
+Methods of class Marshaller<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >:
+****************************************************************************************/
+
+template <class ScalarParam,int numRowsParam,int numColumnsParam>
+inline
+size_t
+Marshaller<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >::getSize(
+	const Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getEntries(),numRows*numColumns);
+	}
+
+template <class ScalarParam,int numRowsParam,int numColumnsParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >::write(
+	const Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getEntries(),numRows*numColumns,sink);
+	}
+
+template <class ScalarParam,int numRowsParam,int numColumnsParam>
+template <class DataSourceParam>
+inline
+Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam>
+Marshaller<Geometry::Matrix<ScalarParam,numRowsParam,numColumnsParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	FixedArrayMarshaller<Scalar>::read(result.getEntries(),numRows*numColumns,source);
+	return result;
+	}
+
+/***************************************************************
+Methods of class Marshaller<Geometry::Rotation<ScalarParam,2> >:
+***************************************************************/
+
+template <class ScalarParam>
+inline
+size_t
+Marshaller<Geometry::Rotation<ScalarParam,2> >::getSize(
+	const Geometry::Rotation<ScalarParam,2>& value)
+	{
+	return Marshaller<Scalar>::getSize(value.getAngle());
+	}
+
+template <class ScalarParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Rotation<ScalarParam,2> >::write(
+	const Geometry::Rotation<ScalarParam,2>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Scalar>::write(value.getAngle(),sink);
+	}
+
+template <class ScalarParam>
+template <class DataSourceParam>
+inline
+Geometry::Rotation<ScalarParam,2>
+Marshaller<Geometry::Rotation<ScalarParam,2> >::read(
+	DataSourceParam& source)
+	{
+	Scalar angle=Marshaller<Scalar>::read(source);
+	return Value(angle);
+	}
+
+/***************************************************************
+Methods of class Marshaller<Geometry::Rotation<ScalarParam,3> >:
+***************************************************************/
+
+template <class ScalarParam>
+inline
+size_t
+Marshaller<Geometry::Rotation<ScalarParam,3> >::getSize(
+	const Geometry::Rotation<ScalarParam,3>& value)
+	{
+	return FixedArrayMarshaller<Scalar>::getSize(value.getQuaternion(),4);
+	}
+
+template <class ScalarParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::Rotation<ScalarParam,3> >::write(
+	const Geometry::Rotation<ScalarParam,3>& value,
+	DataSinkParam& sink)
+	{
+	FixedArrayMarshaller<Scalar>::write(value.getQuaternion(),4,sink);
+	}
+
+template <class ScalarParam>
+template <class DataSourceParam>
+inline
+Geometry::Rotation<ScalarParam,3>
+Marshaller<Geometry::Rotation<ScalarParam,3> >::read(
+	DataSourceParam& source)
+	{
+	Scalar quaternion[4];
+	FixedArrayMarshaller<Scalar>::read(quaternion,4,source);
+	return Value(quaternion);
+	}
+
+/*********************************************************************************************
+Methods of class Marshaller<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >:
+*********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::OrthonormalTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Vector>::getSize(value.getTranslation())+Marshaller<Rotation>::getSize(value.getRotation());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >::write(
+	const Geometry::OrthonormalTransformation<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Vector>::write(value.getTranslation(),sink);
+	Marshaller<Rotation>::write(value.getRotation(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::OrthonormalTransformation<ScalarParam,dimensionParam>
+Marshaller<Geometry::OrthonormalTransformation<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Vector translation=Marshaller<Vector>::read(source);
+	Rotation rotation=Marshaller<Rotation>::read(source);
+	return Value(translation,rotation);
+	}
+
+/********************************************************************************************
+Methods of class Marshaller<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >:
+********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::OrthogonalTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Vector>::getSize(value.getTranslation())+Marshaller<Rotation>::getSize(value.getRotation())+Marshaller<Scalar>::getSize(value.getScale());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >::write(
+	const Geometry::OrthogonalTransformation<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Vector>::write(value.getTranslation(),sink);
+	Marshaller<Rotation>::write(value.getRotation(),sink);
+	Marshaller<Scalar>::write(value.getScaling(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::OrthogonalTransformation<ScalarParam,dimensionParam>
+Marshaller<Geometry::OrthogonalTransformation<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Vector translation=Marshaller<Vector>::read(source);
+	Rotation rotation=Marshaller<Rotation>::read(source);
+	Scalar scale=Marshaller<Scalar>::read(source);
+	return Value(translation,rotation,scale);
+	}
+
+/****************************************************************************************
+Methods of class Marshaller<Geometry::AffineTransformation<ScalarParam,dimensionParam> >:
+****************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::AffineTransformation<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::AffineTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Matrix>::getSize(value.getMatrix());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::AffineTransformation<ScalarParam,dimensionParam> >::write(
+	const Geometry::AffineTransformation<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Matrix>::write(value.getMatrix(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::AffineTransformation<ScalarParam,dimensionParam>
+Marshaller<Geometry::AffineTransformation<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	result.getMatrix()=Marshaller<Matrix>::read(source);
+	return result;
+	}
+
+/********************************************************************************************
+Methods of class Marshaller<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >:
+********************************************************************************************/
+
+template <class ScalarParam,int dimensionParam>
+inline
+size_t
+Marshaller<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >::getSize(
+	const Geometry::ProjectiveTransformation<ScalarParam,dimensionParam>& value)
+	{
+	return Marshaller<Matrix>::getSize(value.getMatrix());
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSinkParam>
+inline
+void
+Marshaller<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >::write(
+	const Geometry::ProjectiveTransformation<ScalarParam,dimensionParam>& value,
+	DataSinkParam& sink)
+	{
+	Marshaller<Matrix>::write(value.getMatrix(),sink);
+	}
+
+template <class ScalarParam,int dimensionParam>
+template <class DataSourceParam>
+inline
+Geometry::ProjectiveTransformation<ScalarParam,dimensionParam>
+Marshaller<Geometry::ProjectiveTransformation<ScalarParam,dimensionParam> >::read(
+	DataSourceParam& source)
+	{
+	Value result;
+	result.getMatrix()=Marshaller<Matrix>::read(source);
+	return result;
+	}
+
+}

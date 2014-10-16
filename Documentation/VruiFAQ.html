@@ -1,0 +1,459 @@
+<HTML>
+<HEAD>
+<TITLE>The Vrui FAQ</TITLE>
+<LINK REL="MADE" HREF="mailto:kreylos@cs.ucdavis.edu">
+</HEAD>
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>The Vrui FAQ</H1>
+
+<OL>
+<H2>General Questions</H2>
+<LI><A HREF="#Q1">What is this Vrui thing, anyway?</A></LI>
+<LI><A HREF="#Q2">How is Vrui different from, say, glut?</A></LI>
+<LI><A HREF="#Q3">How is Vrui different from Qt, Gtk+, etc.?</A></LI>
+<LI><A HREF="#Q4">How is Vrui different from Open SceneGraph, OpenSG, OSG, etc.?</A></LI>
+<LI><A HREF="#Q5">How is Vrui different from Ogre, Horde, Irrlicht, Sauerbraten, etc.?</A></LI>
+<LI><A HREF="#Q6">How is Vrui different from other VR toolkits like Cavelib, FreeVR, VR Juggler, etc.?</A></LI>
+
+<H2>User Questions</H2>
+<LI><A HREF="#Q7">On what operating systems does Vrui run?</A></LI>
+<LI><A HREF="#Q8">Is it difficult to install Vrui?</A></LI>
+<LI><A HREF="#Q9">How do I install Vrui in a system location?</A></LI>
+<LI><A HREF="#Q10">What is the difference between Vrui.cfg and VRDevices.cfg?</A></LI>
+<LI><A HREF="#Q11">Why does Vrui go all wonky when I use two monitors in a single-desktop setup?</A></LI>
+<LI><A HREF="#Q12">How do I set up multiple rendering windows, for example to drive multiple projectors?</A></LI>
+
+<H2>Developer Questions</H2>
+<LI><A HREF="#Q13">How do I get started developing in Vrui?</A></LI>
+<LI><A HREF="#Q14">How to I set up a new Vrui-based project?</A></LI>
+<LI><A HREF="#Q15">How do I use third-party libraries with Vrui's build system?</A></LI>
+<LI><A HREF="#Q16">How do I receive input from the keyboard?</A></LI>
+<LI><A HREF="#Q17">How do I query the display resolution in points per inch etc.?</A></LI>
+<LI><A HREF="#Q18">How do I manage server-side OpenGL state, such as texture objects?</A></LI>
+<LI><A HREF="#Q19">Can I use modern OpenGL in Vrui applications?</A></LI>
+<LI><A HREF="#Q20">What if Vrui's extension manager does not support an OpenGL extension that I need?</A></LI>
+<LI><A HREF="#Q21">Can I use GLEW in Vrui applications?</A></LI>
+</OL>
+
+<H2><A NAME="Q1">1. What is this Vrui thing, anyway?</A></H2>
+
+Vrui (Virtual Reality User Interface) is a development toolkit for 3D graphics applications, with a strong focus on interactivity and <EM>immersive display environments</EM>. In the context of Vrui, immersive display environments mean displays consisting of one or more (large) stereoscopic screens, 3D head tracking, and 3D tracked input devices. Canonical examples of immersive display environments are CAVEs or head-mounted displays (HMDs), and, more recently, those composed of 3D TVs or consumer-level HMDs such as Oculus Rift, and gaming input devices.<P>
+
+Vrui's overriding goal is to support development of correct, portable, and usable applications. In this context, portable means that an application is developed in one environment&nbsp;&ndash; typically a desktop environment&nbsp;&ndash; but runs correctly in any environment. Usable means that a Vrui application run in a desktop environment is exactly as effective as a native desktop application, and that the same Vrui application run in a CAVE or other immersive environment type is exactly as effective as an application developed natively for that specific environment.
+
+<H2><A NAME="Q2">2. How is Vrui different from, say, glut?</A></H2>
+
+In certain ways, Vrui is very much like glut. It allows writing graphics applications without having to worry about the details of the underlying hardware or graphics system, and introduces very little overhead when writing simple applications. Also, Vrui allows applications direct access to OpenGL, to employ custom low-level code. In many cases, Vrui is a more powerful replacement for glut. It has little enough overhead that it is easily used for very simple applications, but at the same time already offers much additional functionality, such as simplified window management, multiple built-in 3D navigation metaphors, 3D measurement and annotation tools, virtual 3D input devices, recording and playback facilities, etc.<P>
+
+Unlike glut, Vrui is portable to non-desktop environments. Here, portable means that a Vrui application is only written <EM>once</EM>, and then runs in <EM>any</EM> environment, without even having to be recompiled. This portability is achieved by shielding application writers much more from the underlying display system as glut does: Vrui applications do not have to open their windows or set up their OpenGL rendering contexts, and they do not directly receive input from mouse or keyboard. In fact, handling of input is probably the biggest difference between Vrui and glut (see <A HREF="#Q16">How do I receive input from the keyboard?</A>).<P>
+
+An additional difference between Vrui and glut is that Vrui consists of an entire hierarchy of layered libraries that work together to support developers in writing correct, portable, and usable applications. For example, Vrui contains a comprehensive cluster-transparent file I/O handling library, explicit high-performance intra-cluster communication, a comprehensive library for affine and projective 3D geometry, OpenGL support classes supporting generic programming, an OpenGL-based GUI widget set, and a scene graph library. While all these are completely optional, and Vrui is intentionally designed to be as compatible as possible with third-party libraries, developers are encouraged to use the highest-level available abstractions provided by the entire Vrui package.
+
+<H2><A NAME="Q3">3. How is Vrui different from Qt, Gtk+, etc.?</A></H2>
+
+Qt, Gtk+, etc. are primarily 2D GUI toolkits, which also happen to offer widgets representing 3D graphics context for 3D rendering. Vrui, on the other hand, is primarily a 3D graphics toolkit, which also happens to offer widgets for (3D) GUIs. In other words, the GUI widget set is only a relatively small part of Vrui.<P>
+
+Ignoring everything else, though, the widget set offered by Vrui is comparable to those offered by Qt or Gtk+ or other 2D GUI toolkits, albeit not as complete (yet). Vrui's GUI widgets are three-dimensional, since they are intended to work in a virtual three-dimensional display space, but their functionality and layout is very similar to 2D GUI widgets. There are dialogs, menus, buttons, sliders, etc., just as usual. From a programming point of view, Vrui's GUI widgets more or less follow the approach of OSF/Motif, in that they primarily rely on automatic layout based on a hierarchical description, and on (C++-style) callbacks to connect widgets to application behavior. One <EM>could</EM> say that Vrui's widget set is a complete rip-off of OSF/Motif, translated to C++ and OpenGL.
+
+<H2><A NAME="Q4">4. How is Vrui different from Open SceneGraph, OpenSG, OSG, etc.?</A></H2>
+
+While Vrui contains a scene graph library, its primary focus is on providing direct access to the underlying OpenGL 3D graphics library for custom applications with specific rendering needs. It is also possible, albeit often difficult in practice, to layer an existing scene graph library <EM>on top of</EM> Vrui, for the added benefit of portability to non-desktop environments.
+
+<H2><A NAME="Q5">5. How is Vrui different from Ogre, Horde, Irrlicht, Sauerbraten, etc.?</A></H2>
+
+Vrui is not a complete game engine, but a toolkit to develop correct, portable, and usable 3D graphics applications. Vrui does not address asset management, handling of 3D modeling data formats, view-dependent or multi-resolution rendering, advanced lighting, collision detection, game logic, artifical intelligence, etc. These aspects are delegated to application code, or to higher-level libraries, which could be part of Vrui itself (like the scene graph library), or developed by third parties.<P>
+
+In other words, Vrui is primarily a display and interaction engine, and comparable to the lower levels contained in any high-level game engine. As a result, given a game engine that has a clear separation of responsibilty between its layers, it can be possible to layer an existing game engine <EM>on top of</EM> Vrui, for the added benefit of being able to run that game engine in non-desktop environments. However, because most commercial or free game engines do not make this clear distinction, doing so might be difficult in practice.
+
+<H2><A NAME="Q6">6. How is Vrui different from other VR toolkits like Cavelib, FreeVR, VR Juggler, etc.?</A></H2>
+
+VR toolkits like Cavelib, FreeVR, VR Juggler, etc. are decidedly low-level toolkits. They shield application developers from some aspects of the underlying display and input device hardware, but typically not enough to support truly portable or usable applications. In a certain way, the analogous comparison between Vrui and, say, Cavelib, in the desktop world is that between X&nbsp;Windows and an X-based GUI toolkit like Qt. While X hides differences in display and input device hardware, and even distribution to some extent, applications based directly on X have to contain their own GUI code. Before GUI toolkits became available, this really happened and resulted in completely different user interfaces between applications. One application might have used the middle mouse button to scroll; another might have used a proto-scroll bar; another might have used clicks into a &quot;map&quot; of scrollable space; in short, the situation was untenable.<P>
+
+GUI toolkits like Qt or Gtk+ remedied that problem by introducing a higher level. Instead of working with windows and mouse events, applications could now use &quot;widgets&quot; with specific purposes and widget events, leading to much better user interfaces, and, more important, <EM>consistent</EM> interfaces between applications.<P>
+
+Vrui attempts to do to immersive 3D graphics what Qt et al. did to 2D GUIs. It provides higher-level interfaces, to prevent individual applications from &quot;reinventing the wheel,&quot; and instead foster consistent user interfaces. Instead of dealing directly with OpenGL windows and 4x4 matrices representing input devices, Vrui applications render into a toolkit-provided 3D application space, and receive higher-level events from input devices. As a concrete example, in other toolkits <EM>navigation</EM>, i.e., the mapping from 3D application space to display space, is handled by each application individually, whereas in Vrui it is handled by the toolkit. Overall, the result is that Vrui applications with widely differing purposes &quot;look&nbsp;&amp; feel&quot; the same.<P>
+
+An intended side effect of Vrui's higher-level abstractions is that Vrui applications are portable between vastly different types of display environments. A single Vrui application will run in a CAVE like a native CAVE application, and will run on the desktop very similarly to a native desktop application. In comparison, other toolkits require applications to be developed for a narrower range of target environments, sometimes requiring different code for single-screen and multi-screen environments, and none that we are aware of support running applications on desktop environments in any way that is useful beyond basic debugging.<P>
+
+An additional difference is that Vrui consists of an entire hierarchy of layered libraries that work together to support developers in writing correct, portable, and usable applications. For example, Vrui contains a comprehensive cluster-transparent file I/O handling library, explicit high-performance intra-cluster communication, a comprehensive library for affine and projective 3D geometry, OpenGL support classes supporting generic programming, an OpenGL-based GUI widget set, and a scene graph library. While all these are completely optional, and Vrui is intentionally designed to be as compatible as possible with third-party libraries, developers are encouraged to use the highest-level available abstractions provided by the entire Vrui package.<P>
+
+For example, Vrui's underlying geometry library is used throughout Vrui's API instead of passing positions or orientations as flat 3- or 4-element arrays or 4x4 matrices. Vrui uses abstract geometry classes such as Point and Vector for affine points and vectors, respectively, and a hierarchy of abstract transformation classes from translations or rotations only over rigid body transformations to fully-general affine or projective transformations. All these classes have full sets of algebraic operations, which means application code can in almost all cases use them as black boxes. These higher-level classes significantly reduce the burden on application developers to either write their own algebraic operations, such as matrix inversion, or continuously convert back-and-forth between the toolkit's flat representation and the representation of a third-party geometry library they want to use. An intended side-effect of the use of higher-level abstractions at the API is that implicit constraints can be made explicit. For example, tracked 6-DOF input devices can only change position and orientation, and instead of representing those as generic projective transformations, i.e., 4x4 matrices, Vrui represents them as rigid-body transformations, i.e., a translation vector plus a unit quaternion. This makes arithmetic involving input devices easier, more efficient, and more robust. That said, all classes have methods to convert from/to flat array representations to be backwards-compatible with third-party libraries an application developer might want to use.
+
+<H2><A NAME="Q7">7. On what operating systems does Vrui run?</A></H2>
+
+Vrui runs on UNIX-like operating systems. It is primarily being developed on Linux, specifically 64-bit <A HREF="http://www.fedoraproject.org">Fedora Linux</A>, but it builds and runs without problems on any other Linux distribution.<P>
+
+Vrui also builds and runs on Mac OS X, but there are currently some Linux-only features, particularly handling of sound and video, some non-standard required libraries&nbsp;&ndash; libpng, libjpeg, libtiff, libusb&nbsp;&ndash; that need to be installed from source or using software management systems such as <A HREF="https://github.com/mxcl/homebrew">homebrew</A>, and Vrui is generally more thoroughly tested on Linux.<P>
+
+Vrui <EM>does not</EM> build on Windows. Microsoft's Visual C++, at least the most recent version tested, cannot deal with some of the C++ template constructs used in Vrui. Other C++ compilers, such as Intel's, can do those, but they are typically quite expensive. Even with a proper C++ compiler, several of the underlying architecture decisions in Vrui are deeply rooted in the UNIX paradigm. Porting Vrui would take significant initial effort, and continual effort to maintain a split codebase.<P>
+
+Vrui <EM>does</EM> build and run under UNIX emulation systems such as <A HREF="http://www.cygwin.com/">cygwin</A>, but it will not be particularly useful because no version of cygwin we have tried offers hardware-accelerated 3D graphics. As Vrui applications rely heavily on high-performance graphics, they will barely be usable under cygwin.<P>
+
+The same problem applies if Linux is run inside a virtual machine. No virtual machine hypervisor we have tried offers hardware-accelerated 3D graphics inside the virtual machine, and Vrui applications will barely be usable as a result.
+
+<H2><A NAME="Q8">8. Is it difficult to install Vrui?</A></H2>
+
+Not really. Vrui's build system is intended to make &quot;simple&quot; installations simple. By default, Vrui installs itself into a <TT>Vrui-&lt;major&gt;.&lt;minor&gt;</TT> directory directly under the installing user's home directory (e.g., <TT>/home/alice/Vrui-3.2</TT>). The installation will touch no other part of the file system, meaning that Vrui can be uninstalled cleanly simply by deleting the installation directory. The simplest installation procedure is thus ($ indicates commands entered at the terminal prompt):<P>
+
+Go to the <A HREF="http://idav.ucdavis.edu/~okreylos/ResDev/Vrui/LinkDownload.html">Vrui download web site</A> and make note of the most recent Vrui release, Vrui-&lt;major&gt;.&lt;minor&gt;-&lt;build&gt;, e.g., Vrui-3.2-001.<P>
+
+Download and unpack the current Vrui source tarball into a <TT>src</TT> directory:
+<PRE>
+$ cd ~
+$ mkdir src
+$ cd src
+$ wget -O - http://idav.ucdavis.edu/~okreylos/ResDev/Vrui/Vrui-&lt;major&gt;.&lt;minor&gt;-&lt;build&gt;.tar.gz | tar xfz -
+$ ls
+Vrui-&lt;major&gt;.&lt;minor&gt;-&lt;build&gt;
+</PRE><P>
+
+This created Vrui's build directory, named by major and minor version number and build number, such as <TT>/home/alice/src/Vrui-3.2-001</TT>. Enter the build directory, and build and install Vrui:
+<PRE>
+$ cd Vrui-&lt;major&gt;.&lt;minor&gt;-&lt;build&gt;
+$ make
+... lots of text...
+$ make install
+... lots of text...
+</PRE><P>
+
+This created the default Vrui installation directory, <TT>/home/alice/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, containing all Vrui header and library files, and some utility programs. To build Vrui's example programs and run a test, follow this directly by:
+<PRE>
+$ cd ExamplePrograms
+$ make
+... lots of text...
+$ ./bin/ShowEarthModel
+</PRE><P>
+
+Most Vrui-based applications are configured to work with the default installation, so building an application is typically as simple as downloading and unpacking the tarball and running &quot;make.&quot;<P>
+
+To install optional system packages for additional Vrui functionality, or to install Vrui in locations where it can be shared by multiple users, see the &quot;quick installation guide&quot; on the <A HREF="http://idav.ucdavis.edu/~okreylos/ResDev/Vrui/LinkDownload.html">Vrui download page</A>.
+
+<H2><A NAME="Q9">9. How do I install Vrui in a system location?</A></H2>
+
+Short answer:
+<PRE>
+$ make INSTALLDIR=/usr/local
+... lots of text...
+$ sudo make INSTALLDIR=/usr/local install
+[sudo] password for &lt;user&gt;: (enter password)
+... lots of text...
+</PRE>
+Long answer:<P>
+
+By default, Vrui installs itself in <TT>~/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, i.e., in the installing user's home directory. For legacy reasons, Vrui does not use the common <TT>./configure</TT>, <TT>make</TT>, <TT>make install</TT> toolchain, but Vrui's build system offers the same level of flexibility. Installation targets can be defined as a whole or individually by editing Vrui's makefile, or by passing <TT>VARIABLE=&lt;value&gt;</TT> arguments on <TT>make</TT>'s command line. When overriding variables via <TT>make</TT>'s command line, it is important to use the same arguments during <TT>make</TT> and <TT>make install</TT> (but see <A HREF="#CreatingBinaryPackages">Creating Binary Packages</A> for an exception).<P>
+
+The most basic installation override is the <TT>INSTALLDIR</TT> variable defined at the very top of Vrui's makefile (to the default value <TT>$(HOME)/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>). Unless detail changes are made, Vrui installs itself into <TT>$(INSTALLDIR)</TT>, using the canonical <TT>include</TT>, <TT>lib(64)</TT>, <TT>bin</TT>, <TT>etc</TT>, and <TT>share</TT> subdirectories. The easiest (and most easily un-installed) way to install Vrui system-wide is to set <TT>INSTALLDIR</TT> to <TT>/usr/local/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>:
+<PRE>
+$ make INSTALLDIR=/usr/local/Vrui-&lt;major&gt;.&lt;minor&gt;
+... lots of text...
+$ sudo make INSTALLDIR=/usr/local/Vrui-&lt;major&gt;.&lt;minor&gt; install
+[sudo] password for &lt;user&gt;: (enter password)
+... lots of text...
+</PRE>
+In this case, &quot;make install&quot; has to be run as super-user because it will create a subdirectory in a system directory. This simple installation procedure will create a system-wide installation in <TT>/usr/local/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, and un-installing Vrui will be as simple as <TT>sudo rm -rf /usr/local/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, but it will not follow the POSIX conventions of installing software in <TT>/usr/local</TT>. According to POSIX, include files go into <TT>/usr/local/include</TT>, library files into <TT>/usr/local/lib(64)</TT>, executables into <TT>/usr/local/bin</TT>, configuration files into subdirectories of <TT>/usr/local/etc</TT>, shared files into subdirectories of <TT>/usr/local/share</TT>, configuration files for <TT>pkg-config</TT> into <TT>/usr/local/lib(64)/pkgconfig</TT>, and documentation files into subdirectories of <TT>/usr/local/share/doc</TT>. Vrui's build system has a variable for each of these destinations: <TT>HEADERINSTALLDIR</TT>, <TT>LIBINSTALLDIR</TT>, <TT>EXECUTABLEINSTALLDIR</TT>, <TT>ETCINSTALLDIR</TT>, <TT>SHAREINSTALLDIR</TT>, <TT>PKGCONFIGINSTALLDIR</TT>, and <TT>DOCINSTALLDIR</TT>, respectively. For example, to install Vrui-3.2-&lt;build&gt; in a POSIX-compliant fashion:
+<PRE>
+$ make HEADERINSTALLDIR=/usr/local/include/Vrui-3.2 LIBINSTALLDIR=/usr/local/lib64/Vrui-3.2 EXECUTABLEINSTALLDIR=/usr/local/bin \
+  ETCINSTALLDIR=/usr/local/etc/Vrui-3.2 SHAREINSTALLDIR=/usr/local/share/Vrui-3.2 PKGCONFIGINSTALLDIR=/usr/local/lib64/pkgconfig \
+  DOCINSTALLDIR=/usr/local/share/doc/Vrui-3.2
+$ sudo make HEADERINSTALLDIR=/usr/local/include/Vrui-3.2 LIBINSTALLDIR=/usr/local/lib64/Vrui-3.2 EXECUTABLEINSTALLDIR=/usr/local/bin \
+  ETCINSTALLDIR=/usr/local/etc/Vrui-3.2 SHAREINSTALLDIR=/usr/local/share/Vrui-3.2 PKGCONFIGINSTALLDIR=/usr/local/lib64/pkgconfig \
+  DOCINSTALLDIR=/usr/local/share/doc/Vrui-3.2 install
+</PRE>
+Those command lines are quite a mouthful (and it's probably more practical to make these changes directly in Vrui's makefile), but they are appropriate for shell scripting, such as when <A HREF="#CreatingBinaryPackages">creating binary packages</A>. By the way, Vrui's build system prints all installation directories at the beginning of its build output. A quick way to check is to run <TT>make &lt;arguments&gt; config</TT>.<P>
+
+That said, Vrui's build system contains logic for several common installation cases. Specifically, there is a shortcut for the exact installation structure spelled out in detail above:
+<PRE>
+$ make INSTALLDIR=/usr/local
+$ sudo make INSTALLDIR=/usr/local install
+</PRE>
+And there is yet another shortcut, for deep system-wide installations in <TT>/usr/include/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, <TT>/usr/lib(64)/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, <TT>/usr/bin</TT>, <TT>/etc/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, <TT>/usr/share/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>, <TT>/usr/lib(64)/pkgconfig</TT>, and <TT>/usr/share/doc/Vrui-&lt;major&gt;.&lt;minor&gt;</TT>:
+<PRE>
+$ make SYSTEMINSTALL=1 INSTALLDIR=
+$ sudo make SYSTEMINSTALL=1 INSTALLDIR= install
+</PRE>
+(That's not a typo, the value after <TT>INSTALLDIR=</TT> must be the empty string.) However, the Linux file system standard states that software locally installed from source should <EM>not</EM> go into <TT>/usr</TT> and <TT>/etc</TT>, but into <TT>/usr/local</TT>. Unless one is...
+
+<H3><A NAME="CreatingBinaryPackages">Creating Binary Packages</A></H3>
+
+Most Linux distributions have a way of distributing software as binary packages, under the auspices of a more or less smart package manager. Installing binary packages has benefits for end users, but Vrui is canonically distributed as source tarballs. However, building binary packages is quite straightforward. While the details depend on the package manager used by a given Linux distribution (<TT>rpm</TT>, <TT>dpkg</TT>, ...), the common fundamental approach is to build and prepare software inside a fake root directory, and then package all created files under that fake root into a single archive for distribution.<P>
+
+The tricky bit here is that the software has to be configured and built for its final destination, such as <TT>/usr/bin</TT> etc., but has to be installed into the fake root directory for packaging. Vrui's build system simplifies that by using the combination of the <TT>SYSTEMINSTALL</TT> and <TT>INSTALLDIR</TT> variables. To build and configure Vrui for the final destination, run
+<PRE>
+$ make SYSTEMINSTALL=1 INSTALLDIR=
+</PRE>
+and to install the built software into a fake root for packaging, run
+<PRE>
+$ make SYSTEMINSTALL=1 INSTALLDIR=/path/to/fake/root install
+</PRE>
+(sudo is not necessary here because the fake root directory is assumed to be under the user's home directory.)<P>
+
+Then, the final step is the distribution-specific equivalent of
+<PRE>
+$ cd /path/to/fake/root
+$ tar cfz Vrui-&lt;major&gt;.&lt;minor&gt;.binary.tar.gz *
+</PRE>
+
+<H2><A NAME="Q10">10. What is the difference between Vrui.cfg and VRDevices.cfg?</A></H2>
+
+Vrui contains its own low-level device driver, VRDeviceDaemon, to talk to input device hardware such as 3D tracking systems, data gloves, wands, joysticks, etc. and convert their data streams into a unified format to be accepted by the Vrui toolkit run-time environment. This device driver is configured for a particular display environment via the VRDevices.cfg configuration file. This file defines what types of input device hardware are present, and how they work together in the same space.<P>
+
+The Vrui run-time environment itself is configured via the Vrui.cfg configuration file. This file defines the complete display environment, including the positions, orientations, and sizes of all screens, all viewers present in an environment, the OpenGL windows used to render 3D views to those screens, the number and types of 3D input devices presented by the low-level device driver, which tools are available, etc.<P>
+
+Concretely, VRDevices.cfg is read when the low-level device driver is started, whereas Vrui.cfg is read whenever a Vrui application is started. Both configuration files together define the complete set-up of the display environment in which Vrui runs, and need to be created and/or adapted carefully based on the details of a concrete environment. In a shared display environment like a CAVE, this task would typically fall to a dedicated system integrator&nbsp;/ administrator, whereas configuration is more or less unnecessary in single-user desktop environments, where the default setup will cover the common cases.
+
+<H2><A NAME="Q11">11. Why does Vrui go all wonky when I use two monitors in a single-desktop setup?</A></H2>
+
+In its default desktop configuration, Vrui tries to determine the actual size of the environment's display by querying the X Windows system. Normally, this ensures that Vrui's rendering has the correct aspect ratio, e.g., spheres show up as spheres instead of ellipsoids, and that it has the correct size, e.g., the scale bar has the correct length, and that fonts show up at the correct sizes. However, X sometimes lies about the sizes of its attached displays, especially when multiple displays are joined in a single-desktop setup (such as Nvidia's TwinView). This is especially bad when the joined displays have different resolutions, say a laptop display with 100dpi next to a 3D TV with 30dpi.<P>
+
+In the first scenario, where all displays have comparable resolutions, but X lies, you will have to disable automatic screen size detection (by setting autoScreenSize to false in your window section), and enter the correct screen size in your screen section. In single-desktop setups, the screen size is the combined size of all screens, not that of a single screen.<P>
+
+This will not work if the screens' resolutions are different. If that's the case, it will not be possible to drag Vrui windows between screens without introducing major distortions&nbsp;-- after all, the Vrui run-time now has to deal with a single (virtual) display that suddenly changes resolution in the middle. You will have to decide which of the screens is the main screen, and configure Vrui for that screen. Then, if an application window is dragged to another screen, partially or completely, behavior is undefined.<P>
+
+To set up a main screen, add a panningDomain setting to the appropriate <A HREF="VruiConfigurationFileReference.html#windowsections">window section</A> in Vrui.cfg, and set the panning domain to the position and size of the main screen. For example, if the main screen has a resolution of 1920x1080, and is to the right of a secondary screen with resolution 1440x900, panningDomain would be (1440, 0), (1920, 1080). Then set autoScreenSize to false, and set the proper size of the main screen in the <A HREF="VruiConfigurationFileReference.html#screensections">screen section</A> associated with the window. This will correlate the pixel size of the panning domain with the physical size of the screen, and Vrui will render to scale. If Vrui windows are dragged outside the panning domain, things will get weird, however.<P>
+
+Here is an example configuration fragment for a 30 dpi 1920x1080 main screen to the right of a 1440x900 100dpi secondary screen:
+<PRE>
+section Screen0 # 100dpi 17" laptop screen, left of main screen
+  name Screen0
+  origin (-46.4, 0.0, 9.0)
+  width 14.4
+  height 9.0
+endsection
+
+section Screen1 # 30 dpi 72" HDTV, centered around the origin
+  name Screen1
+  origin (-32.0, 0.0, -18.0)
+  width 64.0
+  height 36.0
+endsection
+
+section Window
+  windowPos (1800, 300), (800, 600)
+  autoScreenSize false
+  screenName Screen1 # Use HDTV as main screen
+  panningViewport true
+  panningDomain (1440, 0), (1920, 1080)
+endsection
+</PRE><P>
+
+The &quot;Screen0&quot; section is not actually used in this example.
+
+<H2><A NAME="Q12">12. How do I set up multiple rendering windows, for example to drive multiple projectors?</A></H2>
+
+Vrui is quite flexible with regards to multi-window/multi-display rendering. The Vrui run-time environment can dynamically configure itself to run in a cluster with multiple rendering nodes, on a single machine with multiple graphics cards, or on a single machine with a single graphics card and multiple displays connected to multiple video outputs, or any combination of these. For example, when running a &quot;super CAVE&quot; with six walls and two pairs of stacked 4K projectors generating 4000x4000 pixel stereoscopic images per wall, one could use a seven-node cluster, where the head node drives a standard desktop monitor and is the user-facing console, and each of the six render nodes has two high-end graphics cards with two projectors connected to each graphics card. How to configure Vrui for such environments, and how to maximize rendering performance via context sharing and parallel rendering, is explained in detail in the <A HREF="MultiWindowRendering.html">Multi-window Rendering in Vrui</A> document.<P>
+
+As far as application programmers are concerned, the details of managing multiple windows, sharing or replicating OpenGL contexts, and parallel rendering are completely hidden by the Vrui API. See the <A HREF="GLContextData.html">GLContextData</A> document for a detailed explanation of the underlying abstraction mechanism.
+
+<H2><A NAME="Q13">13. How do I get started developing in Vrui?</A></H2>
+
+Unfortunately, Vrui does not yet have comprehensive developer guides. As a prerequisite, developing for Vrui requires a good understanding of 3D graphics, especially of the OpenGL graphics library on which Vrui is based, and of C++. With these in place, starting Vrui developers are encouraged to think of Vrui as being very similar to glut, and take it from there. Vrui comes with a set of template or example applications showing the (little amount of) boilerplate code required to set up a Vrui application, and detailed comments explaining where one would put application and 3D rendering code, for example. If a developer has code for a glut application, it is usually enough to strip out any OpenGL setup and viewpoint navigation code (OpenGL setup and navigation are handled by Vrui), paste the rest into the simplest Vrui template, and compile that to get a working Vrui application.<P>
+
+After these initial steps, developers are encouraged to use several existing Vrui applications to see how they look and feel, especially as they are run in different display environment types, and then peruse the HTML documentation that does exist. A good starting point is the &quot;Library Overview&quot; section, which lists the component library layers that make up the whole Vrui package, and in turn list all the header files and classes contained in those libraries. The interfaces of all those classes are defined in their respective header files, including detailed comments on all interface methods and functions.<P>
+
+Another important starting point is the Vrui kernel API in include/Vrui/Vrui.h, which declares all core functions applications use to communicate with Vrui. Due to Vrui's microkernel architecture, most of its functionality is not provided by the kernel itself, but by delegate classes such as Vrui::VRWindow, or by external so-called <EM>managers</EM> such as the input device manager. References to these managers are retrieved through the kernel API, but afterwards applications communicate directly with those managers. The bottom line is that all of Vrui's functionality is accessed through the kernel API, either directly or indirectly via managers or delegate classes.<P>
+
+While the low-level documentation of classes and interfaces provided by the source code comments are reportedly rather good, they don't tell in which scenarios a developer might use a certain class. This will hopefully be addressed by higher-level development guides in the near future. In the meantime, another important resource is the <A HREF="DevelopmentRules.html">Development Rules</A> document, which lists common pitfalls stemming from Vrui's difference in philosophy to other VR or 3D graphics toolkits, and its focus on portability and usability. For example, the way Vrui applications are supposed to handle user input is Vrui's one feature most distinct from other toolkits.
+
+<H2><A NAME="Q14">14. How do I set up a new Vrui-based project?</A></H2>
+
+The easiest way to set up a new Vrui-based project is to use Vrui's internal build system. This build system, which is used by Vrui itself and all &quot;official&quot; Vrui extension packages and applications, might seem somewhat daunting at first glance. On the upside, it makes building libraries and applications hassle-free and fast, and is very extensible.<P>
+
+Let's say you want to create a new project called &quot;Foo,&quot containing an executable called &quot;Foo&quot; created by compiling and linking together source files Bar.cpp and Foo.cpp.<P>
+
+First, create a new directory called &quot;Foo&quot; somewhere, and copy Vrui's template makefile into it:
+<PRE>
+$ mkdir Foo
+$ cd Foo
+$ cp &lt;Vrui share dir&gt;/make/makefile .
+</PRE>
+where <TT>&lt;Vrui share dir&gt;</TT> is the <TT>share</TT> directory underneath Vrui's installation directory, such as <TT>~/Vrui-3.2/share</TT> or <TT>/usr/share/Vrui-3.2</TT> or <TT>/usr/local/share/Vrui-3.2</TT>.
+
+Then edit the makefile as follows:
+<UL>
+<LI>After the line <TT>PACKAGES =</TT>, add the name of the main Vrui package, <TT>MYVRUI</TT>:
+<PRE>
+PACKAGES = MYVRUI</PRE>
+This will tell the build system that all executables in this project will use the Vrui package.</LI>
+
+<LI>After the line <TT>ALL =</TT>, add the full path to all executables of this project, in this example <TT>$(EXEDIR)/Foo</TT>: <PRE>
+ALL = $(EXEDIR)/Foo
+</PRE>
+<TT>$(EXEDIR)</TT> is a pre-defined variable pointing to the destination directory for executables, i.e., <TT>./bin</TT>.</LI>
+
+<LI>At the end of the makefile, under the heading &quot;Specify build rules for executables,&quot; add the dependencies for the Foo executable:
+<PRE>
+$(EXEDIR)/Foo: $(OBJDIR)/Bar.o $(OBJDIR)/Foo.o
+</PRE>
+<TT>$(OBJDIR)</TT> is a pre-defined variable pointing to the destination directory for compiled object files. The root object file directory is <TT>./o</TT>, but it contains an entire subdirectory hierarchy to keep object files for different compiler options separate, such as debug and non-debug versions.<P>
+
+For executables with many object files, the above is somewhat inconvenient. A better way is to create a list of names of source files needed for an executable, and let <TT>make</TT> figure out the object file names automatically:
+<PRE>
+FOO_SOURCES = Bar.cpp Foo.cpp
+
+$(EXEDIR)/Foo: $(FOO_SOURCES:%.cpp=$(OBJDIR)/%.o)
+</PRE>
+The code after <TT>$(EXEDIR)/Foo</TT> is a function that changes all names in <TT>FOO_SOURCES</TT> ending in <TT>.cpp</TT> into their appropriate object file names in the <TT>$(OBJDIR)</TT> hierarchy.<P>
+
+As an aside, Vrui's build system can deal with source files in multiple subdirectories without any issues. Just use a project directory-relative path name for each source or object file. A source file <TT>Baz/Baz.cpp</TT> will turn into an object file <TT>$(OBJDIR)/Baz/Baz.o</TT>.</LI>
+
+<LI>Create source files <TT>Bar.cpp</TT> and <TT>Foo.cpp</TT> and enter your application code.</LI>
+
+<LI>To build the project, simply type
+<PRE>
+$ make
+</PRE>
+This will recompile all changed source files, and relink all executables. Vrui's build system automatically takes care of additional dependencies such as included header files. There is no need to explicitly enter source dependencies into the makefile.</LI>
+
+<LI>In projects with multiple executables, <TT>make</TT> will build all executables by default. To build only a single one, list its path name on <TT>make</TT>'s command line:
+<PRE>
+$ make bin/Foo
+</PRE>
+Just running <TT>make Foo</TT> will <EM>not</EM> do the right thing. To fix that, add the following lines after the build rule for <TT>$(EXEDIR)/Foo</TT> in the makefile:
+<PRE>
+.PHONY: Foo
+Foo: $(EXEDIR)/Foo
+</PRE>
+After that addition, <TT>make Foo</TT> will work as expected.</LI>
+</UL><P>
+
+For all this work, you'll get these major benefits: you will never have to worry about source file dependencies, you will probably never have to use <TT>make clean</TT>, and <TT>make</TT> will never waste time rebuilding files that don't need rebuilding.
+
+<H2><A NAME="Q15">15. How do I use third-party libraries with Vrui's build system?</A></H2>
+
+Vrui's internal build system uses the notion of &quot;packages&quot; to set up and use internal or external software libraries. A package defines compiler and linker flags that are needed to compile source files and link executables against a given library. The list of external packages known to Vrui can be found in the <TT>make/Packages.System</TT> file in Vrui's share directory, and Vrui's own component libraries can be found in <TT>make/Packages.Vrui</TT> in the same directory.<P>
+
+Creating a new package to use some external library in a project based on Vrui's build system is straightforward. As an example, we will use a locally-built version of the ImageMagick library, installed underneath <TT>/usr/local/Magick6</TT>. First, we need to pick some unique name for the resulting package, say <TT>IMAGEMAGICK_LOCAL</TT>. We will then add a section for that package somewhere in the makefile of the project using it:
+<PRE>
+IMAGEMAGICK_LOCAL_BASEDIR      =
+IMAGEMAGICK_LOCAL_DEPENDS      =
+IMAGEMAGICK_LOCAL_INCLUDE      =
+IMAGEMAGICK_LOCAL_CFLAGS       =
+IMAGEMAGICK_LOCAL_LIBDIR       =
+IMAGEMAGICK_LOCAL_LIBS         =
+IMAGEMAGICK_LOCAL_LINKLIBFLAGS =
+</PRE>
+
+<UL>
+<LI><TT>_BASEDIR</TT> is an optional redirect for the root directory containing the package's include and library files. This is usually <TT>/usr</TT> or <TT>/usr/local</TT>.</LI>
+
+<LI><TT>_DEPENDS</TT> is a list of other packages on which the package depends. For example, the <TT>GLU</TT> (OpenGL Utility) package listed in Vrui's <TT>Packages.System</TT> file depends on the <TT>GL</TT> (OpenGL) package.</LI>
+
+<LI><TT>_INCLUDE</TT> is the list of directories containing the package's header files, including the <TT>-I</TT> prefix before each directory name. What directory names to use depends on common usage. For example, OpenGL's header files are in <TT>/usr/include/GL</TT>, but most source code includes them via <TT>#include &lt;GL/gl.h&gt;</TT> etc. As a result, <TT>GL_INCLUDE</TT> would be set to <TT>-I/usr/include</TT>.</LI>
+
+<LI><TT>_CFLAGS</TT> is a list of additional compiler flags needed to compile source files against the package.</LI>
+
+<LI><TT>_LIBDIR</TT> is the list of directories containing the package's library files, including the <TT>-L</TT> prefix before each directory name.</LI>
+
+<LI><TT>_LIBS</TT> is the list of the package's library files, including the <TT>-l</TT> prefix before each abbreviated library name. For example, the OpenGL library would be listed as <TT>-lGL</TT>.
+
+<LI><TT>_LINKLIBFLAGS</TT> is a list of additional linker flags needed to link against the package's libraries. Common flags are runtime search paths to find a library file in a non-standard location without having to use the <TT>LD_LIBRARY_PATH</TT> environment variable or other workarounds.</LI>
+</UL><P>
+
+This is the resulting package section for our example non-standard ImageMagick package:
+<PRE>
+IMAGEMAGICK_LOCAL_BASEDIR      = /usr/local/Magick6
+IMAGEMAGICK_LOCAL_DEPENDS      =
+IMAGEMAGICK_LOCAL_INCLUDE      = -I$(IMAGEMAGICK_LOCAL_BASEDIR)/include/ImageMagick-6
+IMAGEMAGICK_LOCAL_CFLAGS       = -fopenmp -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16
+IMAGEMAGICK_LOCAL_LIBDIR       = -L$(IMAGEMAGICK_LOCAL_BASEDIR)/lib
+IMAGEMAGICK_LOCAL_LIBS         = -lMagick++-6.Q16
+IMAGEMAGICK_LOCAL_LINKLIBFLAGS = -Wl,-rpath $(IMAGEMAGICK_LOCAL_BASEDIR)/lib
+</PRE>
+The <TT>_LINKLIBFLAGS</TT> variable is only necessary because the ImageMagick library is in a non-standard place where the dynamic linker would otherwise not find it.<P>
+
+By convergent evolution, Vrui's package structure is very similar to that of the <TT>pkg-config</TT> utility. Another way to populate the package section for packages supported by <TT>pkg-config</TT> is the following:
+<PRE>
+IMAGEMAGICK_LOCAL_BASEDIR      =
+IMAGEMAGICK_LOCAL_DEPENDS      =
+IMAGEMAGICK_LOCAL_INCLUDE      = $(pkg-config --cflags-only-I)
+IMAGEMAGICK_LOCAL_CFLAGS       = $(pkg-config --cflags-only-other)
+IMAGEMAGICK_LOCAL_LIBDIR       = $(pkg-config --libs-only-L)
+IMAGEMAGICK_LOCAL_LIBS         = $(pkg-config --libs-only-l)
+IMAGEMAGICK_LOCAL_LINKLIBFLAGS = $(pkg-config --libs-only-other)
+</PRE><P>
+
+To use a package in a project, simply append its name to the <TT>PACKAGE</TT> variable in the project's makefile. If the package is only required by some executables in a project, its name can be listed in a specific executable's build section. For example:
+<PRE>
+$(EXEDIR)/Foo: PACKAGES += IMAGEMAGICK_LOCAL
+$(EXEDIR)/Foo: $(OBJDIR)/Foo.o
+</PRE>
+
+<H2><A NAME="Q16">16. How do I receive input from the keyboard?</A></H2>
+
+You don't. No, really. Unlike glut et al., Vrui aims to support environment-independent applications, and non-desktop environments do not have keyboards. As a result, Vrui applications receive input in a very different manner than, say, glut applications. Instead of directly receiving events from the keyboard (or the mouse) via dedicated callbacks, Vrui applications receive events from so-called tools, which in turn receive events from actual input devices.<P>
+
+To use a concrete example, assume an application that wants to do something when the user presses a specific key. In glut et al., this would be handled by registering a keyboard event callback, which will in turn check the identity of the just-pressed key when called, and invoke the proper application behavior if the desired key is pressed. In Vrui, application behaviors are implemented as tools. If an application has some behavior&nbsp;X that is to be invoked when some key is pressed, the developer would create a corresponding tool class&nbsp;X and hand it to Vrui's tool manager during start-up. After that, a user can dynamically bind a tool object of class&nbsp;X to any button she desires; after that, if she presses that button, the bound tool object will be called, and can in turn invoke behavior&nbsp;X.<P>
+
+While this approach sounds more complicated, it has important benefits. For one, it works in non-desktop environments. Even if there is no keyboard, there will still be some input device that has some ways to signal that a user wants to initiate an event (which could be an actual button, or a gesture, or a voice command, etc.), and Vrui's dynamic tool binding mechanism allows the user to bind a tool of class&nbsp;X to any such event source, without the application developer having to code any support for that. Even if constrained to the desktop, this allows users to map application behaviors to any keys they desire&nbsp;&ndash; in other words, the keyboard remapping functionality common in PC games comes for free in Vrui.<P>
+
+Additionally, in actual code, setting up a tool is no more complicated than writing a callback. For simple cases like the one above, where a key press invokes some behavior, Vrui offers a convenience shortcut that creates a tool class, passes it to Vrui's tool manager, handles dynamic binding, and invokes an arbitrary application callback when an event happens, in a single line of code (see <TT>VruiEventToolDemo.cpp</TT> in the <TT>ExamplePrograms</TT> subdirectory for several concrete examples). Only in more complex cases, such as when behaviors require their own internal states, will a developer have to implement an actual tool class, which would be essentially the same amount of work as in other toolkits.
+
+<H3>But I don't want events, I want the user to enter some text, such as a file name or label!</H3>
+
+In that case, still don't query the keyboard. Create a GLMotif dialog box with an editable text field and let Vrui worry about where that text comes from (from a real keyboard, from a virtual keyboard, from a gesture-based text entry method, from speech recognition, ...).
+
+<H2><A NAME="Q17">17. How do I query the display resolution in points per inch etc.?</A></H2>
+
+You don't. Due to Vrui's portability, an application might not have a display, might have multiple displays with different resolutions, or might have an immersive display, where display resolution is not even an applicable concept. In Vrui, only very specific applications, such as calibration utilities, would need to know anything about display resolution. In almost all cases, the actual functionality for which a developer would like to know the display resolution can be achieved in a more direct way. One common example is scaling: a developer wants to be able to display 3D data at fixed scales (1:1, 1:100) such that images on the display can be measured. This is supported directly in Vrui: if an application tells Vrui which unit of measurement is used by an application, it will provide an interactive scale bar that shows the exact scale factor from application to real world, and a user interface to adjust the scale factor to common fixed values, such as 1:1.<P>
+
+Another common example is an application needing to know how big to make a display, like a text label, or how big to make the influence zone around an interaction event, based on display resolution. In Vrui, these parameters are configured by the system integrator/administrator appropriately for a concrete environment, and can be queried directly via the Vrui kernel API.<P>
+
+In other words, Vrui applications should always render in 3D application space in any unit of measurement they want, advertise that unit to Vrui's coordinate manager, and let Vrui take care of the rest. Any questions about appropriate display sizes, interaction fuzz values, optimal font sizes, etc. should be answered by querying the Vrui kernel API whenever needed.
+
+<H2><A NAME="Q18">18. How do I manage server-side OpenGL state, such as texture objects?</A></H2>
+
+In most other 3D or VR toolkits, application-side state, such as a 3D mesh representation, and server-side OpenGL state, such as texture or buffer objects, are mixed freely. In an application object, a pointer to a mesh structure might directly be followed by a handle to a vertex buffer object holding the mesh's vertices. This, however, prevents portability to environments where one application has to deal with multiple OpenGL contexts, where a single mesh structure might be represented by several vertex buffers, each for a different OpenGL context, with a different handle. Vrui solves the problem by strictly separating application-side state from server-side OpenGL state, and associating multiple copies of an application's server-side state with a single copy of application-side state. Context and state management, and necessary state replication, are completely hidden by the Vrui API. Applications always only see a single copy of server-side state, and only at the time this state is needed for rendering. This process is described in detail in the <A HREF="GLContextData.html">GLContextData</A> document.
+
+<H2><A NAME="Q19">19. Can I use modern OpenGL in Vrui applications?</A></H2>
+
+At first glance, it might seem as if Vrui is a ca.&nbsp;1998 old-school OpenGL 1.0 toolkit. And while Vrui itself does still contain enough legacy code to require running under an OpenGL compatibility profile (removing that is ongoing work in progress), Vrui applications are free to use modern features (and even many components of Vrui do so), as long as their functionality is either directly provided by the underlying OpenGL library or available via OpenGL extensions. There are two main approaches to use modern features:
+<OL>
+<LI>Simply call a modern OpenGL entry point and hope for the best.</LI>
+
+<LI>Use Vrui's internal OpenGL extension wrangling mechanism.</LI>
+</OL>
+The first approach might work on a developer's local machine, where the OpenGL driver automatically exports all OpenGL entry points, but it won't be portable. The second approach requires a small amount of additional work, but it much safer and more flexible. Here is how it is used:<P>
+
+Let us assume that some module of your project, say a single class, wants to use some OpenGL extension, say <TT>GL_ARB_vertex_buffer_object</TT> to store some geometry in the GPU's own memory. In Vrui, each supported OpenGL extension is represented as an individual class, with header files in the <TT>GL/Extensions</TT> subdirectory.<P>
+
+To use an extension, the source file defining the class first has to include the appropriate header file:
+<PRE>
+#include &lt;GL/Extensions/GLARBVertexBufferObject.h&gt;
+</PRE>
+(note the conversion from separate_words to CamelCase). Including this file makes all <TT>#define</TT> constants and function prototypes provided by the extension available to the source file's code. All declarations will use the extension's name space suffix (<TT>ARB</TT>, <TT>EXT</TT>, etc.), such as <TT>GL_ARRAY_BUFFER_ARB</TT> or <TT>glGenBuffersARB</TT>.<P>
+
+After that, the code has to initialize the extension before any of its functions can be used by calling the extension class's static <TT>initExtension</TT> method:
+<PRE>
+GLARBVertexBufferObject::initExtension();
+</PRE>
+This is typically done once per lifetime of each created object, typically in the class's OpenGL context initialization method (see <TT>initContext</TT> in <A HREF="GLContextData.html">GLContextData</A>). Vrui's extension manager is designed such that multiple redundant calls to <TT>initExtension</TT> are safe and fast; developers do not have to worry about managing extension initialization and can leave it completely decentralized, improving code modularity.<P>
+
+The <TT>initExtension</TT> method throws a run-time error exception if an extension is not supported by the current OpenGL context. For more flexibility, especially when using new and rarely-supported extensions, application code can query the availability of an extension via the static <TT>isSupported</TT> method:
+<PRE>
+if(GLARBVertexBufferObject::isSupported())
+    GLARBVertexBufferObject::initExtension();
+else
+    {
+    /* Set up a fallback rendering path etc. */
+    }
+</PRE>
+This pattern only makes sense if there is a reasonable alternative to using the requested extension, such as a fallback rendering path. If a module cannot meaningfully function without a certain extension, it is probably best to let <TT>initExtension</TT> throw an exception and let the module's client code decide what to do.<P>
+
+An important fact about OpenGL extensions is that they are context-dependent state. Due to Vrui's multi-machine, multi-pipe rendering architecture, it is entirely possible (albeit rare) that a certain extension is supported in one OpenGL context used by the application, and not in another. This is normally handled transparently by Vrui's <TT>GLContextData</TT> mechanism (see <A HREF="GLContextData.html">GLContextData</A>), but an important effect is that <TT>isSupported</TT>, <TT>initExtension</TT>, and all extension functions can only be called when there is a current OpenGL context, i.e., during a class's <TT>initContext</TT> or rendering method, or when a class's method is called from inside another class's <TT>initContext</TT> method etc. The <A HREF="GLContextData.html">GLContextData</A> document contains a more detailed treatment of application/OpenGL state separation and multi-context rendering.
+
+<H2><A NAME="Q20">20. What if Vrui's extension manager does not support an OpenGL extension that I need?</A></H2>
+
+Vrui strives to support all OpenGL extensions in the long term, but as of right now, due to limited developer time, only those OpenGL extensions that are required by Vrui itself or by &quot;official&quot; Vrui applications, and those that were requested by external Vrui developers, are available. Find the full list of extensions supported by your version of Vrui inside the <TT>include/GL/Extensions</TT> directory. If an extension you require is not there, you have two options:
+<OL>
+<LI>Write an extension class using an existing extension class as a template, and ideally submit it back to the Vrui repository.</LI>
+
+<LI>Ask someone to do it for you (yes, please do!).</LI>
+</OL>
+
+<H2><A NAME="Q21">21. Can I use GLEW in Vrui applications?</A></H2>
+
+Yes, but it is tricky, finicky, and unsupported. GLEW (the OpenGL Extension Wrangler) is an external library with the same goals as Vrui's built-in extension manager (see <A HREF="#Q19">Can I use modern OpenGL in Vrui applications?</A>). Unfortunately, GLEW's design clashes with Vrui's multi-machine/multi-context rendering architecture. While there is a multi-context capable version of GLEW, its use in an application must be centralized, and requires inclusion of GLEW's header file(s) in every source file of a Vrui application using GLEW, before any OpenGL headers are included. While some external Vrui developers have been successful in using GLEW in their projects, it requires careful management and breaks easily. Most importantly, GLEW cannot be used in a library, unless users of the library add GLEW handling throughout their applications. Vrui's built-in extension manager is much more compatible, but see <A HREF="#Q20">What if Vrui's extension manager does not support an OpenGL extension that I need?</A>.
+
+</BODY>
+</HTML>

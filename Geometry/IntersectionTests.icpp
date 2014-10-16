@@ -1,0 +1,778 @@
+/***********************************************************************
+IntersectionTests - Namespace-global functions to test for intersections
+between various geometric objects.
+Copyright (c) 2012-2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_INTERSECTIONTESTS_IMPLEMENTATION
+
+#include <Geometry/IntersectionTests.h>
+
+#include <Math/Math.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
+#include <Geometry/Box.h>
+
+namespace Geometry {
+
+template <class ScalarParam>
+inline
+bool
+isPointInsideTriangle(
+	const Point<ScalarParam,2> triangle[3],
+	const Point<ScalarParam,2>& p)
+	{
+	/* Check the three triangle edges: */
+	int tv0=2;
+	for(int tv1=0;tv1<3;tv0=tv1,++tv1)
+		{
+		/* Calculate the edge's 2D normal vector and edge offset: */
+		ScalarParam eN0=triangle[tv0][1]-triangle[tv1][1];
+		ScalarParam eN1=triangle[tv1][0]-triangle[tv0][0];
+		ScalarParam eOffset=eN0*triangle[tv0][0]+eN1*triangle[tv0][1];
+		
+		/* Check that the intersection point is to the left of the triangle edge: */
+		if(eN0*p[0]+eN1*p[1]<eOffset)
+			return false;
+		}
+	
+	return true;
+	}
+
+template <class ScalarParam>
+inline
+bool
+isPointInsideTriangle(
+	const Point<ScalarParam,2>& t0,
+	const Point<ScalarParam,2>& t1,
+	const Point<ScalarParam,2>& t2,
+	const Point<ScalarParam,2>& p)
+	{
+	/* Check the three triangle edges: */
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t2[1]-t0[1];
+	ScalarParam eN1=t0[0]-t2[0];
+	ScalarParam eOffset=eN0*t2[0]+eN1*t2[1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if(eN0*p[0]+eN1*p[1]<eOffset)
+		return false;
+	}
+	
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t0[1]-t1[1];
+	ScalarParam eN1=t1[0]-t0[0];
+	ScalarParam eOffset=eN0*t0[0]+eN1*t0[1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if(eN0*p[0]+eN1*p[1]<eOffset)
+		return false;
+	}
+	
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t1[1]-t2[1];
+	ScalarParam eN1=t2[0]-t1[0];
+	ScalarParam eOffset=eN0*t1[0]+eN1*t1[1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if(eN0*p[0]+eN1*p[1]<eOffset)
+		return false;
+	}
+	
+	return true;
+	}
+
+template <class ScalarParam>
+inline
+bool
+isPointInsideTriangle(
+	const Point<ScalarParam,3> triangle[3],
+	const Vector<ScalarParam,3>& triangleNormal,
+	const Point<ScalarParam,3>& p)
+	{
+	/* Use the primary 2D plane that is orthogonal to the largest normal vector component for the subsequent point-in-triangle test: */
+	int primaryAxis=findParallelAxis(triangleNormal);
+	int a0=(primaryAxis+1)%3;
+	int a1=(primaryAxis+2)%3;
+	ScalarParam normalMax=triangleNormal[primaryAxis];
+	
+	/* Check the three triangle edges: */
+	int tv0=2;
+	for(int tv1=0;tv1<3;tv0=tv1,++tv1)
+		{
+		/* Calculate the edge's 2D normal vector and edge offset: */
+		ScalarParam eN0=triangle[tv0][a1]-triangle[tv1][a1];
+		ScalarParam eN1=triangle[tv1][a0]-triangle[tv0][a0];
+		ScalarParam eOffset=eN0*triangle[tv0][a0]+eN1*triangle[tv0][a1];
+		
+		/* Check that the intersection point is to the left of the triangle edge: */
+		if((eN0*p[a0]+eN1*p[a1])*normalMax<eOffset*normalMax) // Multiply both sides with normalMax to fix the handedness of the triangle
+			return false;
+		}
+	
+	return true;
+	}
+
+template <class ScalarParam>
+inline
+bool
+isPointInsideTriangle(
+	const Point<ScalarParam,3>& t0,
+	const Point<ScalarParam,3>& t1,
+	const Point<ScalarParam,3>& t2,
+	const Vector<ScalarParam,3>& triangleNormal,
+	const Point<ScalarParam,3>& p)
+	{
+	/* Use the primary 2D plane that is orthogonal to the largest normal vector component for the subsequent point-in-triangle test: */
+	int primaryAxis=findParallelAxis(triangleNormal);
+	int a0=(primaryAxis+1)%3;
+	int a1=(primaryAxis+2)%3;
+	ScalarParam normalMax=triangleNormal[primaryAxis];
+	
+	/* Check the three triangle edges: */
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t2[a1]-t0[a1];
+	ScalarParam eN1=t0[a0]-t2[a0];
+	ScalarParam eOffset=eN0*t2[a0]+eN1*t2[a1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if((eN0*p[a0]+eN1*p[a1])*normalMax<eOffset*normalMax)
+		return false;
+	}
+	
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t0[a1]-t1[a1];
+	ScalarParam eN1=t1[a0]-t0[a0];
+	ScalarParam eOffset=eN0*t0[a0]+eN1*t0[a1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if((eN0*p[a0]+eN1*p[a1])*normalMax<eOffset*normalMax)
+		return false;
+	}
+	
+	{
+	/* Calculate the first edge's 2D normal vector and edge offset: */
+	ScalarParam eN0=t1[a1]-t2[a1];
+	ScalarParam eN1=t2[a0]-t1[a0];
+	ScalarParam eOffset=eN0*t1[a0]+eN1*t1[a1];
+	
+	/* Check that the intersection point is to the left of the first edge: */
+	if((eN0*p[a0]+eN1*p[a1])*normalMax<eOffset*normalMax)
+		return false;
+	}
+	
+	return true;
+	}
+
+template <class ScalarParam,int dimensionParam>
+inline
+bool
+doesLineIntersectBox(
+	const Box<ScalarParam,dimensionParam>& box,
+	const Point<ScalarParam,dimensionParam> line[2])
+	{
+	/*********************************************************************
+	Determine the box regions containing each line vertex. Regions are
+	numbered as bit masks where bit 0: x<xmin, bit 1: x>xmax, bits 2,3:
+	same for y, bits 4,5: same for z, etc. The interior of the (closed)
+	box is region 0.
+	*********************************************************************/
+	
+	unsigned int vertexRegions[2];
+	for(int vertexIndex=0;vertexIndex<2;++vertexIndex)
+		{
+		/* Compare the vertex against the box: */
+		vertexRegions[vertexIndex]=0x0U;
+		unsigned int regionBit=0x1U;
+		for(int axis=0;axis<dimensionParam;++axis)
+			{
+			if(line[vertexIndex][axis]<box.min[axis])
+				vertexRegions[vertexIndex]|=regionBit;
+			regionBit<<=1;
+			if(line[vertexIndex][axis]>box.max[axis])
+				vertexRegions[vertexIndex]|=regionBit;
+			regionBit<<=1;
+			}
+		
+		/* Check if the vertex is inside the box: */
+		if(vertexRegions[vertexIndex]==0x0U)
+			return true;
+		}
+	
+	/* Check if all vertices are outside the same face of the box: */
+	if((vertexRegions[0]&vertexRegions[1])!=0x0U)
+		return false;
+	
+	/* Tracing from line0 to line1, find the latest entry point into the box and the first exit point from the box over all axes: */
+	ScalarParam maxEntry=ScalarParam(0);
+	ScalarParam minExit=ScalarParam(1);
+	unsigned int minBit=0x1U;
+	for(int axis=0;axis<dimensionParam&&maxEntry<=minExit;++axis)
+		{
+		/* Calculate the region bits for this axis: */
+		unsigned int maxBit=minBit<<1;
+		
+		/* Check whether the edge ever enters the box's extent along the current axis: */
+		if((vertexRegions[0]&minBit)!=0x0U) // line0 is < min
+			{
+			/* Calculate the entry point and update the valid interval: */
+			ScalarParam entry=(box.min[axis]-line[0][axis])/(line[1][axis]-line[0][axis]);
+			if(maxEntry<entry)
+				maxEntry=entry;
+			}
+		if((vertexRegions[0]&maxBit)!=0x0U) // line0 is > max
+			{
+			/* Calculate the entry point and update the valid interval: */
+			ScalarParam entry=(box.max[axis]-line[0][axis])/(line[1][axis]-line[0][axis]);
+			if(maxEntry<entry)
+				maxEntry=entry;
+			}
+
+		/* Check whether the edge ever exits the box's extent along the current axis: */
+		if((vertexRegions[1]&minBit)!=0x0U) // line1 is < min
+			{
+			/* Calculate the exit point and update the valid interval: */
+			ScalarParam exit=(box.min[axis]-line[0][axis])/(line[1][axis]-line[0][axis]);
+			if(minExit>exit)
+				minExit=exit;
+			}
+		if((vertexRegions[1]&maxBit)!=0x0U) // line1 is > max
+			{
+			/* Calculate the exit point and update the valid interval: */
+			ScalarParam exit=(box.max[axis]-line[0][axis])/(line[1][axis]-line[0][axis]);
+			if(minExit>exit)
+				minExit=exit;
+			}
+		
+		/* Go to the next axis: */
+		minBit=maxBit<<1;
+		}
+	
+	/* Line intersects if the final interval is non-empty: */
+	return maxEntry<=minExit;
+	}
+
+template <class ScalarParam>
+inline
+bool
+doesLineIntersectTriangle(
+	const Point<ScalarParam,3> triangle[3],
+	const Point<ScalarParam,3> line[2])
+	{
+	/* Calculate the triangle's plane equation: */
+	Vector<ScalarParam,3> normal=(triangle[1]-triangle[0])^(triangle[2]-triangle[1]);
+	ScalarParam offset=normal*triangle[1];
+	
+	/* Calculate the plane offsets of the line's vertices: */
+	ScalarParam d0=normal*line[0]-offset;
+	ScalarParam d1=normal*line[1]-offset;
+	
+	/* Check if the line's vertices are both above or below the triangle's plane: */
+	if(d0*d1>ScalarParam(0))
+		return false;
+	
+	/* Use the primary 2D plane that is orthogonal to the largest normal vector component for the subsequent point-in-triangle test: */
+	int primaryAxis=findParallelAxis(normal);
+	int a0=(primaryAxis+1)%3;
+	int a1=(primaryAxis+2)%3;
+	ScalarParam normalMax=normal[primaryAxis];
+	
+	/* Calculate the intersection point between the edge and the plane: */
+	ScalarParam denom=d1-d0;
+	if(denom!=ScalarParam(0)) // The line and triangle are not co-planar
+		{
+		Point<ScalarParam,3> ip=affineCombination(line[0],line[1],-d0/denom);
+		
+		/***************************************************************
+		Check if the intersection point is inside the triangle by
+		projecting everything to the primary 2D plane that is most
+		closely aligned with the triangle's plane.
+		***************************************************************/
+		
+		/* Check the three triangle edges: */
+		int tv0=2;
+		for(int tv1=0;tv1<3;tv0=tv1,++tv1)
+			{
+			/* Calculate the edge's 2D normal vector and edge offset: */
+			ScalarParam eN0=triangle[tv0][a1]-triangle[tv1][a1];
+			ScalarParam eN1=triangle[tv1][a0]-triangle[tv0][a0];
+			ScalarParam eOffset=eN0*triangle[tv0][a0]+eN1*triangle[tv0][a1];
+
+			/* Check that the intersection point is to the left of the triangle edge: */
+			if((eN0*ip[a0]+eN1*ip[a1])*normalMax<eOffset*normalMax) // Use the sign of the largest normal vector component to determine the handedness of the triangle
+				return false;
+			}
+		
+		return true;
+		}
+	else // The line and triangle are co-planar; revisit the problem entirely in 2D
+		{
+		/*******************************************************************
+		Intersect the line with the triangle's edges in the primary 2D plane
+		that is most closely aligned with the triangle's plane.
+		*******************************************************************/
+		
+		/* Calculate the intersection interval between the line and the triangle: */
+		ScalarParam maxEntry=ScalarParam(0);
+		ScalarParam minExit=ScalarParam(1);
+		int tv0=2;
+		for(int tv1=0;tv1<3;tv0=tv1,++tv1)
+			{
+			/* Calculate the edge's 2D normal vector and edge offset: */
+			ScalarParam eN0=triangle[tv0][a1]-triangle[tv1][a1];
+			ScalarParam eN1=triangle[tv1][a0]-triangle[tv0][a0];
+			ScalarParam eOffset=eN0*triangle[tv0][a0]+eN1*triangle[tv0][a1];
+			
+			/* Calculate the distances of the line's end points from the edge: */
+			ScalarParam d0=(eN0*line[0][a0]+eN1*line[0][a1]-eOffset)*normalMax; // Multiply with normalMax to account for triangle's handedness
+			ScalarParam d1=(eN0*line[1][a0]+eN1*line[1][a1]-eOffset)*normalMax; // Multiply with normalMax to account for triangle's handedness
+			
+			/* Test the relationship between the line's vertices and the edge: */
+			if(d0<ScalarParam(0)&&d1<ScalarParam(0))
+				{
+				/* Both points are on the outside: */
+				return false;
+				}
+			else if(d0<ScalarParam(0))
+				{
+				/* Line0 is outside, line1 is inside: */
+				ScalarParam entry=-d0/(d1-d0);
+				if(maxEntry<entry)
+					maxEntry=entry;
+				}
+			else if(d1<ScalarParam(0))
+				{
+				/* Line1 is outside, line0 is inside: */
+				ScalarParam exit=-d0/(d1-d0);
+				if(minExit>exit)
+					minExit=exit;
+				}
+			}
+		
+		/* The line intersects if the intersection interval is non-empty: */
+		return maxEntry<=minExit;
+		}
+	}
+
+template <class ScalarParam>
+inline
+bool
+doesTriangleIntersectBox(
+	const Box<ScalarParam,3>& box,
+	const Point<ScalarParam,3> triangle[3])
+	{
+	/*********************************************************************
+	Determine the box regions containing each triangle vertex. Regions are
+	numbered as bit masks where bit 0: x<xmin, bit 1: x>xmax, bits 2,3:
+	same for y, bits 4,5: same for z. The interior of the (closed) box
+	is region 0.
+	*********************************************************************/
+	
+	unsigned int vertexRegions[3];
+	for(int vertexIndex=0;vertexIndex<3;++vertexIndex)
+		{
+		/* Compare the vertex against the box: */
+		vertexRegions[vertexIndex]=0x0U;
+		if(triangle[vertexIndex][0]<box.min[0])
+			vertexRegions[vertexIndex]|=0x1U;
+		if(triangle[vertexIndex][0]>box.max[0])
+			vertexRegions[vertexIndex]|=0x2U;
+		if(triangle[vertexIndex][1]<box.min[1])
+			vertexRegions[vertexIndex]|=0x4U;
+		if(triangle[vertexIndex][1]>box.max[1])
+			vertexRegions[vertexIndex]|=0x8U;
+		if(triangle[vertexIndex][2]<box.min[2])
+			vertexRegions[vertexIndex]|=0x10U;
+		if(triangle[vertexIndex][2]>box.max[2])
+			vertexRegions[vertexIndex]|=0x20U;
+		
+		/* Check if the vertex is inside the box: */
+		if(vertexRegions[vertexIndex]==0x0U)
+			return true;
+		}
+	
+	/* Check if all vertices are outside the same face of the box: */
+	if((vertexRegions[0]&vertexRegions[1]&vertexRegions[2])!=0x0U)
+		return false;
+	
+	/*********************************************************************
+	Check if the box is entirely below or above the triangle's plane:
+	*********************************************************************/
+	
+	/* Calculate the triangle's plane equation: */
+	Vector<ScalarParam,3> normal=(triangle[1]-triangle[0])^(triangle[2]-triangle[1]);
+	ScalarParam offset=normal*triangle[1];
+	
+	/* Calculate the plane offsets of the box's eight vertices and the number of vertices on either side of the plane: */
+	ScalarParam boxVertexDs[8];
+	int numGE=8;
+	int numLE=8;
+	for(int vertexIndex=0;vertexIndex<8;++vertexIndex)
+		{
+		boxVertexDs[vertexIndex]=normal*box.getVertex(vertexIndex)-offset;
+		if(boxVertexDs[vertexIndex]<ScalarParam(0))
+			--numGE; // One fewer vertex on the greater-equal side
+		if(boxVertexDs[vertexIndex]>ScalarParam(0))
+			--numLE; // One fewer vertex on the smaller-equal side
+		}
+	
+	/* Check if all box vertices are above or below the plane: */
+	if(numLE==0||numGE==0)
+		return false;
+	
+	/*********************************************************************
+	Check if any of the triangle's edges intersect the box.
+	*********************************************************************/
+	
+	int vertexIndex0=2;
+	for(int vertexIndex1=0;vertexIndex1<3;vertexIndex0=vertexIndex1,++vertexIndex1)
+		{
+		/* Get the edge's vertices and their regions: */
+		const Point<ScalarParam,3>& v0=triangle[vertexIndex0];
+		unsigned int region0=vertexRegions[vertexIndex0];
+		const Point<ScalarParam,3>& v1=triangle[vertexIndex1];
+		unsigned int region1=vertexRegions[vertexIndex1];
+		
+		/* Check if the edge crosses at least one of the box's faces: */
+		if((region0&region1)==0x0U)
+			{
+			/* Tracing from v0 to v1, find the latest entry point into the box and the first exit point from the box over all three axes: */
+			ScalarParam maxEntry=ScalarParam(0);
+			ScalarParam minExit=ScalarParam(1);
+			unsigned int minBit=0x1U;
+			for(int axis=0;axis<3&&maxEntry<=minExit;++axis)
+				{
+				/* Calculate the region bits for this axis: */
+				unsigned int maxBit=minBit<<1;
+				
+				/* Check whether the edge ever enters the box's extent along the current axis: */
+				if((region0&minBit)!=0x0U) // v0 is < min
+					{
+					/* Calculate the entry point and update the valid interval: */
+					ScalarParam entry=(box.min[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(maxEntry<entry)
+						maxEntry=entry;
+					}
+				if((region0&maxBit)!=0x0U) // v0 is > max
+					{
+					/* Calculate the entry point and update the valid interval: */
+					ScalarParam entry=(box.max[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(maxEntry<entry)
+						maxEntry=entry;
+					}
+				
+				/* Check whether the edge ever exits the box's extent along the current axis: */
+				if((region1&minBit)!=0x0U) // v1 is < min
+					{
+					/* Calculate the exit point and update the valid interval: */
+					ScalarParam exit=(box.min[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(minExit>exit)
+						minExit=exit;
+					}
+				if((region1&maxBit)!=0x0U) // v1 is > max
+					{
+					/* Calculate the exit point and update the valid interval: */
+					ScalarParam exit=(box.max[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(minExit>exit)
+						minExit=exit;
+					}
+				
+				/* Go to the next axis: */
+				minBit=maxBit<<1;
+				}
+			
+			/* Check if the final interval is non-empty: */
+			if(maxEntry<=minExit)
+				return true;
+			}
+		}
+	
+	/*********************************************************************
+	Check if any of the box's edges intersect the triangle:
+	*********************************************************************/
+	
+	/* Use the primary 2D plane that is orthogonal to the largest normal vector component for the subsequent point-in-triangle test: */
+	int primaryAxis=findParallelAxis(normal);
+	int a0=(primaryAxis+1)%3;
+	int a1=(primaryAxis+2)%3;
+	ScalarParam normalMax=normal[primaryAxis];
+	
+	/* Check all box edges whose vertices are on different sides of the plane: */
+	static const int edgeVertices[12][2]= // Look-up table to get the vertices of the 12 edges
+		{
+		{0,1},{2,3},{4,5},{6,7}, // Edges along x axis
+		{0,2},{1,3},{4,6},{5,7}, // Edges along y axis
+		{0,4},{1,5},{2,6},{3,7}  // Edges along z axis
+		};
+	for(int edgeIndex=0;edgeIndex<12;++edgeIndex)
+		{
+		/* Get the indices of the edge's vertices: */
+		int v0=edgeVertices[edgeIndex][0];
+		int v1=edgeVertices[edgeIndex][1];
+		
+		/* Check if the vertices are on different sides of the plane (or co-planar, but that will be caught elsewhere): */
+		if(boxVertexDs[v0]*boxVertexDs[v1]<=ScalarParam(0))
+			{
+			/* Calculate the intersection point between the edge and the plane: */
+			ScalarParam denom=boxVertexDs[v1]-boxVertexDs[v0];
+			if(denom!=ScalarParam(0)) // Ignore co-planar edges; their intersections are found by at least one of the other tests
+				{
+				Point<ScalarParam,3> ip=affineCombination(box.getVertex(v0),box.getVertex(v1),-boxVertexDs[v0]/denom);
+				
+				/***************************************************************
+				Check if the intersection point is inside the triangle by
+				projecting everything to the primary 2D plane that is most
+				closely aligned with the triangle's plane.
+				***************************************************************/
+				
+				/* Check the three triangle edges: */
+				bool inside=true;
+				int tv0=2;
+				for(int tv1=0;tv1<3&&inside;tv0=tv1,++tv1)
+					{
+					/* Calculate the edge's 2D normal vector and edge offset: */
+					ScalarParam eN0=triangle[tv0][a1]-triangle[tv1][a1];
+					ScalarParam eN1=triangle[tv1][a0]-triangle[tv0][a0];
+					ScalarParam eOffset=eN0*triangle[tv0][a0]+eN1*triangle[tv0][a1];
+					
+					/* Check that the intersection point is to the left of the triangle edge: */
+					if((eN0*ip[a0]+eN1*ip[a1])*normalMax<eOffset*normalMax) // Use the sign of the largest normal vector component to determine the handedness of the triangle
+						inside=false;
+					}
+				
+				/* Return if the intersection is inside: */
+				if(inside)
+					return true;
+				}
+			}
+		}
+	
+	return false;
+	}
+
+template <class ScalarParam>
+inline
+bool
+doesTriangleIntersectBox(
+	const Box<ScalarParam,3>& box,
+	const Point<ScalarParam,3>* vertexArray,
+	const size_t triangleIndices[3])
+	{
+	/* Retrieve the triangle vertices from the vertex array: */
+	const Point<ScalarParam,3>* triangle[3];
+	for(int i=0;i<3;++i)
+		triangle[i]=&(vertexArray[triangleIndices[i]]);
+	
+	/*********************************************************************
+	Determine the box regions containing each triangle vertex. Regions are
+	numbered as bit masks where bit 0: x<xmin, bit 1: x>xmax, bits 2,3:
+	same for y, bits 4,5: same for z. The interior of the (closed) box
+	is region 0.
+	*********************************************************************/
+	
+	unsigned int vertexRegions[3];
+	for(int vertexIndex=0;vertexIndex<3;++vertexIndex)
+		{
+		/* Compare the vertex against the box: */
+		vertexRegions[vertexIndex]=0x0U;
+		const Point<ScalarParam,3>& tv=*triangle[vertexIndex];
+		if(tv[0]<box.min[0])
+			vertexRegions[vertexIndex]|=0x1U;
+		if(tv[0]>box.max[0])
+			vertexRegions[vertexIndex]|=0x2U;
+		if(tv[1]<box.min[1])
+			vertexRegions[vertexIndex]|=0x4U;
+		if(tv[1]>box.max[1])
+			vertexRegions[vertexIndex]|=0x8U;
+		if(tv[2]<box.min[2])
+			vertexRegions[vertexIndex]|=0x10U;
+		if(tv[2]>box.max[2])
+			vertexRegions[vertexIndex]|=0x20U;
+		
+		/* Check if the vertex is inside the box: */
+		if(vertexRegions[vertexIndex]==0x0U)
+			return true;
+		}
+	
+	/* Check if all vertices are outside the same face of the box: */
+	if((vertexRegions[0]&vertexRegions[1]&vertexRegions[2])!=0x0U)
+		return false;
+	
+	/*********************************************************************
+	Check if the box is entirely below or above the triangle's plane:
+	*********************************************************************/
+	
+	/* Calculate the triangle's plane equation: */
+	Vector<ScalarParam,3> normal=((*triangle[1])-(*triangle[0]))^((*triangle[2])-(*triangle[1]));
+	ScalarParam offset=normal*(*triangle[1]);
+	
+	/* Calculate the plane offsets of the box's eight vertices and the number of vertices on either side of the plane: */
+	ScalarParam boxVertexDs[8];
+	int numGE=8;
+	int numLE=8;
+	for(int vertexIndex=0;vertexIndex<8;++vertexIndex)
+		{
+		boxVertexDs[vertexIndex]=normal*box.getVertex(vertexIndex)-offset;
+		if(boxVertexDs[vertexIndex]<ScalarParam(0))
+			--numGE; // One fewer vertex on the greater-equal side
+		if(boxVertexDs[vertexIndex]>ScalarParam(0))
+			--numLE; // One fewer vertex on the smaller-equal side
+		}
+	
+	/* Check if all box vertices are above or below the plane: */
+	if(numLE==0||numGE==0)
+		return false;
+	
+	/*********************************************************************
+	Check if any of the triangle's edges intersect the box.
+	*********************************************************************/
+	
+	int vertexIndex0=2;
+	for(int vertexIndex1=0;vertexIndex1<3;vertexIndex0=vertexIndex1,++vertexIndex1)
+		{
+		/* Get the edge's vertices and their regions: */
+		const Point<ScalarParam,3>& v0=*triangle[vertexIndex0];
+		unsigned int region0=vertexRegions[vertexIndex0];
+		const Point<ScalarParam,3>& v1=*triangle[vertexIndex1];
+		unsigned int region1=vertexRegions[vertexIndex1];
+		
+		/* Check if the edge crosses at least one of the box's faces: */
+		if((region0&region1)==0x0U)
+			{
+			/* Tracing from v0 to v1, find the latest entry point into the box and the first exit point from the box over all three axes: */
+			ScalarParam maxEntry=ScalarParam(0);
+			ScalarParam minExit=ScalarParam(1);
+			unsigned int minBit=0x1U;
+			for(int axis=0;axis<3&&maxEntry<=minExit;++axis)
+				{
+				/* Calculate the region bits for this axis: */
+				unsigned int maxBit=minBit<<1;
+				
+				/* Check whether the edge ever enters the box's extent along the current axis: */
+				if((region0&minBit)!=0x0U) // v0 is < min
+					{
+					/* Calculate the entry point and update the valid interval: */
+					ScalarParam entry=(box.min[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(maxEntry<entry)
+						maxEntry=entry;
+					}
+				if((region0&maxBit)!=0x0U) // v0 is > max
+					{
+					/* Calculate the entry point and update the valid interval: */
+					ScalarParam entry=(box.max[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(maxEntry<entry)
+						maxEntry=entry;
+					}
+				
+				/* Check whether the edge ever exits the box's extent along the current axis: */
+				if((region1&minBit)!=0x0U) // v1 is < min
+					{
+					/* Calculate the exit point and update the valid interval: */
+					ScalarParam exit=(box.min[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(minExit>exit)
+						minExit=exit;
+					}
+				if((region1&maxBit)!=0x0U) // v1 is > max
+					{
+					/* Calculate the exit point and update the valid interval: */
+					ScalarParam exit=(box.max[axis]-v0[axis])/(v1[axis]-v0[axis]);
+					if(minExit>exit)
+						minExit=exit;
+					}
+				
+				/* Go to the next axis: */
+				minBit=maxBit<<1;
+				}
+			
+			/* Check if the final interval is non-empty: */
+			if(maxEntry<=minExit)
+				return true;
+			}
+		}
+	
+	/*********************************************************************
+	Check if any of the box's edges intersect the triangle:
+	*********************************************************************/
+	
+	/* Use the primary 2D plane that is orthogonal to the largest normal vector component for the subsequent point-in-triangle test: */
+	int primaryAxis=findParallelAxis(normal);
+	int a0=(primaryAxis+1)%3;
+	int a1=(primaryAxis+2)%3;
+	ScalarParam normalMax=normal[primaryAxis];
+	
+	/* Check all box edges whose vertices are on different sides of the plane: */
+	static const int edgeVertices[12][2]= // Look-up table to get the vertices of the 12 edges
+		{
+		{0,1},{2,3},{4,5},{6,7}, // Edges along x axis
+		{0,2},{1,3},{4,6},{5,7}, // Edges along y axis
+		{0,4},{1,5},{2,6},{3,7}  // Edges along z axis
+		};
+	for(int edgeIndex=0;edgeIndex<12;++edgeIndex)
+		{
+		/* Get the indices of the edge's vertices: */
+		int v0=edgeVertices[edgeIndex][0];
+		int v1=edgeVertices[edgeIndex][1];
+		
+		/* Check if the vertices are on different sides of the plane (or co-planar, but that will be caught elsewhere): */
+		if(boxVertexDs[v0]*boxVertexDs[v1]<=ScalarParam(0))
+			{
+			/* Calculate the intersection point between the edge and the plane: */
+			ScalarParam denom=boxVertexDs[v1]-boxVertexDs[v0];
+			if(denom!=ScalarParam(0)) // Ignore co-planar edges; their intersections are found by at least one of the other tests
+				{
+				Point<ScalarParam,3> ip=affineCombination(box.getVertex(v0),box.getVertex(v1),-boxVertexDs[v0]/denom);
+				
+				/***************************************************************
+				Check if the intersection point is inside the triangle by
+				projecting everything to the primary 2D plane that is most
+				closely aligned with the triangle's plane.
+				***************************************************************/
+				
+				/* Check the three triangle edges: */
+				bool inside=true;
+				int tv0=2;
+				for(int tv1=0;tv1<3&&inside;tv0=tv1,++tv1)
+					{
+					/* Calculate the edge's 2D normal vector and edge offset: */
+					ScalarParam eN0=(*triangle[tv0])[a1]-(*triangle[tv1])[a1];
+					ScalarParam eN1=(*triangle[tv1])[a0]-(*triangle[tv0])[a0];
+					ScalarParam eOffset=eN0*(*triangle[tv0])[a0]+eN1*(*triangle[tv0])[a1];
+					
+					/* Check that the intersection point is to the left of the triangle edge: */
+					if((eN0*ip[a0]+eN1*ip[a1])*normalMax<eOffset*normalMax) // Use the sign of the largest normal vector component to determine the handedness of the triangle
+						inside=false;
+					}
+				
+				/* Return if the intersection is inside: */
+				if(inside)
+					return true;
+				}
+			}
+		}
+	
+	return false;
+	}
+
+}

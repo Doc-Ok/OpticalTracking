@@ -1,0 +1,2786 @@
+<HTML>
+<HEAD>
+<TITLE>Vrui Tool Class Configuration File Settings Reference</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Vrui Tool Class Configuration File Settings Reference</H1>
+
+<H2>List of Tool Classes</H2>
+
+The following lists all core Vrui tool classes, in the same hierarchical order in which they appear in the tool selection menu. Each class is listed with its internal class name first, followed by the descriptive name shown in the tool selection menu.
+<UL>
+<LI>Locator
+<UL>
+<LI><A HREF="#SixDofLocatorTool">SixDofLocatorTool</A> &quot;6-DOF Locator&quot;</LI>
+
+<LI><A HREF="#ScreenLocatorTool">ScreenLocatorTool</A> &quot;Screen Locator&quot;</LI>
+
+<LI><A HREF="#WaldoLocatorTool">WaldoLocatorTool</A> &quot;Waldo (Scaled) Locator&quot;</LI>
+</UL>
+</LI>
+
+<LI>Dragger
+<UL>
+<LI><A HREF="#SixDofDraggingTool">SixDofDraggingTool</A> &quot;6-DOF Dragger&quot;</LI>
+
+<LI><A HREF="#WaldoDraggingTool">WaldoDraggingTool</A> &quot;Waldo (Scaled) Dragger&quot;</LI>
+</UL>
+</LI>
+
+<LI>Navigation
+<UL>
+<LI>Surface-Aligned Navigation
+<UL>
+<LI><A HREF="#MouseSurfaceNavigationTool">MouseSurfaceNavigationTool</A> &quot;Mouse (Multiple Buttons)&quot;</LI>
+
+<LI><A HREF="#FPSNavigationTool">FPSNavigationTool</A> &quot;FPS (Mouse Look&nbsp;+ Buttons)&quot;</LI>
+
+<LI><A HREF="#FiveAxisSurfaceNavigationTool">FiveAxisSurfaceNavigationTool</A> &quot;Five-Axis&quot;</LI>
+
+<LI><A HREF="#SixAxisSurfaceNavigationTool">SixAxisSurfaceNavigationTool</A> &quot;Six-Axis&quot;</LI>
+
+<LI><A HREF="#HelicopterNavigationTool">HelicopterNavigationTool</A> &quot;Helicopter Flight&quot;</LI>
+
+<LI><A HREF="#WalkSurfaceNavigationTool">WalkSurfaceNavigationTool</A> &quot;Walk&quot;</LI>
+
+<LI><A HREF="#ValuatorWalkSurfaceNavigationTool">ValuatorWalkSurfaceNavigationTool</A> &quot;Walk &amp; Valuators&quot;</LI>
+</UL>
+</LI>
+
+<LI><A HREF="#MouseNavigationTool">MouseNavigationTool</A> &quot;Mouse (Multiple Buttons)&quot;</LI>
+
+<LI><A HREF="#MouseDialogNavigationTool">MouseDialogNavigationTool</A> &quot;Mouse (via Dialog Box)&quot;</LI>
+
+<LI><A HREF="#SixAxisNavigationTool">SixAxisNavigationTool</A> &quot;Six-Axis&quot;</LI>
+
+<LI><A HREF="#SixDofNavigationTool">SixDofNavigationTool</A> &quot;6-DOF&quot;</LI>
+
+<LI><A HREF="#ScaleNavigationTool">ScaleNavigationTool</A> &quot;Scaling Only&quot;</LI>
+
+<LI><A HREF="#TrackballNavigationTool">TrackballNavigationTool</A> &quot;Ray-Based Trackball&quot;</LI>
+
+<LI><A HREF="#ValuatorScalingNavigationTool">ValuatorScalingNavigationTool</A> &quot;Valuator Scaling&quot;</LI>
+
+<LI><A HREF="#WandNavigationTool">WandNavigationTool</A> &quot;Wand (6-DOF&nbsp;+ Scaling)&quot;</LI>
+
+<LI><A HREF="#SixDofWithScaleNavigationTool">SixDofWithScaleNavigationTool</A> &quot;6-DOF&nbsp;+ Scaling Device&quot;</LI>
+
+<LI><A HREF="#TwoHandedNavigationTool">TwoHandedNavigationTool</A> &quot;Ambidextrous 6-DOF&nbsp;+ Scaling&quot;</LI>
+
+<LI><A HREF="#MultiDeviceNavigationTool">MultiDeviceNavigationTool</A> &quot;Multiple 3-DOF Devices&quot;</LI>
+
+<LI><A HREF="#FlyNavigationTool">FlyNavigationTool</A> &quot;Fly (Direction Only)&quot;</LI>
+
+<LI><A HREF="#ValuatorFlyNavigationTool">ValuatorFlyNavigationTool</A> &quot;Valuator Fly Only&quot;</LI>
+
+<LI><A HREF="#ValuatorTurnNavigationTool">ValuatorTurnNavigationTool</A> &quot;Valuator Rotation&quot;</LI>
+
+<LI><A HREF="#ValuatorFlyTurnNavigationTool">ValuatorFlyTurnNavigationTool</A> &quot;Valuator Fly&nbsp;+ Turn&quot;</LI>
+
+<LI><A HREF="#WalkNavigationTool">WalkNavigationTool</A> &quot;Walk&quot;</LI>
+
+<LI><A HREF="#ComeHitherNavigationTool">ComeHitherNavigationTool</A> &quot;Warp to Position&quot;</LI>
+
+<LI><A HREF="#ForceJumpNavigationTool">ForceJumpNavigationTool</A> &quot;Force Jump&quot;</LI>
+
+<LI><A HREF="#ViewpointFileNavigationTool">ViewpointFileNavigationTool</A> &quot;Curve File Animation&quot;</LI>
+</UL>
+</LI>
+
+<LI>Transformer
+<UL>
+<LI><A HREF="#MouseTool">MouseTool</A> &quot;Mouse->Screen Projector&quot;</LI>
+
+<LI><A HREF="#ToggleButtonTool">ToggleButtonTool</A> &quot;Toggle Button&quot;</LI>
+
+<LI><A HREF="#ButtonToValuatorTool">ButtonToValuatorTool</A> &quot;Button -> Valuator&quot;</LI>
+
+<LI><A HREF="#ValuatorToButtonTool">ValuatorToButtonTool</A> &quot;Valuator -> Button&quot;</LI>
+
+<LI><A HREF="#TwoRayTransformTool">TwoRayTransformTool</A> &quot;Dual Ray Intersector&quot;</LI>
+
+<LI><A HREF="#SixAxisTransformTool">SixAxisTransformTool</A> &quot;Six-Axis Device&quot;</LI>
+
+<LI><A HREF="#EyeRayTool">EyeRayTool</A> &quot;View-Aligned Ray&quot;</LI>
+
+<LI><A HREF="#OffsetTool">OffsetTool</A> &quot;Offset Transformation&quot;</LI>
+
+<LI><A HREF="#WaldoTool">WaldoTool</A> &quot;Waldo (Scaling) Transformation&quot;</LI>
+
+<LI><A HREF="#ClutchTool">ClutchTool</A> &quot;Clutch Transformation&quot;</LI>
+
+<LI><A HREF="#ShiftButtonTool">ShiftButtonTool</A> &quot;Shift Button&quot;</LI>
+
+<LI><A HREF="#MultiShiftButtonTool">MultiShiftButtonTool</A> &quot;Radio Buttons&quot;</LI>
+
+<LI><A HREF="#RevolverTool">RevolverTool</A> &quot;Revolver Multi-Button&quot;</LI>
+</UL>
+</LI>
+
+<LI>User Interface
+<UL>
+<LI><A HREF="#UserInterfaceTool">UserInterfaceTool</A> (abstract class; not in tool selection menu)</LI>
+
+<LI>Menu Handler
+<UL>
+<LI><A HREF="#RayMenuTool">RayMenuTool</A> &quot;Free-Standing menu&quot;</LI>
+
+<LI><A HREF="#RayScreenMenuTool">RayScreenMenuTool</A> &quot;Screen-Aligned Menu&quot;</LI>
+
+<LI><A HREF="#PanelMenuTool">PanelMenuTool</A> &quot;Device-Attached Menu&quot;</LI>
+</UL>
+</LI>
+
+<LI>Input Device Driver
+<UL>
+<LI><A HREF="#RayInputDeviceTool">RayInputDeviceTool</A> &quot;Ray-Based Driver&quot;</LI>
+
+<LI><A HREF="#ButtonInputDeviceTool">ButtonInputDeviceTool</A> &quot;Button-Based Driver&quot;</LI>
+
+<LI><A HREF="#SixAxisInputDeviceTool">SixAxisInputDeviceTool</A> &quot;Six-Axis Driver&quot;</LI>
+
+<LI><A HREF="#SixDofInputDeviceTool">SixDofInputDeviceTool</A> &quot;6-DOF Driver&quot;</LI>
+
+<LI><A HREF="#PlaneSnapInputDeviceTool">PlaneSnapInputDeviceTool</A> &quot;Plane Snapper&quot;</LI>
+</UL>
+</LI>
+
+<LI><A HREF="#WidgetTool">WidgetTool</A> &quot;GUI Interaction&quot;</LI>
+
+<LI><A HREF="#ScrollTool">ScrollTool</A> &quot;GUI Scrolling&quot;</LI>
+
+<LI><A HREF="#DaisyWheelTool">DaisyWheelTool</A> &quot;Daisy Wheel&quot;</LI>
+
+<LI><A HREF="#QuikWriteTool">QuikWriteTool</A> &quot;QuikWrite&quot;</LI>
+</UL>
+</LI>
+
+<LI>Pointer
+<UL>
+<LI><A HREF="#LaserpointerTool">LaserpointerTool</A> &quot;Laser Pointer&quot;</LI>
+
+<LI><A HREF="#FlashlightTool">FlashlightTool</A> &quot;Flashlight&quot;</LI>
+
+<LI><A HREF="#ClipPlaneTool">ClipPlaneTool</A> &quot;Clipping Plane&quot;</LI>
+
+<LI><A HREF="#JediTool">JediTool</A> &quot;Jedi Tool&quot;</LI>
+</UL>
+</LI>
+
+<LI>Utility
+<UL>
+<LI><A HREF="#MeasurementTool">MeasurementTool</A> &quot;Measurement Tool&quot;</LI>
+
+<LI><A HREF="#SketchingTool">SketchingTool</A> &quot;Curve Editor&quot;</LI>
+
+<LI><A HREF="#AnnotationTool">AnnotationTool</A> &quot;Annotation Tool&quot;</LI>
+
+<LI><A HREF="#ViewpointSaverTool">ViewpointSaverTool</A> &quot;Viewpoint Recorder&quot;</LI>
+
+<LI><A HREF="#CurveEditorTool">CurveEditorTool</A> &quot;Viewpoint Curve Editor&quot;</LI>
+
+<LI><A HREF="#ScreenshotTool">ScreenshotTool</A> &quot;Virtual Still Camera&quot;</LI>
+
+<LI><A HREF="#ScreenshotTool">NopTool</A> &quot;Do Nothing&quot;</LI>
+</UL>
+</LI>
+</UL>
+
+<H2>Tool Class Settings Reference</H2>
+
+<A NAME="SixDofLocatorTool"><H3>SixDofLocatorTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Locate point at device position.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="ScreenLocatorTool"><H3>ScreenLocatorTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Locate point at projection of device position on closest screen.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>crosshairSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Size of the crosshairs indicating the tool's screen position, in physical coordinate units. If set to zero, no crosshairs will be drawn.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WaldoLocatorTool"><H3>WaldoLocatorTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Locate point at device position; scale translations and rotations of device while active.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>linearScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Scale factor between translations of the tool's device and the locator while active.</TD>
+</TR>
+
+<TR>
+<TD>angularScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Scale factor between rotations of the tool's device and the locator while active.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixDofDraggingTool"><H3>SixDofDraggingTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Drag from device position.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="WaldoDraggingTool"><H3>WaldoDraggingTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Drag from device position; scale translations and rotations of device while active.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>linearScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Scale factor between translations of the tool's device and the dragger while active.</TD>
+</TR>
+
+<TR>
+<TD>angularScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD></TD><TD>0.25</TD>
+<TD>Scale factor between rotations of the tool's device and the dragger while active.</TD>
+</TR>
+</TABLE>
+
+<A NAME="MouseSurfaceNavigationTool"><H3>MouseSurfaceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>2</TD>
+<TD>1: Rotate around display center. Optionally: Interact with 3D GUI widgets.<BR>
+    2: If 1 not pressed: Pan along surface. Otherwise: Scale around display center.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>Scale around display center.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/4.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to be moved in rotation mode to rotate the model by one radians.</TD>
+</TR>
+
+<TR>
+<TD>screenScalingDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, -1.0, 0.0)</TD>
+<TD>Direction in screen coordinates along which the mouse has to slide to scale in scaling mode.</TD>
+</TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/4.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to slide along the scaling direction in scaling mode to scale by a factor of e.</TD>
+</TR>
+
+<TR>
+<TD>wheelScaleFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.5</TD>
+<TD>Scale factor to apply for each tick of the mouse wheel.</TD>
+</TR>
+
+<TR>
+<TD>throwThreshold</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to move while button 2 is released in panning mode to trigger throwing animation.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A></TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the display center to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A></TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the display center is snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>showCompass</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the compass rose showing the 0&deg; azimuth direction (&quot;north&quot;).</TD>
+</TR>
+
+<TR>
+<TD>compassSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*5.0</TD>
+<TD>Radius of the displayed compass rose in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>compassThickness</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*0.5</TD>
+<TD>Thickness of the displayed compass rose's azimuth band in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>showScreenCenter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to show crosshairs indicating the screen plane and the screen center while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>interactWithWidgets</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the tool's first button interacts with 3D GUI widgets if pressed over a displayed widget.</TD>
+</TR>
+</TABLE>
+
+<A NAME="FPSNavigationTool"><H3>FPSNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>6</TD>
+<TD>1: Toggle tool activation state.<BR>
+    2: Strafe left.<BR>
+    3: Strafe right.<BR>
+    4: Walk backwards.<BR>
+    5: Walk forward.<BR>
+    6: Jump</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>activationToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the activation button acts as a toggle.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(<A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/2, <A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/2)</TD>
+<TD>Distance in physical coordinate units by which the input device has to be moved to rotate the model by one radians horizontally and vertically, respectively. A factor of 0.0 is a special case that completely disables rotation in that direction.</TD>
+</TR>
+
+<TR>
+<TD>moveSpeeds</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of exactly two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(200.0"/s, 200"/s)</TD>
+<TD>Movement speed in physical coordinate units per second.</TD>
+</TR>
+
+<TR>
+<TD>fallAcceleration</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>9.81m/s<SUP>2</SUP></TD>
+<TD>Acceleration when falling towards the surface in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>jumpVelocity</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>4.0m/s</SUP></TD>
+<TD>Instantaneous vertical velocity applied when the user requests to jump.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>12.0"</TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the viewer's feet to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>24.0"</TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the viewer's feet are snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>azimuthStep</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.0&deg;</TD>
+<TD>Discrete increment in azimuth angle in degrees during mouse rotation to fight motion sickness for HMD users.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>levelOnExit</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether to reset the tool's elevation to zero upon deactivation.</TD>
+</TR>
+
+<TR>
+<TD>drawHud</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the six-axis navigation tool's heads-up display, indicating azimuth, elevation, and roll angles.</TD>
+</TR>
+
+<TR>
+<TD>hudColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Color to draw the HUD.</TD>
+</TR>
+
+<TR>
+<TD>hudDist</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>Distance from main viewer's head position to <A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Distance from the viewer's eye to the HUD plane in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5</TD>
+<TD>Radius of the HUD physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudFontSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*1.5</TD>
+<TD>Font size for the HUD in physical coordinate units.</TD>
+</TR>
+</TABLE>
+
+<A NAME="FiveAxisSurfaceNavigationTool"><H3>FiveAxisSurfaceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>5</TD>
+<TD>1: Translate along local X axis (right/left).<BR>
+    2: Translate along local Y axis (forward/backwards).<BR>
+    3: Rotate around surface Z axis (yaw).<BR>
+    4: Rotate around surface X axis (pitch).<BR>
+    5: Scale.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>translateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(<A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>, <A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>)</TD>
+<TD>Maximum translation speeds along X and Y axes, respectively, in physical coordinate units/s.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(180.0&deg;/s, 180.0&deg;/s)</TD>
+<TD>Maximum rotation speeds in yaw and pitch, respectively, in degree/s.</TD>
+</TR>
+
+<TR>
+<TD>zoomFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Unitless zoom factor in 1/s. This is the natural logarithm of the zoom factor achieved when the zoom axis is held at its maximal value for one second.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A></TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the display center to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A></TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the display center is snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>showCompass</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the compass rose showing the 0&deg; azimuth direction (&quot;north&quot;).</TD>
+</TR>
+
+<TR>
+<TD>compassSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*5.0</TD>
+<TD>Radius of the displayed compass rose in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>compassThickness</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*0.5</TD>
+<TD>Thickness of the displayed compass rose's azimuth band in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>showScreenCenter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to show crosshairs indicating the screen plane and the screen center while the tool is active.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixAxisSurfaceNavigationTool"><H3>SixAxisSurfaceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>1: Tool activation state.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>6</TD>
+<TD>1: Translate along local X axis (right/left).<BR>
+    2: Translate along local Y axis (forward/backwards).<BR>
+    3: Translate along local Z axis (up/down).<BR>
+    4: Rotate around surface Z axis (yaw).<BR>
+    5: Rotate around surface X axis (pitch).<BR>
+    6: Rotate around surface Y axis (roll).</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>activationToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the activation button acts as a toggle.</TD>
+</TR>
+
+<TR>
+<TD>translateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of three <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(<A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>, <A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>, <A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>)</TD>
+<TD>Maximum translation speeds along X, Y, and Z axes, respectively, in physical coordinate units/s.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of three <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(180.0&deg;/s, 180.0&deg;/s, 180.0&deg;/s)</TD>
+<TD>Maximum rotation speeds in yaw, pitch, and roll, respectively, in degree/s.</TD>
+</TR>
+
+<TR>
+<TD>canRoll</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the navigation tool allows rolling away from level orientation.</TD>
+</TR>
+
+<TR>
+<TD>bankTurns</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the navigation tool links roll angle to the current yaw angular velocity.</TD>
+</TR>
+
+<TR>
+<TD>bankFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>60.0</TD>
+<TD>Maximum banking angle during banking turns in degrees.</TD>
+</TR>
+
+<TR>
+<TD>levelSpeed</TD><TD>positive <A HREF="VruiCFGTypes.html#number">number</A></TD><TD>5.0</TD>
+<TD>Relative speed at which the navigation tool attains a given roll angle.</TD>
+</TR>
+
+<TR>
+<TD>canFly</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the navigation tool allows flying above the surface.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.5m</TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the viewer's feet to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.5m</TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the viewer's feet are snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>drawHud</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the six-axis navigation tool's heads-up display, indicating azimuth, elevation, and roll angles.</TD>
+</TR>
+
+<TR>
+<TD>hudColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Color to draw the HUD.</TD>
+</TR>
+
+<TR>
+<TD>hudDist</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>Distance from main viewer's head position to <A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Distance from the viewer's eye to the HUD plane in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A></TD>
+<TD>Radius of the HUD physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudFontSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*1.5</TD>
+<TD>Font size for the HUD in physical coordinate units.</TD>
+</TR>
+</TABLE>
+
+<A NAME="HelicopterNavigationTool"><H3>HelicopterNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>3</TD>
+<TD>1: Tool activation state.<BR>
+    2: Forward thrust.<BR>
+    3: Reverse thrust.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>6</TD>
+<TD>1: Cyclic pitch control.<BR>
+    2: Cyclic roll control.<BR>
+    3: Rudder yaw control.<BR>
+    4: Collective control.<BR>
+    5: Viewing yaw.<BR>
+    6: Viewing pitch.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>activationToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the activation button acts as a toggle.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of three <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(-60.0&deg;/s, -60.0&deg;/s, 45.0&deg;/s)</TD>
+<TD>Maximum rotation speeds in roll, pitch, and yaw, respectively, in degree/s.</TD>
+</TR>
+
+<TR>
+<TD>g</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>9.81m/s<SUP>2</SUP></TD>
+<TD>Gravity acceleration in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>collectiveMin</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.0m/s<SUP>2</SUP></TD>
+<TD>Minimum collective acceleration.</TD>
+</TR>
+
+<TR>
+<TD>collectiveMax</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>g*1.5</TD>
+<TD>Maximum collective acceleration.</TD>
+</TR>
+
+<TR>
+<TD>thrust</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>g*1.0</TD>
+<TD>Forward thrust acceleration.</TD>
+</TR>
+
+<TR>
+<TD>brake</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>g*0.5</TD>
+<TD>Reverse thrust acceleration.</TD>
+</TR>
+
+<TR>
+<TD>dragCoefficients</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.3, 0.1, 0.3)</TD>
+<TD>Drag coefficient tensor in helicopter's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>viewAngleFactors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>(35.0&deg;, -25.0&deg;)</TD>
+<TD>Yaw and pitch viewing angles in degrees when the respective valuators are at their maximum values.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.5m</TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the viewer's feet to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.5m</TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the viewer's feet are snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>drawHud</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the helicopter tool's heads-up display, indicating azimuth, elevation, and roll angles and relative flight path.</TD>
+</TR>
+
+<TR>
+<TD>hudColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Color to draw the HUD.</TD>
+</TR>
+
+<TR>
+<TD>hudDist</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>Distance from main viewer's head position to <A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Distance from the viewer's eye to the HUD plane in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A></TD>
+<TD>Radius of the HUD physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudFontSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*1.5</TD>
+<TD>Font size for the HUD in physical coordinate units.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WalkSurfaceNavigationTool"><H3>WalkSurfaceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Toggle tool's activation state.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>1</TD>
+<TD>Fire a &quot;jetpack&quot; thruster along the ray direction of the device associated with the valuator.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>centerOnActivation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool's center point is set to the viewer's foot position when the tool is activated.</TD>
+</TR>
+
+<TR>
+<TD>centerPoint</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Center point of the movement circle in physical coordinate system. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>moveSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/s</TD>
+<TD>Maximum walking speed in physical coordinate units per second if the viewer stepped outside the outer movement circle.</TD>
+</TR>
+
+<TR>
+<TD>innerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5</TD>
+<TD>Radius of the inner movement circle. Movement speed is set to zero when the viewer is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.75</TD>
+<TD>Radius of the outer movement circle. Movement speed varies linearly between zero and the maximum walking speed as the viewer moves from the inner circle to the outer circle.</TD>
+</TR>
+
+<TR>
+<TD>centerViewDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD><A HREF="VruiConfigurationFileReference.html#forwardDirection">forwardDirection</A></TD>
+<TD>Direction of the center line of the rotation cone. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>rotateSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;/s</TD>
+<TD>Maximum rotation speed in degrees per second if the viewer looks outside the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>innerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>30.0&deg;</TD>
+<TD>Inner rotation angle. Rotation speed is set to zero while the view direction is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;</TD>
+<TD>Outer rotation angle. Rotation speed varies linearly between zero and maximum rotation speed as the viewer looks from the inner rotation angle to the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>fallAcceleration</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>9.81m/s<SUP>2</SUP></TD>
+<TD>Acceleration when falling towards the surface in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>jetpackAcceleration</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>fallAcceleration*1.5</TD>
+<TD>Maximum acceleration of virtual jetpack in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>12.0"</TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the viewer's feet to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>24.0"</TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the viewer's feet are snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>drawMovementCircles</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the movement circles and the rotation cone while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>movementCircleColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Line color with which to draw the movement circles and rotation cone.</TD>
+</TR>
+
+<TR>
+<TD>drawHud</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the heads-up display indicating the current azimuth angle.</TD>
+</TR>
+
+<TR>
+<TD>hudFontSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Size of heads-up display's font in physical coordinate units.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ValuatorWalkSurfaceNavigationTool"><H3>ValuatorWalkSurfaceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Toggle tool's activation state.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>2</TD>
+<TD>1: Move along local X axis (right/left).<BR>
+    2: Move along local Y axis (forward/backwards).</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>2</TD>
+<TD>Rotate around the local Z axis (up direction).</TD>
+<TD>Fire a &quot;jetpack&quot; thruster along the ray direction of the device associated with the valuator.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>activationToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the tool's activation button acts as a toggle button.</TD>
+</TR>
+
+<TR>
+<TD>centerOnActivation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool's center point is set to the viewer's foot position when the tool is activated.</TD>
+</TR>
+
+<TR>
+<TD>centerPoint</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Center point of the movement circle in physical coordinate system. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>moveSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/s</TD>
+<TD>Maximum walking speed in physical coordinate units per second if the viewer stepped outside the outer movement circle.</TD>
+</TR>
+
+<TR>
+<TD>innerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5</TD>
+<TD>Radius of the inner movement circle. Movement speed is set to zero when the viewer is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.75</TD>
+<TD>Radius of the outer movement circle. Movement speed varies linearly between zero and the maximum walking speed as the viewer moves from the inner circle to the outer circle.</TD>
+</TR>
+
+<TR>
+<TD>valuatorMoveSpeed</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of two <A HREF="VruiCFGTypes.html#number">numbers</A></TD><TD>moveSpeed</TD>
+<TD>Maximum walking speed in physical coordinate units per second for X and Y axis valuators.</TD>
+</TR>
+
+<TR>
+<TD>valuatorViewFollowFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Blending factor in the range [0, 1] such that valuator movement is relative to the fixed forward direction (0) or the current view direction (1).</TD>
+</TR>
+
+<TR>
+<TD>centerViewDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD><A HREF="VruiConfigurationFileReference.html#forwardDirection">forwardDirection</A></TD>
+<TD>Direction of the center line of the rotation cone. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>rotateSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;/s</TD>
+<TD>Maximum rotation speed in degrees per second if the viewer looks outside the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>innerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>30.0&deg;</TD>
+<TD>Inner rotation angle. Rotation speed is set to zero while the view direction is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;</TD>
+<TD>Outer rotation angle. Rotation speed varies linearly between zero and maximum rotation speed as the viewer looks from the inner rotation angle to the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>valuatorSnapRotate</TD><TD><A HREF="VruiCFGTypes.html#bool">bool</A></TD><TD>false</TD>
+<TD>Flag to enable snap rotation, where pushing the rotation valuator all the way left or right rotates instantaneously by the valuatorRotateSpeed angle.</TD>
+</TR>
+
+<TR>
+<TD>valuatorRotateSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>rotateSpeed</TD>
+<TD>Maximum rotation speed in degrees per second when using the rotation valuator if valuatorSnapRotate is false, or instantaneous rotation angle in degrees if valuatorSnapRotate is true.</TD>
+</TR>
+
+<TR>
+<TD>fallAcceleration</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>9.81m/s<SUP>2</SUP></TD>
+<TD>Acceleration when falling towards the surface in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>jetpackAcceleration</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>fallAcceleration*1.5</TD>
+<TD>Maximum acceleration of virtual jetpack in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>probeSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>12.0"</TD>
+<TD>Radius in physical coordinate units of the probe sphere used to lock the viewer's feet to the surface.</TD>
+</TR>
+
+<TR>
+<TD>maxClimb</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>24.0"</TD>
+<TD>Maximum distance in physical coordinate units by which the probe sphere can climb when the viewer's feet are snapped to the surface.</TD>
+</TR>
+
+<TR>
+<TD>fixAzimuth</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the current azimuth angle stays constant when the surface's local coordinate frame rotates.</TD>
+</TR>
+
+<TR>
+<TD>drawMovementCircles</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the movement circles and the rotation cone while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>movementCircleColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Line color with which to draw the movement circles and rotation cone.</TD>
+</TR>
+
+<TR>
+<TD>drawHud</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the heads-up display indicating the current azimuth angle.</TD>
+</TR>
+
+<TR>
+<TD>hudRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*2.0</TD>
+<TD>Radius of heads-up display in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>hudFontSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Size of heads-up display's font in physical coordinate units.</TD>
+</TR>
+</TABLE>
+
+<A NAME="MouseNavigationTool"><H3>MouseNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>3</TD>
+<TD>1: Rotate around screen center. Optional: Interact with 3D GUI widgets.<BR>
+    2: If 1 not pressed: Pan in screen plane. Otherwise: Scale around display center, or dolly in or out of screen plane.<BR>
+    3: Switch between scaling and dollying.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>Scale around display center, or dolly in or out of screen plane.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rotatePlaneOffset</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/4.0</TD>
+<TD>The mouse navigation tool uses an offset plane formula to calculate the rotation axis based on the mouse position and mouse motion in screen coordinates. If the plane offset is zero, any mouse movement will rotate around the screen's z axis (roll); a large plane offset will favor rotation around the screen's x and y axes (yaw and pitch, respectively).</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/4.0</TD>
+<TD>Distance in physical coordinate units by which the mouse pointer has to move on screen to rotate the view by one radians.</TD>
+</TR>
+
+<TR>
+<TD>invertDolly</TD><TD><A HREF="#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether to invert the scaling/dolly switch. If false, pressing buttons 1 and 2 together or rolling the mouse wheel will scale around the display center, while additionally pressing button 3 will dolly in or out of the screen plane. If true, the roles of scaling and dollying are reversed.</TD>
+</TR>
+
+<TR>
+<TD>dollyingDirection</TD><TD><A HREF="#vector">vector</A></TD><TD>-<A HREF="VruiConfigurationFileReference.html#upDirection">upDirection</A></TD>
+<TD>Direction in physical coordinates along which the mouse has to slide to dolly in or out of the screen plane.</TD>
+</TR>
+
+<TR>
+<TD>scalingDirection</TD><TD><A HREF="#vector">vector</A></TD><TD>-<A HREF="VruiConfigurationFileReference.html#upDirection">upDirection</A></TD>
+<TD>Direction in physical coordinates along which the mouse has to slide to scale.</TD>
+</TR>
+
+<TR>
+<TD>dollyFactor</TD><TD><A HREF="#number">number</A></TD><TD>1.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to slide along the dollying direction to dolly in or out by one physical coordinate unit.</TD>
+</TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/4.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to slide along the scaling direction to scale by a factor of e.</TD>
+</TR>
+
+<TR>
+<TD>wheelDollyFactor</TD><TD><A HREF="#number">number</A></TD><TD>-<A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A></TD>
+<TD>Dollying distance in physical coordinate units to apply for each tick of the mouse wheel.</TD>
+</TR>
+
+<TR>
+<TD>wheelScaleFactor</TD><TD><A HREF="#number">number</A></TD><TD>0.5</TD>
+<TD>Scale factor to apply for each tick of the mouse wheel.</TD>
+</TR>
+
+<TR>
+<TD>spinThreshold</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A></TD>
+<TD>Distance in physical coordinate units by which the mouse has to move while button 1 is released in rotation mode to trigger spinning animation.</TD>
+</TR>
+
+<TR>
+<TD>showScreenCenter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to show crosshairs indicating the screen plane and the screen center while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>interactWithWidgets</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the tool's first button interacts with 3D GUI widgets if pressed over a displayed widget.</TD>
+</TR>
+</TABLE>
+
+<A NAME="MouseDialogNavigationTool"><H3>MouseDialogNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Rotate around screen center, or pan in screen plane, or scale around the display center, or dolly in or out of the screen plane.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rotatePlaneOffset</TD><TD><A HREF="#number">number</A></TD><TD>3.0"</TD>
+<TD>The mouse navigation tool uses an offset plane formula to calculate the rotation axis based on the mouse position and mouse motion in screen coordinates. If the plane offset is zero, any mouse movement will rotate around the screen's z axis (roll); a large plane offset will favor rotation around the screen's x and y axes (yaw and pitch, respectively).</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="#number">number</A></TD><TD>3.0"</TD>
+<TD>Distance in physical coordinate units by which the mouse pointer has to move on screen to rotate the view by one radians.</TD>
+</TR>
+
+<TR>
+<TD>screenDollyingDirection</TD><TD><A HREF="#vector">vector</A></TD><TD>(0.0, -1.0, 0.0)</TD>
+<TD>Direction in screen coordinates along which the mouse has to slide to dolly in or out of the screen plane.</TD>
+</TR>
+
+<TR>
+<TD>screenScalingDirection</TD><TD><A HREF="#vector">vector</A></TD><TD>(0.0, -1.0, 0.0)</TD>
+<TD>Direction in screen coordinates along which the mouse has to slide to scale.</TD>
+</TR>
+
+<TR>
+<TD>dollyFactor</TD><TD><A HREF="#number">number</A></TD><TD>1.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to slide along the dollying direction to dolly in or out by one physical coordinate unit.</TD>
+</TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="#number">number</A></TD><TD>3.0"</TD>
+<TD>Distance in physical coordinate units by which the mouse has to slide along the scaling direction to scale by a factor of e.</TD>
+</TR>
+
+<TR>
+<TD>spinThreshold</TD><TD><A HREF="#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Distance in physical coordinate units by which the mouse has to move while button 1 is released in rotation mode to trigger spinning animation.</TD>
+</TR>
+
+<TR>
+<TD>interactWithWidgets</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the tool's first button interacts with 3D GUI widgets if pressed over a displayed widget.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixAxisNavigationTool"><H3>SixAxisNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>7</TD>
+<TD>1: Translate along vector 0<BR>
+    2: Translate along vector 1<BR>
+    3: Translate along vector 2<BR>
+    4: Rotate around axis 0<BR>
+    5: Rotate around axis 1<BR>
+    6: Rotate around axis 2<BR>
+    7: Zoom</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>translateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/3.0</TD>
+<TD>Linear velocity factor in physical coordinate units per second by which the three translation vectors will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>translationVectors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless translation vectors in physical space. Each vector will be multiplied by the translateFactor to calculate the final physical-space translation vectors.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>180.0&deg;/s</TD>
+<TD>Angular velocity factor in degrees per second by which the three scaled rotation axes will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>scaledRotationAxes</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless scaled rotation axes in physical space. Each axis will be multiplied by the rotateFactor to calculate the final physical-space scaled rotation axes.</TD>
+</TR>
+
+<TR>
+<TD>zoomFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Unitless zoom factor in 1/s. This is the natural logarithm of the zoom factor achieved when the zoom axis is held at its maximal value for one second.</TD>
+</TR>
+
+<TR>
+<TD>navigationCenter</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Center point for rotation and zooming navigation.</TD>
+</TR>
+
+<TR>
+<TD>invertNavigation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Switches between camera-in-hand navigation mode (if false) and world-in-hand navigation mode (if true).</TD>
+</TR>
+
+<TR>
+<TD>showNavigationCenter</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to show crosshairs indicating the center of navigation while the tool is active.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixDofNavigationTool"><H3>SixDofNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab space at device position.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="ScaleNavigationTool"><H3>ScaleNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Scale around initial device position.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>scaleDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Direction of scaling line in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>-8.0"</TD>
+<TD>Distance in physical coordinate units by which the device has to slide along the scaling line to scale by a factor of e.</TD>
+</TR>
+</TABLE>
+
+<A NAME="TrackballNavigationTool"><H3>TrackballNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab virtual trackball and rotate.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Number of degrees by which the model rotates if the virtual trackball is rotated by one degree.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ValuatorScalingNavigationTool"><H3>ValuatorScalingNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>1: Scale around device's initial position.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>valuatorThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Minimum absolute valuator value at which the tool becomes active.</TD>
+</TR>
+
+<TR>
+<TD>scalingFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25/s</TD>
+<TD>Maximum change in scale per second, if valuator is held at maximum absolute value.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WandNavigationTool"><H3>WandNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>2</TD>
+<TD>1: Grab space.<BR>
+    2: If 1 already pressed: Scale around device position. Otherwise: Forwarded button.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>-8.0"</TD>
+<TD>Distance in physical coordinate units by which the device has to slide along the scaling line to scale by a factor of e.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixDofWithScaleNavigationTool"><H3>SixDofWithScaleNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>2</TD>
+<TD>1: If device is away from second device: Grab space. Otherwise: Scale around second device position.<BR>
+    2: Forwarded button.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>scaleDeviceDistance</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>4.0"</TD>
+<TD>Maximum distance between the two devices at which tool goes into scaling mode when activated.</TD>
+</TR>
+
+<TR>
+<TD>deviceScaleDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Direction of scaling line in second device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>scaleFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>8.0"</TD>
+<TD>Distance in physical coordinate units by which the device has to slide along the scaling line to scale by a factor of e.</TD>
+</TR>
+</TABLE>
+
+<A NAME="TwoHandedNavigationTool"><H3>TwoHandedNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>2</TD>
+<TD>1 or 2: By itself: Grab space. Otherwise: Scale around other device's position.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="MultiDeviceNavigationTool"><H3>MultiDeviceNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab space.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Grab space.</TD>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>translationFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Number of units by which the model translates if the centroid of the currently active devices moves by one unit.</TD>
+</TR>
+
+<TR>
+<TD>minRotationScalingDistance</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0"</TD>
+<TD>Minimum separation distance between two active devices to allow rotation and scaling.</TD>
+</TR>
+
+<TR>
+<TD>rotationFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Number of degrees by which the model translates if the currently active devices rotate around their centroid by one degree.</TD>
+</TR>
+
+<TR>
+<TD>scalingFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Ratio between the factor by which the model is scaled to the factor by which the configuration of currently active devices is scaled.</TD>
+</TR>
+</TABLE>
+
+<A NAME="FlyNavigationTool"><H3>FlyNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Fly in device-relative direction.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>flyDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Unit vector defining the flying direction in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>flyFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5/s</TD>
+<TD>Flying speed in physical coordinate units per second.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ValuatorFlyNavigationTool"><H3>ValuatorFlyNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>Fly in device-relative direction.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>valuatorThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Minimum absolute valuator value at which the tool becomes active.</TD>
+</TR>
+
+<TR>
+<TD>flyDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Unit vector defining the flying direction in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>flyFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5/s</TD>
+<TD>Flying speed in physical coordinate units per second, if valuator is at maximum absolute value.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ValuatorTurnNavigationTool"><H3>ValuatorTurnNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Fly in device-relative direction.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>2</TD>
+<TD>1: Rotate around first axis.<BR>
+    2: Rotate around second axis.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>valuatorThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Minimum absolute valuator value at which the tool becomes active.</TD>
+</TR>
+
+<TR>
+<TD>flyDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Unit vector defining the flying direction in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>flyFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5/s</TD>
+<TD>Flying speed in physical coordinate units per second.</TD>
+</TR>
+
+<TR>
+<TD>rotationAxis0</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 0.0, 1.0)</TD>
+<TD>Unit vector defining rotation axis for first valuator in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>rotationAxis1</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(1.0, 0.0, 0.0)</TD>
+<TD>Unit vector defining rotation axis for second valuator in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>rotationCenter</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD>(0.0, 0.0, 0.0)</TD>
+<TD>Center of rotation for both axes in device's local coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>rotationFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>90.0&deg;/s</TD>
+<TD>Rotation speed in degrees per second, if the respective valuator is at maximum absolute value.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ValuatorFlyTurnNavigationTool"><H3>ValuatorFlyTurnNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>2</TD>
+<TD>1: Fly in device-relative direction.<BR>
+    2: Rotate around axis.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>valuatorThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Minimum absolute valuator value at which the tool becomes active.</TD>
+</TR>
+
+<TR>
+<TD>valuatorExponent</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0</TD>
+<TD>Exponent applied to absolute valuator value to enable non-linear behavior.</TD>
+</TR>
+
+<TR>
+<TD>superAccelerationFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.1/s</TD>
+<TD>While the first valuator is held at its maximal absolute value, the flying speed increases by this factor every second.</TD>
+</TR>
+
+<TR>
+<TD>flyDirectionDeviceCoordinates</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the fly direction is defined in the device's local coordinate system (true) or in physical coordinates (false).</TD>
+</TR>
+
+<TR>
+<TD>flyDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Unit vector defining the flying direction for the first valuator in device's local coordinate system, or in physical coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>flyFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*2.0/s</TD>
+<TD>Maximum flying speed in physical coordinate units per second if first valuator is held a maximum absolute value, and without superacceleration.</TD>
+</TR>
+
+<TR>
+<TD>rotationAxisDeviceCoordinates</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the rotation axis is defined in the device's local coordinate system (true) or in physical coordinates (false).</TD>
+</TR>
+
+<TR>
+<TD>rotationAxis</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD>(0.0, 0.0, 1.0)</TD>
+<TD>Unit vector defining rotation axis for the second valuator in device's local coordinate system, or in physical coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>rotationCenterDeviceCoordinates</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the center of rotation is defined in the device's local coordinate system (true) or in physical coordinates (false).</TD>
+</TR>
+
+<TR>
+<TD>rotationCenter</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD>(0.0, 0.0, 0.0)</TD>
+<TD>Center of rotation for second valuator in device's local coordinate system, or in physical coordinate system.</TD>
+</TR>
+
+<TR>
+<TD>rotationFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>90.0&deg;/s</TD>
+<TD>Rotation speed in degrees per second, if the respective valuator is at maximum absolute value.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WalkNavigationTool"><H3>WalkNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Toggle tool's activation state.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>centerOnActivation</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool's center point is set to the viewer's foot position when the tool is activated.</TD>
+</TR>
+
+<TR>
+<TD>centerPoint</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Center point of the movement circle in physical coordinate system. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>moveSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/s</TD>
+<TD>Maximum walking speed in physical coordinate units per second if the viewer stepped outside the outer movement circle.</TD>
+</TR>
+
+<TR>
+<TD>innerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5</TD>
+<TD>Radius of the inner movement circle. Movement speed is set to zero when the viewer is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerRadius</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.75</TD>
+<TD>Radius of the outer movement circle. Movement speed varies linearly between zero and the maximum walking speed as the viewer moves from the inner circle to the outer circle.</TD>
+</TR>
+
+<TR>
+<TD>centerViewDirection</TD><TD><A HREF="VruiCFGTypes.html#vector">vector</A></TD><TD><A HREF="VruiConfigurationFileReference.html#forwardDirection">forwardDirection</A></TD>
+<TD>Direction of the center line of the rotation cone. Is projected to environment's floor plane before activation.</TD>
+</TR>
+
+<TR>
+<TD>rotateSpeed</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;/s</TD>
+<TD>Maximum rotation speed in degrees per second if the viewer looks outside the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>innerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>30.0&deg;</TD>
+<TD>Inner rotation angle. Rotation speed is set to zero while the view direction is inside.</TD>
+</TR>
+
+<TR>
+<TD>outerAngle</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>120.0&deg;</TD>
+<TD>Outer rotation angle. Rotation speed varies linearly between zero and maximum rotation speed as the viewer looks from the inner rotation angle to the outer rotation angle.</TD>
+</TR>
+
+<TR>
+<TD>drawMovementCircles</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to draw the movement circles and the rotation cone while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>movementCircleColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(0.0, 1.0, 0.0)</TD>
+<TD>Line color with which to draw the movement circles and rotation cone.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ComeHitherNavigationTool"><H3>ComeHitherNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Move device's position to display center, and its pointing direction to the forward direction. If pressed again during animation, jump immediately to final position and orientation.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>linearSnapThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.25</TD>
+<TD>Maximum translation distance in physical coordinate units for which the tool will skip animation and jump directly to the final position.</TD>
+</TR>
+
+<TR>
+<TD>angularSnapThreshold</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>15.0&deg;</TD>
+<TD>Maximum rotation angle in degrees for which the tool will skip animation and jump directly to the final orientation.</TD>
+</TR>
+
+<TR>
+<TD>maxLinearVelocity</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*5.0/s</TD>
+<TD>Maximum linear velocity in physical coordinate units per second during animation.</TD>
+</TR>
+
+<TR>
+<TD>maxAngularVelocity</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>90.0&deg;/s</TD>
+<TD>Maximum angular velocity in degrees per second during animation.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ForceJumpNavigationTool"><H3>ForceJumpNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Jump to the position of the input device, using a fancy forward flip.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>gravity</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>9.81m/s<SUP>2</SUP></TD>
+<TD>Gravity acceleration in physical coordinate units per second squared.</TD>
+</TR>
+
+<TR>
+<TD>jumpTime</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>1.0s</TD>
+<TD>Time to complete the jump to the input device's position in seconds.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ViewpointFileNavigationTool"><H3>ViewpointFileNavigationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Toggle tool's activation state. When the tool is deactivated during animation, it will resume animation at the interrupted point when re-activated.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>viewpointFileName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD><TD>&quot;&quot;</TD>
+<TD>Name of the viewpoint or curve file to load when a tool of this class is created. If the file name is left empty, a newly-instantiated tool will open a file selection dialog to load a file interactively.<BR>
+If the specified or selected file name has extension &quot;.views&quot;, the tool will read a sequence of animation keyframes, and calculate an interpolating cubic animation spline on-the-fly. If the specified or selected file name has extension &quot;.curve&quot;, the tool will read a sequence of cubic Hermite spline sections and play them back exactly as specified.</TD>
+</TR>
+
+<TR>
+<TD>showKeyframes</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether to show a representation of the next keyframe during animation. Keyframes are drawn as two lines: a green line indicating the keyframe's &quot;forward&quot; direction, and a red line indicating its &quot;up&quot; direction. The intersection point of the two lines is the keyframe's display center, and the lengths of the lines indicate the keyframe's display size.</TD>
+</TR>
+
+<TR>
+<TD>pauseFileName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD><TD>&quot;ViewpointFileNavigation.pauses&quot;</TD>
+<TD>If a file of this name exists when a tool of this class is created, the newly-instantiated tool will read a list of time stamps (in seconds) from it. The tool will automatically pause playback when reaching any of the time stamps, and can be re-activated by pressing the activation button.</TD>
+</TR>
+
+<TR>
+<TD>autostart</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool will start animating immediately after construction.</TD>
+</TR>
+
+<TR>
+<TD>showGui</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>Flag whether the tool will display a dialog window to control playback position and speed.</TD>
+</TR>
+</TABLE>
+
+<A NAME="MouseTool"><H3>MouseTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rayOffset</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Distance in physical coordinate units by which to move back the start position of intersection rays.</TD>
+</TR>
+
+<TR>
+<TD>crosshairSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.0"</TD>
+<TD>Size of crosshairs in physical coordinate units to indicate the position of the virtual input device in the screen plane. If left at 0.0", no crosshairs will be drawn.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ToggleButtonTool"><H3>ToggleButtonTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Button to be converted into a toggle button.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>onRisingEdge</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD>
+<TD>If true, the state of a virtual button is toggled when the real button changes state from released to pressed; if false, the other way.</TD>
+</TR>
+
+<A NAME="ButtonToValuatorTool"><H3>ButtonToValuatorTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Set the simulated valuator to value +1.0.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Set the simulated valuator to value -1.0.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="ValuatorToButtonTool"><H3>ValuatorToButtonTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>Simulate two buttons; one pressed when valuator is positive, one pressed when valuator is negative.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Simulate two buttons; one pressed when valuator is positive, one pressed when valuator is negative.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="TwoRayTransformTool"><H3>TwoRayTransformTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="SixAxisTransformTool"><H3>SixAxisTransformTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Reset the virtual input device to its home position.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>6</TD>
+<TD>1: Translate along vector 0<BR>
+    2: Translate along vector 1<BR>
+    3: Translate along vector 2<BR>
+    4: Rotate around axis 0<BR>
+    5: Rotate around axis 1<BR>
+    6: Rotate around axis 2</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>homePosition</TD><TD><A HREF="VruiCFGTypes.html#point">point</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displayCenter">displayCenter</A></TD>
+<TD>Home position for the tool's virtual input device. Newly-instantiated tools position their virtual devices at the home position, and pressing the home button will return the virtual input device to the home position.</TD>
+</TR>
+
+<TR>
+<TD>translateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/3.0</TD>
+<TD>Linear velocity factor in physical coordinate units per second by which the three translation vectors will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>translationVectors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless translation vectors in physical space. Each vector will be multiplied by the translateFactor to calculate the final physical-space translation vectors.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>180.0&deg;/s</TD>
+<TD>Angular velocity factor in degrees per second by which the three scaled rotation axes will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>scaledRotationAxes</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless scaled rotation axes in physical space. Each axis will be multiplied by the rotateFactor to calculate the final physical-space scaled rotation axes.</TD>
+</TR>
+
+<TR>
+<TD>deviceGlyphType</TD><TD><A HREF="VruiCFGTypes.html#glyphtype">glyph type</A></TD><TD>Cone</TD>
+<TD>Type of glyph used to draw a 3D representation of the virtual input device in the Vrui display environment.</TD>
+</TR>
+
+<TR>
+<TD>deviceGlyphMaterial</TD><TD><A HREF="VruiCFGTypes.html#material">material</A></TD><TD>{AmbientDiffuse=(0.5, 0.5, 0.5); Specular=(1.0, 1.0, 1.0); Shininess=25.0;}</TD>
+<TD>Material properties to render the virtual input device's glyph.</TD>
+</TR>
+</TABLE>
+
+<A NAME="EyeRayTool"><H3>EyeRayTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="OffsetTool"><H3>OffsetTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>offset</TD><TD><A HREF="VruiCFGTypes.html#trackerstate">tracker state</A></TD><TD>translate (0.0, <A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*0.5, 0.0)</TD>
+<TD>Offset transformation from source input device to transformed input device, in source device's local coordinate system.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WaldoTool"><H3>WaldoTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>linearScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Scale factor between translations of the tool's source device and the transformed device while active.</TD>
+</TR>
+
+<TR>
+<TD>angularScale</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>0.25</TD>
+<TD>Scale factor between rotations of the tool's tool's source device and the transformed device while active.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ClutchTool"><H3>ClutchTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Disengage source input device from transformed input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>clutchButtonToggleFlag</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the clutch button acts as a toggle.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ShiftButtonTool"><H3>ShiftButtonTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Shift between button/valuator planes.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>toggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the shift button acts as a toggle.</TD>
+</TR>
+
+<TR>
+<TD>forwardShiftButton</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the shift button itself is forwarded to both button planes, reflecting the status of the currently active plane.</TD>
+</TR>
+
+<TR>
+<TD>resetFeatures</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether buttons and valuators reset to their default values when the tool shifts away from their plane.</TD>
+</TR>
+</TABLE>
+
+<A NAME="MultiShiftButtonTool"><H3>MultiShiftButtonTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>First radio button.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Additional radio buttons or forwarded to virtual input device, depending on number of configured button/valuator planes.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>numPlanes</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD><TD>2</TD>
+<TD>Number of button/valuator planes and radio buttons.</TD>
+</TR>
+
+<TR>
+<TD>forwardRadioButtons</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the radio buttons themselves are forwarded to their respective button planes, reflecting the status of the currently active plane.</TD>
+</TR>
+
+<TR>
+<TD>resetFeatures</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether buttons and valuators reset to their default values when the tool shifts away from their plane.</TD>
+</TR>
+
+<TR>
+<TD>initialPlane</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD><TD>0</TD>
+<TD>Index of button/valuator plane activated when a tool is created.</TD>
+</TR>
+</TABLE>
+
+<A NAME="RevolverTool"><H3>RevolverTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Cycle revolver chamber.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>numChambers</TD><TD><A HREF="VruiCFGTypes.html#integer">integer</A></TD><TD>6</TD>
+<TD>Number of chambers on the revolver. Each chamber contains copies of all optional forwarded buttons and valuators.</TD>
+</TR>
+</TABLE>
+
+<A NAME="UserInterfaceTool"><H3>UserInterfaceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>useEyeRay</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether all classes derived from UserInterfaceTool use a ray from the main viewer's head position to the device position as interaction ray instead of the device's own ray direction.</TD>
+</TR>
+
+<TR>
+<TD>rayOffset</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A>*2.0</TD>
+<TD>Distance in physical coordinate units by which to move back the start position of interaction rays when not using eye rays.</TD>
+</TR>
+
+<TR>
+<TD>drawRay</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true if useEyeRay is false; true otherwise</TD>
+<TD>Flag whether all classes derived from UserInterfaceTool draw the interaction ray when active.</TD>
+</TR>
+
+<TR>
+<TD>rayWidth</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>3.0</TD>
+<TD>Cosmetic line width to draw the interaction ray in pixels.</TD>
+</TR>
+
+<TR>
+<TD>rayColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(1.0, 0.0, 0.0)</TD>
+<TD>Color with which to draw the interaction ray.</TD>
+</TR>
+</TABLE>
+
+<A NAME="RayMenuTool"><H3>RayMenuTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Pop up and interact with menu.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>initialMenuOffset</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>6.0"</TD>
+<TD>Distance in physical coordinate units along device's interaction ray from device's position to menu pop-up position.</TD>
+</TR>
+
+<TR>
+<TD>interactWithWidgets</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool's button interacts with 3D GUI widgets if pressed over a displayed widget.</TD>
+</TR>
+</TABLE>
+
+<A NAME="RayScreenMenuTool"><H3>RayScreenMenuTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Pop up and interact with menu.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>interactWithWidgets</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD>
+<TD>Flag whether the tool's button interacts with 3D GUI widgets if pressed over a displayed widget.</TD>
+</TR>
+</TABLE>
+
+<A NAME="PanelMenuTool"><H3>PanelMenuTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Forwarded button.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="RayInputDeviceTool"><H3>RayInputDeviceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>3.0"</TD>
+<TD>Distance in physical coordinate units by which a virtual input device's edge has to be dragged to rotate by one radians.</TD>
+</TR>
+</TABLE>
+
+<A NAME="ButtonInputDeviceTool"><H3>ButtonInputDeviceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>8</TD>
+<TD>1: Switch control to the next virtual input device.<BR>
+    2: Switch between translation and rotation modes.<BR>
+    3: Translate along -X or rotate around -Z.<BR>
+    4: Translate along +X or rotate around +Z.<BR>
+    5: Translate along -Y or rotate around -Y.<BR>
+    6: Translate along +Y or rotate around +Y.<BR>
+    7: Translate along -Z or rotate around -X.<BR>
+    8: Translate along +Z or rotate around +X.<BR>
+</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to currently controlled virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to currently controlled virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>translateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>4.0"/s</TD><TD>Speed in physical coordinate units by which the controlled virtual input device moves if a translate button is pressed.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>60.0&deg;/s</TD><TD>Angular speed by which the controlled virtual input device rotates if a rotate button is pressed.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixAxisInputDeviceTool"><H3>SixAxisInputDeviceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab virtual input device based on ray selection.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD>6</TD>
+<TD>1: Translate along vector 0<BR>
+    2: Translate along vector 1<BR>
+    3: Translate along vector 2<BR>
+    4: Rotate around axis 0<BR>
+    5: Rotate around axis 1<BR>
+    6: Rotate around axis 2</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>selectButtonToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>true</TD><TD>Flag whether the grab button acts as a toggle.</TD>
+</TR>
+
+<TR>
+<TD>translateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>/3.0</TD>
+<TD>Linear velocity factor in physical coordinate units per second by which the three translation vectors will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>translationVectors</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless translation vectors in physical space. Each vector will be multiplied by the translateFactor to calculate the final physical-space translation vectors.</TD>
+</TR>
+
+<TR>
+<TD>rotateFactor</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>180.0&deg;/s</TD>
+<TD>Angular velocity factor in degrees per second by which the three scaled rotation axes will be multiplied.</TD>
+</TR>
+
+<TR>
+<TD>scaledRotationAxes</TD><TD><A HREF="VruiCFGTypes.html#list">list</A> of <A HREF="VruiCFGTypes.html#vector">vectors</A></TD><TD>((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))</TD>
+<TD>List of exactly three unitless scaled rotation axes in physical space. Each axis will be multiplied by the rotateFactor to calculate the final physical-space scaled rotation axes.</TD>
+</TR>
+</TABLE>
+
+<A NAME="SixDofInputDeviceTool"><H3>SixDofInputDeviceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Forwarded to grabbed virtual input device.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>selectButtonToggle</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD><TD>Flag whether the grab button acts as a toggle.</TD>
+</TR>
+</TABLE>
+
+<A NAME="PlaneSnapInputDeviceTool"><H3>PlaneSnapInputDeviceTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Grab virtual input device or select plane points.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>markerSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiSize">uiSize</A></TD>
+<TD>Size of the markers indicating the tool's currently selected plane points, in physical coordinate units. If set to zero, no markers will be drawn.</TD>
+</TR>
+</TABLE>
+
+<A NAME="WidgetTool"><H3>WidgetTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Interact with GUI widgets.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="ScrollTool"><H3>ScrollTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+<TR>
+<TD>Required Valuators</TD><TD>1</TD>
+<TD>Scroll in GUI widgets.</TD>
+</TR>
+</TABLE><P>
+
+<A NAME="DaisyWheelTool"><H3>DaisyWheelTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Select in daisy wheel.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="QuikWriteTool"><H3>QuikWriteTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Pop up and interact with QuikWrite panel.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>deviceName</TD><TD><A HREF="VruiCFGTypes.html#string">string</A></TD><TD>(not set)</TD>
+<TD>If present, specifies the name of an input device to be used for interaction instead of the device bound to the first button slot. Added as a hack to support gaze-directed writing.</TD>
+</TR>
+
+<TR>
+<TD>squareSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#uiFontTextHeight">uiFontTextHeight</A>*10.0</TD><TD>Overall side length of QuikWrite panel.</TD>
+</TR>
+
+<TR>
+<TD>initialSquareDist</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>3.0"</TD><TD>Initial distance in physical coordinate units along device's selection ray when popping up the QuikWrite panel.</TD>
+</TR>
+
+<TR>
+<TD>backgroundColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD><A HREF="VruiConfigurationFileReference.html#backgroundColor">backgroundColor</A></TD><TD>Background color for the QuikWrite panel.</TD>
+</TR>
+
+<TR>
+<TD>foregroundColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>Complement of <A HREF="VruiConfigurationFileReference.html#backgroundColor">backgroundColor</A></TD><TD>Foreground and text color for the QuikWrite panel.</TD>
+</TR>
+
+<TR>
+<TD>drawPoint</TD><TD><A HREF="VruiCFGTypes.html#boolean">boolean</A></TD><TD>false</TD><TD>Flag whether to draw the current interaction point while the tool is active.</TD>
+</TR>
+
+<TR>
+<TD>pointColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>Complement of <A HREF="VruiConfigurationFileReference.html#backgroundColor">backgroundColor</A></TD><TD>Color to draw the intersection point.</TD>
+</TR>
+
+<TR>
+<TD>pointSize</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>3.0</TD><TD>Size to draw the intersection point in pixels.</TD>
+</TR>
+</TABLE>
+
+<A NAME="LaserpointerTool"><H3>LaserpointerTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD>1</TD>
+<TD>Activate laser pointer.</TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+
+<TR>
+<TD>rayLength</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD><A HREF="VruiConfigurationFileReference.html#displaySize">displaySize</A>*5.0</TD><TD>Length of the laser pointer ray in physical coordinate units.</TD>
+</TR>
+
+<TR>
+<TD>rayLineWidth</TD><TD><A HREF="VruiCFGTypes.html#number">number</A></TD><TD>3.0</TD><TD>Cosmetic line width in pixels with which to draw the laser pointer ray.</TD>
+</TR>
+
+<TR>
+<TD>rayColor</TD><TD><A HREF="VruiCFGTypes.html#color">color</A></TD><TD>(1.0, 0.0, 0.0)</TD><TD>Color with which to draw the laser pointer ray.</TD>
+</TR>
+</TABLE>
+
+<A NAME="FlashlightTool"><H3>FlashlightTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="ClipPlaneTool"><H3>ClipPlaneTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="JediTool"><H3>JediTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="MeasurementTool"><H3>MeasurementTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="SketchingTool"><H3>SketchingTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="AnnotationTool"><H3>AnnotationTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="ViewpointSaverTool"><H3>ViewpointSaverTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="CurveEditorTool"><H3>CurveEditorTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="ScreenshotTool"><H3>ScreenshotTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Required Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Required Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD></TD>
+<TD></TD>
+</TR>
+</TABLE><P>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Setting Tag</TH><TH>Setting Value Type</TH><TH>Default Value</TH><TH>Setting Description</TH></TR>
+</TABLE>
+
+<A NAME="NopTool"><H3>NopTool</H3></A>
+
+<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=1>
+<TR><TH>Input</TH><TH>Number</TH><TH>Function Description</TH></TR>
+
+<TR>
+<TD>Optional Buttons</TD><TD>&gt;=0</TD>
+<TD>Ignored buttons.</TD>
+</TR>
+
+<TR>
+<TD>Optional Valuators</TD><TD>&gt;=0</TD>
+<TD>Ignored valuators.</TD>
+</TR>
+</TABLE><P>
+
+</BODY>
+</HTML>
+

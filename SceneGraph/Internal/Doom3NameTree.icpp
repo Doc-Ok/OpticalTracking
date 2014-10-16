@@ -1,0 +1,204 @@
+/***********************************************************************
+Doom3NameTree - Generic class to store named items in a hierarchical
+fashion, basically as in a file system directory tree.
+Copyright (c) 2007-2010 Oliver Kreylos
+
+This file is part of the Simple Scene Graph Renderer (SceneGraph).
+
+The Simple Scene Graph Renderer is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Simple Scene Graph Renderer is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Simple Scene Graph Renderer; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define SCENEGRAPH_INTERNAL_DOOM3NAMETREE_IMPLEMENTATION
+
+#include <SceneGraph/Internal/Doom3NameTree.h>
+
+#include <string.h>
+
+namespace SceneGraph {
+
+/********************************************
+Methods of class Doom3NameTree::InteriorNode:
+********************************************/
+
+template <class LeafNodeValueParam>
+inline
+Doom3NameTree<LeafNodeValueParam>::InteriorNode::~InteriorNode(
+	void)
+	{
+	/* Destroy all child interior nodes: */
+	for(typename std::vector<InteriorNode*>::iterator inIt=childNodes.begin();inIt!=childNodes.end();++inIt)
+		delete *inIt;
+	
+	/* Destroy all child leaf nodes: */
+	for(typename std::vector<LeafNode*>::iterator lnIt=leafNodes.begin();lnIt!=leafNodes.end();++lnIt)
+		delete *lnIt;
+	}
+
+/******************************
+Methods of class Doom3NameTree:
+******************************/
+
+template <class LeafNodeValueParam>
+inline
+typename Doom3NameTree<LeafNodeValueParam>::LeafID
+Doom3NameTree<LeafNodeValueParam>::insertLeaf(
+	const char* nodeName,
+	const typename Doom3NameTree<LeafNodeValueParam>::LeafNodeValue& nodeValue)
+	{
+	/* Start searching in the root directory: */
+	InteriorNode* currentNode=&root;
+	const char* nnPtr=nodeName;
+	while(true)
+		{
+		/* Remove leading slashes from the node name: */
+		while(*nnPtr=='/'||*nnPtr=='\\')
+			++nnPtr;
+		
+		/* Check if the node name starts with a directory name: */
+		const char* slashPtr;
+		for(slashPtr=nnPtr;*slashPtr!='\0'&&*slashPtr!='/'&&*slashPtr!='\\';++slashPtr)
+			;
+		if(*slashPtr=='\0') // No directory name
+			break;
+		
+		/* It's a leaf node in a subdirectory; find the subdirectory: */
+		std::string subDirName(nnPtr,slashPtr);
+		typename std::vector<InteriorNode*>::iterator inIt;
+		for(inIt=currentNode->childNodes.begin();inIt!=currentNode->childNodes.end()&&strcasecmp((*inIt)->name.c_str(),subDirName.c_str())!=0;++inIt)
+			;
+		if(inIt==currentNode->childNodes.end()) // Directory not found
+			{
+			/* Create a new directory: */
+			inIt=currentNode->childNodes.insert(inIt,new InteriorNode(subDirName));
+			}
+		
+		/* Recurse into the subdirectory: */
+		nnPtr=slashPtr;
+		currentNode=*inIt;
+		}
+	
+	if(*nnPtr!='\0')
+		{
+		/* Find the leaf node in the current directory: */
+		typename std::vector<LeafNode*>::iterator lnIt;
+		for(lnIt=currentNode->leafNodes.begin();lnIt!=currentNode->leafNodes.end()&&strcasecmp((*lnIt)->name.c_str(),nnPtr)!=0;++lnIt)
+			;
+		if(lnIt==currentNode->leafNodes.end()) // Leaf node not found
+			{
+			/* Insert a new leaf node: */
+			lnIt=currentNode->leafNodes.insert(lnIt,new LeafNode(nnPtr,nodeValue));
+			}
+		else
+			{
+			/* Replace the existing leaf node's value: */
+			(*lnIt)->value=nodeValue;
+			}
+		
+		/* Return the leaf's ID: */
+		return LeafID(*lnIt);
+		}
+	else
+		{
+		return LeafID();
+		}
+	}
+
+template <class LeafNodeValueParam>
+inline
+typename Doom3NameTree<LeafNodeValueParam>::LeafID
+Doom3NameTree<LeafNodeValueParam>::findLeaf(
+	const char* nodeName) const
+	{
+	/* Start searching in the root directory: */
+	const InteriorNode* currentNode=&root;
+	const char* nnPtr=nodeName;
+	while(true)
+		{
+		/* Remove leading slashes from the node name: */
+		while(*nnPtr=='/'||*nnPtr=='\\')
+			++nnPtr;
+		
+		/* Check if the node name starts with a directory name: */
+		const char* slashPtr;
+		for(slashPtr=nnPtr;*slashPtr!='\0'&&*slashPtr!='/'&&*slashPtr!='\\';++slashPtr)
+			;
+		if(*slashPtr=='\0') // No directory name
+			break;
+		
+		/* It's a leaf node in a subdirectory; find the subdirectory: */
+		std::string subDirName(nnPtr,slashPtr);
+		typename std::vector<InteriorNode*>::const_iterator inIt;
+		for(inIt=currentNode->childNodes.begin();inIt!=currentNode->childNodes.end()&&strcasecmp((*inIt)->name.c_str(),subDirName.c_str())!=0;++inIt)
+			;
+		if(inIt==currentNode->childNodes.end())
+			return LeafID(); // Directory not found
+		
+		/* Recurse into the subdirectory: */
+		nnPtr=slashPtr;
+		currentNode=*inIt;
+		}
+	
+	/* Find the leaf node in the current directory: */
+	typename std::vector<LeafNode*>::const_iterator lnIt;
+	for(lnIt=currentNode->leafNodes.begin();lnIt!=currentNode->leafNodes.end()&&strcasecmp((*lnIt)->name.c_str(),nnPtr);++lnIt)
+		;
+	if(lnIt==currentNode->leafNodes.end())
+		return LeafID(); // Leaf node not found
+	
+	/* Return the leaf's ID: */
+	return LeafID(*lnIt);
+	}
+
+template <class LeafNodeValueParam>
+inline
+typename Doom3NameTree<LeafNodeValueParam>::NodeIterator
+Doom3NameTree<LeafNodeValueParam>::findInteriorNode(
+	const char* nodeName) const
+	{
+	/* Start searching in the root directory: */
+	const InteriorNode* currentNode=&root;
+	const char* nnPtr=nodeName;
+	while(*nnPtr!='\0')
+		{
+		/* Remove leading slashes from the node name: */
+		while(*nnPtr=='/'||*nnPtr=='\\')
+			++nnPtr;
+		
+		/* Find the next slash delimiting the next path component: */
+		const char* slashPtr;
+		for(slashPtr=nnPtr;*slashPtr!='\0'&&*slashPtr!='/'&&*slashPtr!='\\';++slashPtr)
+			;
+		
+		/* Find the subdirectory of the same name: */
+		std::string subDirName(nnPtr,slashPtr);
+		typename std::vector<InteriorNode*>::const_iterator inIt;
+		for(inIt=currentNode->childNodes.begin();inIt!=currentNode->childNodes.end()&&strcasecmp((*inIt)->name.c_str(),subDirName.c_str())!=0;++inIt)
+			;
+		if(inIt==currentNode->childNodes.end())
+			{
+			/* Return an invalid iterator: */
+			return NodeIterator();
+			}
+		
+		/* Recurse into the subdirectory: */
+		nnPtr=slashPtr;
+		currentNode=*inIt;
+		}
+	
+	/* Return an iterator for the current directory: */
+	return NodeIterator(currentNode);
+	}
+
+}

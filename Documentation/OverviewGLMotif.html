@@ -1,0 +1,152 @@
+<HTML>
+<HEAD>
+<TITLE>GLMotif -- OpenGL 3D Widget Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>GLMotif&nbsp;-- OpenGL 3D Widget Library</H1>
+
+The GLMotif library contains classes to implement 3D graphical user interfaces using a collection of widgets similar in look and behavior to typical 2D widgets, but represented as 3D objects. The GLMotif widget set is especially useful to develop user interfaces for virtual reality applications. GLMotif uses the CallbackData/CallbackList mechanism provided by the Misc library to connect widget events to application functions.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Types.h</DT>
+<DD>Types.h contains several typedefs defining fundamental data types used by the GLMotif library, such as the scalar type, point and vector types, color types, etc.</DD>
+
+<DT>GlyphGadget.h</DT>
+<DD>GlyphGadget is a helper class to render common types of 2.5D glyphs used by widgets.</DD>
+
+<DT>Alignment.h</DT>
+<DD>Alignment is a helper structure to define the horizontal and vertical alignment of smaller objects inside larger frames.</DD>
+
+<DT>Event.h</DT>
+<DD>Event is a class describing events in a 3D user interface. An event is either a button press event, a button release event, or a pointer motion event. Pointer positions inside events can either be defined as absolute positions in 3D space, or as rays that are intersected with interested widgets to calculate 3D positions on-the-fly.</DD>
+
+<DT>TextEvent.h</DT>
+<DD>TextEvent is a class describing text entry events, and stores a single character or multi-character strings.</DD>
+
+<DT>TextControlEvent.h</DT>
+<DD>TextControlEvent is a class describing text entry control events, such as cursor movement, delete / backspace, or cut&nbsp;&amp;&nbsp;paste.</DD>
+
+<DT>StyleSheet.h</DT>
+<DD>StyleSheet is a helper class defining layout parameters for widgets to achieve a consistent look&amp;feel between GUI elements.</DD>
+
+<DT>Draggable.h</DT>
+<DD>Draggable is a mix-in class to denote widgets that can be used to change their root widget's widget transformations.</DD>
+
+<DT>Widget.h</DT>
+<DD>Widget is the base class for all 3D user interface components.</DD>
+
+<DT>WidgetManager.h</DT>
+<DD>WidgetManager is a class managing separate 3D user interface elements as a hierarchy of top-level widgets, and responsible for mapping 2&nbsp;1/2D widgets into 3D application space.</DD>
+
+<DT>Container.h</DT>
+<DD>Container is the base class for all widgets that contain other widgets, forming the basis for the widget hierarchy of all user interface elements.</DD>
+
+<DT>SingleChildContainer.h</DT>
+<DD>SingleChildContainer is a base class for widgets that contain exactly one child window, and contains default implementations of the relevant methods from Container to reduce the complexity of creating simple container widget classes.</DD>
+
+<DT>Margin.h</DT>
+<DD>Margin is a class for margins around single child widgets, to inset the child widget by a fixed amount, and/or to pad the child widget into boxes larger than its natural size, with selectable alignments.</DD>
+
+<DT>Popup.h</DT>
+<DD>Popup is a class for simple top-level widgets that contain an optional title and a single child widget.</DD>
+
+<DT>Blind.h</DT>
+<DD>Blind is a simple widget class for widgets without graphical elements, mostly used to provide empty space in layout containers.</DD>
+
+<DT>Glyph.h</DT>
+<DD>Glyph is a simple widget class for widgets containing only a 2.5D glyph.</DD>
+
+<DT>Separator.h</DT>
+<DD>Separator is a widget class to visually separate adjacent components in a widget layout.</DD>
+
+<DT>Image.h</DT>
+<DD>Image is a class for widgets displaying color images.</DD>
+
+<DT>Label.h</DT>
+<DD>Label is a class for widgets containing a single line of text.</DD>
+
+<DT>TextField.h</DT>
+<DD>TextField is a class for widgets displaying a single line of text as a value. TextField is very similar to Label, but with the semantic difference that Label displays static text, whereas TextField displays variable (and potentially editable) text.</DD>
+
+<DT>Button.h</DT>
+<DD>Button is a class for widgets that can be selected to cause an action. Button is derived from Label and displays a single line of text.</DD>
+
+<DT>NewButton.h</DT>
+<DD>NewButton is a replacement for the Button widget class. Instead of being derived from Label, it is a container with a single child widget that it can pop in or out. This allows to use arbitrary widgets as button interiors, including blinds, labels, and icons (if they ever get implemented).</DD>
+
+<DT>DecoratedButton.h</DT>
+<DD>DecoratedButton is a subclass of Button that adds a 3D decoration, such as a toggle indicator or a cascade arrow.</DD>
+
+<DT>ToggleButton.h</DT>
+<DD>ToggleButton is a subclass of DecoratedButton that contains a toggle indicator. The toggle indicator can be either a square (to represent a stand-alone toggle) or a diamond (to represent a radio button).</DD>
+
+<DT>CascadeButton.h</DT>
+<DD>CascadeButton is a subclass of DecoratedButton that adds a cascade arrow, and pops up a child widget when the button is activated.</DD>
+
+<DT>DragWidget.h</DT>
+<DD>DragWidget is a mix-in class denoting widgets that support dragging operations in their area, such as sliders.</DD>
+
+<DT>Slider.h</DT>
+<DD>Slider is a subclass of DragWidget to change a floating-point value linearly between two extremes by dragging with the pointing device.</DD>
+
+<DT>TextFieldSlider.h</DT>
+<DD>TextFieldSlider is a compound widget class consisting of a slider and a text field displaying the slider's current value.</DD>
+
+<DT>HSVColorSelector.h</DT>
+<DD>HSVColorSelector is a compound widget class consisting of a color hexagon and a slider to select an RGB color using an interface based on the HSV color model.</DD>
+
+<DT>MaterialEditor.h</DT>
+<DD>MaterialEditor is a compound widget class consisting of several HSV color selectors and a slider to select OpenGL material properties.</DD>
+
+<DT>ScrollBar.h></DT>
+<DD>ScrollBar is a class for horizontal or vertical scroll bars, used to move a &quot;sliding window&quot; through a larger space. Scroll bars are similar to sliders in function, but are used for a different purpose.</DD>
+
+<DT>ListBox.h</DT>
+<DD>ListBox is a class to display a variable list of text items in a fixed-size widget. Supports selection of items and dynamic insertion/removal; typically used in conjunction with a (set of) scroll bar(s) to change the subset of visible items.</DD>
+
+<DT>ScrolledListBox.h</DT>
+<DD>ScrolledListBox is a compound widget class consisting of a list box and a vertical  and optional horizontal scroll bar linked to the list box.</DD>
+
+<DT>RowColumn.h</DT>
+<DD>RowColumn is a subclass of Container that automatically lays out its children in a gridded fashion.</DD>
+
+<DT>RadioBox.h</DT>
+<DD>RadioBox is a subclass of RowColumn that can only contain ToggleButton widgets, and enforces radio box behavior between all its children, i.e., at most one child can be toggled at any time.</DD>
+
+<DT>DropdownBox.h</DT>
+<DD>DropdownBox is a subclass of label that allows a user to choose one from a fixed list of items, and displays the currently selected item as its label.</DD>
+
+<DT>Menu.h</DT>
+<DD>Menu is a subclass of RowColumn containing only widgets derived from Button.</DD>
+
+<DT>SubMenu.h</DT>
+<DD>SubMenu is a subclass of RowColumn containing only widgets derived from Button, and acting as a sub-menu of another popup menu.</DD>
+
+<DT>PopupMenu.h</DT>
+<DD>PopupMenu is a subclass of Popup and implements menus that require only a single button press/pointer move/button release sequence to pop up a menu and select one of its choices.</DD>
+
+<DT>Pager.h</DT>
+<DD>Pager is a subclass of Container that lays out its children as pages in a flipbook, with a row of buttons to select the currently-displayed page.</DD>
+
+<DT>TitleBar.h</DT>
+<DD>TitleBar is a helper class representing the title bars of popup windows, such that dragging a TitleBar changes the position of its parent window in application space.</DD>
+
+<DT>PopupWindow.h</DT>
+<DD>PopupWindow is a class representing permanent windows such as dialog boxes or panels. Popup windows can be moved by dragging their title bars, and, if enabled, can be resized by dragging their borders.</DD>
+
+<DT>FileSelectionDialog.h</DT>
+<DD>FileSelectionDialog is a compound widget class providing applications with a standard user interface to select (existing) files from the file system. Its design follows the Gnome file selection dialog, and it features settable lists of file types for filtering.</DD>
+
+<DT>WidgetStateHelper.h</DT>
+<DD>WidgetStateHelper.h contains namespace-global functions to read/write widget state from/to configuration files.</DD>
+
+<DT>WidgetAlgorithms.h</DT>
+<DD>WidgetAlgorithms.h contains a namespace-global function that traverses an entire tree of widgets and applies a given functor to each widget in turn.</DD>
+</DL>
+
+</BODY>
+</HTML>

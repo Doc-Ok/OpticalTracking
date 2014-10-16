@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<TITLE>USB&nbsp;- USB Support Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>USB&nbsp;- USB Support Library</H1>
+
+The USB library contains abstraction classes for access to USB devices using the libusb library version 1.0. The classes mostly provide exception safety via the RAII paradigm, and a simplified interface to raw libusb functions.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Context.h</DT>
+<DD>Context is a wrapper class for libusb_context USB device contexts.</DD>
+
+<DT>VendorProductId.h</DT>
+<DD>VendorProductId is a helper structure representing a USB device ID.</DD>
+
+<DT>DeviceList.h</DT>
+<DD>DeviceList is a class to represent lists of USB devices enumerated from USB contexts.</DD>
+
+<DT>Device.h</DT>
+<DD>Device is a wrapper class for libusb_device and libusb_device_handle and represent unopened and opened USB devices.</DD>
+
+<DT>ConfigDescriptor.h</DT>
+<DD>ConfigDescriptor is a wrapper class for libusb_config_descriptor configuration descriptors.</DD>
+</DL>
+
+</BODY>
+</HTML>

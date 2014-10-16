@@ -1,0 +1,1092 @@
+/***********************************************************************
+ArrayKdTree - Class to store k-dimensional points in a kd-tree. Version
+for fixed sets of points using index-based storage for added performance
+and smaller memory footprint.
+Copyright (c) 2003-2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_ARRAYKDTREE_IMPLEMENTATION
+
+#include <Geometry/ArrayKdTree.h>
+
+#define GEOMETRY_ARRAYKDTREE_USE_STD_NTH_ELEMENT 1
+
+#include <iostream>
+#if GEOMETRY_ARRAYKDTREE_USE_STD_NTH_ELEMENT
+#include <algorithm>
+#else
+#include <Misc/Utility.h>
+#endif
+#include <Threads/Thread.h>
+#include <Math/Constants.h>
+
+namespace Geometry {
+
+namespace {
+
+/******************************************************************
+Helper class to find medians of node arrays using std::nth_element:
+******************************************************************/
+
+#if GEOMETRY_ARRAYKDTREE_USE_STD_NTH_ELEMENT
+
+template <class StoredPointParam>
+class NodeSortFunctor
+	{
+	/* Elements: */
+	private:
+	int splitDimension; // Split dimension for this level of the kd-tree
+	
+	/* Constructors and destructors: */
+	public:
+	NodeSortFunctor(int sSplitDimension)
+		:splitDimension(sSplitDimension)
+		{
+		}
+	
+	/* Methods: */
+	bool operator()(const StoredPointParam& n1,const StoredPointParam& n2) const
+		{
+		return n1[splitDimension]<n2[splitDimension];
+		}
+	};
+
+#endif
+
+}
+
+/****************************
+Methods of class ArrayKdTree:
+****************************/
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::createTree(
+	int left,
+	int right,
+	int splitDimension)
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	#if GEOMETRY_ARRAYKDTREE_USE_STD_NTH_ELEMENT
+	NodeSortFunctor<StoredPointParam> comp(splitDimension);
+	std::nth_element(nodes+left,nodes+mid,nodes+right+1,comp);
+	#else
+	/* Find the splitIndex-th smallest element and separate the point array into two subarrays: */
+	int sweepLeft=left;
+	int sweepRight=right;
+	while(true)
+		{
+		/* Perform a quicksort sweep for an element in the middle of the array: */
+		int sweepMid=(sweepLeft+sweepRight)>>1;
+		Scalar pivot=nodes[sweepMid][splitDimension];
+		
+		/* Save the pivot element at the right of the array: */
+		Misc::swap(nodes[sweepMid],nodes[sweepRight]);
+		
+		/* Split array into left and right points using one (modified) Quicksort sweep: */
+		int l=sweepLeft;
+		int r=sweepRight-1;
+		while(true)
+			{
+			while(l<sweepRight&&nodes[l][splitDimension]<pivot)
+				++l;
+			while(r>=sweepLeft&&nodes[r][splitDimension]>=pivot)
+				--r;
+			
+			if(l>r)
+				break;
+			
+			Misc::swap(nodes[l],nodes[r]);
+			++l;
+			--r;
+			}
+		Misc::swap(nodes[l],nodes[sweepRight]);
+		
+		/* Check if done: */
+		if(l<mid)
+			{
+			/* Continue searching in the right sub-array: */
+			sweepLeft=l+1;
+			}
+		else if(l>mid)
+			{
+			/* Continue searching in the left sub-array: */
+			sweepRight=l-1;
+			}
+		else
+			{
+			/* Finish searching: */
+			break;
+			}
+		}
+	#endif
+	
+	/* Create left and right subtrees: */
+	++splitDimension;
+	if(splitDimension==dimension)
+		splitDimension=0;
+	if(left<mid)
+		createTree(left,mid-1,splitDimension);
+	if(right>mid)
+		createTree(mid+1,right,splitDimension);
+	}
+
+template <class StoredPointParam>
+inline
+void*
+ArrayKdTree<StoredPointParam>::createTreeThreaded(
+	const typename ArrayKdTree<StoredPointParam>::CreateSubTreeArgs* args)
+	{
+	int left=args->left;
+	int right=args->right;
+	int splitDimension=args->splitDimension;
+	
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	#if GEOMETRY_ARRAYKDTREE_USE_STD_NTH_ELEMENT
+	NodeSortFunctor<StoredPointParam> comp(splitDimension);
+	std::nth_element(nodes+left,nodes+mid,nodes+right+1,comp);
+	#else
+	/* Find the splitIndex-th smallest element and separate the point array into two subarrays: */
+	int sweepLeft=left;
+	int sweepRight=right;
+	while(true)
+		{
+		/* Perform a quicksort sweep for an element in the middle of the array: */
+		int sweepMid=(sweepLeft+sweepRight)>>1;
+		Scalar pivot=nodes[sweepMid][splitDimension];
+		
+		/* Save the pivot element at the right of the array: */
+		Misc::swap(nodes[sweepMid],nodes[sweepRight]);
+		
+		/* Split array into left and right points using one (modified) Quicksort sweep: */
+		int l=sweepLeft;
+		int r=sweepRight-1;
+		while(true)
+			{
+			while(l<sweepRight&&nodes[l][splitDimension]<pivot)
+				++l;
+			while(r>=sweepLeft&&nodes[r][splitDimension]>=pivot)
+				--r;
+			
+			if(l>r)
+				break;
+			
+			Misc::swap(nodes[l],nodes[r]);
+			++l;
+			--r;
+			}
+		Misc::swap(nodes[l],nodes[sweepRight]);
+		
+		/* Check if done: */
+		if(l<mid)
+			{
+			/* Continue searching in the right sub-array: */
+			sweepLeft=l+1;
+			}
+		else if(l>mid)
+			{
+			/* Continue searching in the left sub-array: */
+			sweepRight=l-1;
+			}
+		else
+			{
+			/* Finish searching: */
+			break;
+			}
+		}
+	#endif
+	
+	/* Create left and right subtrees: */
+	++splitDimension;
+	if(splitDimension==dimension)
+		splitDimension=0;
+	if(args->numThreads>1)
+		{
+		if(left<mid&&mid<right)
+			{
+			/* Start a new thread to process the right subtree: */
+			CreateSubTreeArgs args1(mid+1,right,splitDimension,args->numThreads/2);
+			Threads::Thread rightThread;
+			rightThread.start<ArrayKdTree,const CreateSubTreeArgs*>(this,&ArrayKdTree::createTreeThreaded,&args1);
+			
+			/* Process the left subtree: */
+			CreateSubTreeArgs args2(left,mid-1,splitDimension,(args->numThreads+1)/2);
+			createTreeThreaded(&args2);
+			
+			/* Wait for the right subtree to finish: */
+			rightThread.join();
+			}
+		else if(left<mid)
+			{
+			CreateSubTreeArgs args1(left,mid-1,splitDimension,args->numThreads);
+			createTreeThreaded(&args1);
+			}
+		else if(right>mid)
+			{
+			CreateSubTreeArgs args1(mid+1,right,splitDimension,args->numThreads);
+			createTreeThreaded(&args1);
+			}
+		}
+	else
+		{
+		/* Recurse using the single-threaded methods: */
+		if(left<mid)
+			createTree(left,mid-1,splitDimension);
+		if(right>mid)
+			createTree(mid+1,right,splitDimension);
+		}
+	
+	return 0;
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::checkTree(
+	int left,
+	int right,
+	int splitDimension,
+	typename ArrayKdTree<StoredPointParam>::Scalar bbMin[],
+	typename ArrayKdTree<StoredPointParam>::Scalar bbMax[]) const
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	/* Calculate this node's bounding box: */
+	for(int i=0;i<dimension;++i)
+		bbMin[i]=bbMax[i]=nodes[mid][i];
+	
+	int childSplitDimension=splitDimension+1;
+	if(childSplitDimension==dimension)
+		childSplitDimension=0;
+	Scalar childMin[dimension],childMax[dimension];
+	
+	/* Check both subtrees and calculate their bounding boxes: */
+	for(int ch=0;ch<2;++ch)
+		{
+		int childLeft=left;
+		int childRight=right;
+		if(ch==0)
+			childRight=mid-1;
+		else
+			childLeft=mid+1;
+		if(childLeft<=childRight)
+			{
+			checkTree(childLeft,childRight,childSplitDimension,childMin,childMax);
+			
+			/* Check if the child's bounding box is on the correct side of this node: */
+			if(ch==0)
+				{
+				if(childMax[splitDimension]>nodes[mid][splitDimension])
+					std::cout<<"Left child box overlap by "<<childMax[splitDimension]-nodes[mid][splitDimension]<<std::endl;
+				}
+			else
+				{
+				if(childMin[splitDimension]<nodes[mid][splitDimension])
+					std::cout<<"Right child box overlap by "<<nodes[mid][splitDimension]-childMin[splitDimension]<<std::endl;
+				}
+			
+			/* Adjust this node's bounding box: */
+			for(int i=0;i<dimension;++i)
+				{
+				if(bbMin[i]>childMin[i])
+					bbMin[i]=childMin[i];
+				if(bbMax[i]<childMax[i])
+					bbMax[i]=childMax[i];
+				}
+			}
+		}
+	}
+
+template <class StoredPointParam>
+template <class TraversalFunctionParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::traverseTreeInBox(
+	int left,
+	int right,
+	int splitDimension,
+	const typename ArrayKdTree<StoredPointParam>::Box& box,
+	TraversalFunctionParam& traversalFunction) const
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	/* Traverse node if it is inside the given box: */
+	if(box.contains(nodes[mid]))
+		traversalFunction(nodes[mid]);
+	
+	int childSplitDimension=splitDimension+1;
+	if(childSplitDimension==dimension)
+		childSplitDimension=0;
+	
+	/* Traverse into left child: */
+	if(left<mid&&nodes[mid][splitDimension]>=box.min[splitDimension])
+		traverseTreeInBox(left,mid-1,childSplitDimension,box,traversalFunction);
+	
+	/* Traverse into right child: */
+	if(mid<right&&nodes[mid][splitDimension]<=box.max[splitDimension])
+		traverseTreeInBox(mid+1,right,childSplitDimension,box,traversalFunction);
+	}
+
+#if !GEOMETRY_ARRAYKDTREE_TRAVERSAL_EXPLICIT_RECURSION
+
+template <class StoredPointParam>
+template <class DirectedTraversalFunctionParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::traverseTreeDirected(
+	int left,
+	int right,
+	int splitDimension,
+	DirectedTraversalFunctionParam& traversalFunction) const
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	int childSplitDimension=splitDimension+1;
+	if(childSplitDimension==dimension)
+		childSplitDimension=0;
+	
+	/* Traverse into child closer to query point: */
+	if(traversalFunction.getQueryPosition()[splitDimension]<nodes[mid][splitDimension])
+		{
+		/* Traverse left child: */
+		if(left<mid)
+			traverseTreeDirected(left,mid-1,childSplitDimension,traversalFunction);
+		
+		/* Call traversal function: */
+		if(!traversalFunction(nodes[mid],splitDimension))
+			return;
+		
+		/* Traverse right child: */
+		if(right>mid)
+			traverseTreeDirected(mid+1,right,childSplitDimension,traversalFunction);
+		}
+	else
+		{
+		/* Traverse right child: */
+		if(right>mid)
+			traverseTreeDirected(mid+1,right,childSplitDimension,traversalFunction);
+		
+		/* Call traversal function: */
+		if(!traversalFunction(nodes[mid],splitDimension))
+			return;
+		
+		/* Traverse left child: */
+		if(left<mid)
+			traverseTreeDirected(left,mid-1,childSplitDimension,traversalFunction);
+		}
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::findClosestPoint(
+	int left,
+	int right,
+	int splitDimension,
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition,
+	const typename ArrayKdTree<StoredPointParam>::StoredPoint*& closestPoint,
+	typename ArrayKdTree<StoredPointParam>::Scalar& minDist2) const
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	int childSplitDimension=splitDimension+1;
+	if(childSplitDimension==dimension)
+		childSplitDimension=0;
+	
+	/* Traverse into child closer to query point: */
+	if(queryPosition[splitDimension]<nodes[mid][splitDimension])
+		{
+		/* Traverse left child: */
+		if(left<mid)
+			findClosestPoint(left,mid-1,childSplitDimension,queryPosition,closestPoint,minDist2);
+		
+		/* Compare node's point to current closest point: */
+		Scalar dist2=sqrDist(nodes[mid],queryPosition);
+		if(minDist2>dist2)
+			{
+			closestPoint=&nodes[mid];
+			minDist2=dist2;
+			}
+		
+		/* Traverse right child: */
+		if(right>mid)
+			if(Math::sqr(nodes[mid][splitDimension]-queryPosition[splitDimension])<minDist2)
+				findClosestPoint(mid+1,right,childSplitDimension,queryPosition,closestPoint,minDist2);
+		}
+	else
+		{
+		/* Traverse right child: */
+		if(right>mid)
+			findClosestPoint(mid+1,right,childSplitDimension,queryPosition,closestPoint,minDist2);
+		
+		/* Compare node's point to current closest point: */
+		Scalar dist2=sqrDist(nodes[mid],queryPosition);
+		if(minDist2>dist2)
+			{
+			closestPoint=&nodes[mid];
+			minDist2=dist2;
+			}
+		
+		/* Traverse left child: */
+		if(left<mid)
+			if(Math::sqr(nodes[mid][splitDimension]-queryPosition[splitDimension])<minDist2)
+				findClosestPoint(left,mid-1,childSplitDimension,queryPosition,closestPoint,minDist2);
+		}
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::findClosestPoints(
+	int left,
+	int right,
+	int splitDimension,
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition,
+	typename ArrayKdTree<StoredPointParam>::ClosePointSet& closestPoints) const
+	{
+	/* Calculate the index of this node: */
+	int mid=(left+right)>>1;
+	
+	int childSplitDimension=splitDimension+1;
+	if(childSplitDimension==dimension)
+		childSplitDimension=0;
+	
+	/* Traverse into child closer to query point: */
+	if(queryPosition[splitDimension]<nodes[mid][splitDimension])
+		{
+		/* Traverse left child: */
+		if(left<mid)
+			findClosestPoints(left,mid-1,childSplitDimension,queryPosition,closestPoints);
+		
+		/* Insert node's point into close point set: */
+		Scalar dist2=sqrDist(nodes[mid],queryPosition);
+		closestPoints.insertPoint(nodes[mid],dist2);
+		
+		/* Traverse right child: */
+		if(right>mid)
+			if(Math::sqr(nodes[mid][splitDimension]-queryPosition[splitDimension])<closestPoints.getMaxSqrDist())
+				findClosestPoints(mid+1,right,childSplitDimension,queryPosition,closestPoints);
+		}
+	else
+		{
+		/* Traverse right child: */
+		if(right>mid)
+			findClosestPoints(mid+1,right,childSplitDimension,queryPosition,closestPoints);
+		
+		/* Insert node's point into close point set: */
+		Scalar dist2=sqrDist(nodes[mid],queryPosition);
+		closestPoints.insertPoint(nodes[mid],dist2);
+		
+		/* Traverse left child: */
+		if(left<mid)
+			if(Math::sqr(nodes[mid][splitDimension]-queryPosition[splitDimension])<closestPoints.getMaxSqrDist())
+				findClosestPoints(left,mid-1,childSplitDimension,queryPosition,closestPoints);
+		}
+	}
+
+#endif
+
+template <class StoredPointParam>
+inline
+ArrayKdTree<StoredPointParam>::ArrayKdTree(
+	int sNumNodes,
+	const typename ArrayKdTree<StoredPointParam>::StoredPoint sNodes[])
+	:numNodes(sNumNodes),nodes(new StoredPoint[numNodes])
+	{
+	/* Copy given point data: */
+	for(int i=0;i<numNodes;++i)
+		nodes[i]=sNodes[i];
+	
+	/* Create new tree: */
+	createTree(0,numNodes-1,0);
+	}
+
+template <class StoredPointParam>
+inline
+typename ArrayKdTree<StoredPointParam>::StoredPoint*
+ArrayKdTree<StoredPointParam>::createTree(
+	int newNumNodes)
+	{
+	if(newNumNodes!=numNodes)
+		{
+		/* Delete existing tree: */
+		delete[] nodes;
+		
+		/* Allocate new tree: */
+		numNodes=newNumNodes;
+		nodes=new StoredPoint[numNodes];
+		}
+	
+	/* Return pointer to the point array: */
+	return nodes;
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::setPoints(
+	int newNumNodes,
+	const typename ArrayKdTree<StoredPointParam>::StoredPoint newNodes[])
+	{
+	if(newNumNodes!=numNodes)
+		{
+		/* Delete existing tree: */
+		delete[] nodes;
+		
+		/* Allocate new tree: */
+		numNodes=newNumNodes;
+		nodes=new StoredPoint[numNodes];
+		}
+	
+	/* Copy given point data: */
+	for(int i=0;i<numNodes;++i)
+		nodes[i]=newNodes[i];
+	
+	/* Create new tree: */
+	createTree(0,numNodes-1,0);
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::setPoints(
+	int newNumNodes,
+	const typename ArrayKdTree<StoredPointParam>::StoredPoint newNodes[],
+	int numThreads)
+	{
+	if(newNumNodes!=numNodes)
+		{
+		/* Delete existing tree: */
+		delete[] nodes;
+		
+		/* Allocate new tree: */
+		numNodes=newNumNodes;
+		nodes=new StoredPoint[numNodes];
+		}
+	
+	/* Copy given point data: */
+	for(int i=0;i<numNodes;++i)
+		nodes[i]=newNodes[i];
+	
+	/* Create new tree: */
+	CreateSubTreeArgs args(0,numNodes-1,0,numThreads);
+	createTreeThreaded(&args);
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::donatePoints(
+	int newNumNodes,
+	typename ArrayKdTree<StoredPointParam>::StoredPoint* newNodes)
+	{
+	/* Delete existing tree: */
+	delete[] nodes;
+	
+	/* Calculate new tree's layout: */
+	numNodes=newNumNodes;
+	nodes=newNodes;
+	
+	/* Create new tree: */
+	createTree(0,numNodes-1,0);
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::donatePoints(
+	int newNumNodes,
+	typename ArrayKdTree<StoredPointParam>::StoredPoint* newNodes,
+	int numThreads)
+	{
+	/* Delete existing tree: */
+	delete[] nodes;
+	
+	/* Calculate new tree's layout: */
+	numNodes=newNumNodes;
+	nodes=newNodes;
+	
+	/* Create new tree: */
+	CreateSubTreeArgs args(0,numNodes-1,0,numThreads);
+	createTreeThreaded(&args);
+	}
+
+template <class StoredPointParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::checkTree(
+	void) const
+	{
+	Scalar bbMin[dimension],bbMax[dimension];
+	checkTree(0,numNodes-1,0,bbMin,bbMax);
+	}
+
+#if GEOMETRY_ARRAYKDTREE_TRAVERSAL_EXPLICIT_RECURSION
+
+template <class StoredPointParam>
+template <class DirectedTraversalFunctionParam>
+inline
+void
+ArrayKdTree<StoredPointParam>::traverseTreeDirected(
+	DirectedTraversalFunctionParam& traversalFunction) const
+	{
+	/* Set up a traversal stack for explicit recursion: */
+	struct TraversalStack
+		{
+		/* Elements: */
+		public:
+		int left,right; // Left and right boundaries of the current subtree
+		int root; // Root of the current subtree
+		int splitDimension; // Split dimension of the current subtree
+		bool goLeftFirst; // Flag whether to traverse the left or right subtree in stage 0
+		} traversalStack[33]; // 33 is enough for all time! ALL TIME!
+	
+	/* Initialize the traversal stack: */
+	TraversalStack* tsPtr=traversalStack;
+	tsPtr->left=0;
+	tsPtr->right=numNodes-1;
+	tsPtr->splitDimension=0;
+	
+	/*********************************************************************
+	Traverse the tree recursively by ping-ponging between stages 0 and 1:
+	*********************************************************************/
+	
+	doTheStage0:
+	
+	/*****************************************************************
+	Stage 0: Traverse into the subtree closer to the query point.
+	*****************************************************************/
+	
+	/* Calculate the root node index: */
+	tsPtr->root=(tsPtr->left+tsPtr->right)>>1;
+	
+	/* Decide whether to go left or right first: */
+	tsPtr->goLeftFirst=traversalFunction.getQueryPosition()[tsPtr->splitDimension]<=nodes[tsPtr->root][tsPtr->splitDimension];
+	
+	if(tsPtr->goLeftFirst)
+		{
+		if(tsPtr->left<tsPtr->root)
+			{
+			/* Traverse left subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].left;
+			tsPtr->right=tsPtr[-1].root-1;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+			
+			goto doTheStage0;
+			}
+		}
+	else
+		{
+		if(tsPtr->root<tsPtr->right)
+			{
+			/* Traverse right subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].root+1;
+			tsPtr->right=tsPtr[-1].right;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+			
+			goto doTheStage0;
+			}
+		}
+	
+	doTheStage1:
+	
+	/*****************************************************************
+	Stage 1: Call the traversal function on the root node and decide
+	whether to traverse into the subtree farther from the query point.
+	*****************************************************************/
+	
+	/* Call the traversal function on the root node: */
+	if(traversalFunction(nodes[tsPtr->root],tsPtr->splitDimension))
+		{
+		/*****************************************************************
+		Stage 2: Traverse into the subtree farther from the query point.
+		*****************************************************************/
+		
+		if(tsPtr->goLeftFirst)
+			{
+			if(tsPtr->root<tsPtr->right)
+				{
+				/* Traverse right subtree, but stay in the same stack frame to avoid tail recursion: */
+				tsPtr->left=tsPtr->root+1;
+				if(++tsPtr->splitDimension==dimension)
+					tsPtr->splitDimension=0;
+				
+				goto doTheStage0;
+				}
+			}
+		else
+			{
+			if(tsPtr->left<tsPtr->root)
+				{
+				/* Traverse left subtree, but stay in the same stack frame to avoid tail recursion: */
+				tsPtr->right=tsPtr->root-1;
+				if(++tsPtr->splitDimension==dimension)
+					tsPtr->splitDimension=0;
+				
+				goto doTheStage0;
+				}
+			}
+		}
+	
+	/* Return to caller: */
+	--tsPtr;
+	if(tsPtr>=traversalStack)
+		goto doTheStage1;
+	}
+
+#endif
+
+template <class StoredPointParam>
+inline
+const typename ArrayKdTree<StoredPointParam>::StoredPoint&
+ArrayKdTree<StoredPointParam>::findClosePoint(
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition) const
+	{
+	int left=0;
+	int right=numNodes-1;
+	int splitDimension=0;
+	int mid;
+	while(true)
+		{
+		/* Calculate the index of this node: */
+		mid=(left+right)>>1;
+		
+		/* Decide which way to go: */
+		if(queryPosition[splitDimension]<nodes[mid][splitDimension])
+			{
+			/* Go left: */
+			right=mid-1;
+			}
+		else
+			{
+			/* Go right: */
+			left=mid+1;
+			}
+		if(left>right)
+			break;
+		
+		++splitDimension;
+		if(splitDimension==dimension)
+			splitDimension=0;
+		}
+	
+	return nodes[mid];
+	}
+
+#if GEOMETRY_ARRAYKDTREE_TRAVERSAL_EXPLICIT_RECURSION
+
+template <class StoredPointParam>
+inline
+const typename ArrayKdTree<StoredPointParam>::StoredPoint&
+ArrayKdTree<StoredPointParam>::findClosestPoint(
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition) const
+	{
+	/* Initialize the result values: */
+	const StoredPoint* result=0;
+	Scalar resultDist2=Math::Constants<Scalar>::max;
+	
+	/* Set up a traversal stack for explicit recursion: */
+	struct TraversalStack
+		{
+		/* Elements: */
+		public:
+		int left,right; // Left and right boundaries of the current subtree
+		int root; // Root of the current subtree
+		int splitDimension; // Split dimension of the current subtree
+		bool goLeftFirst; // Flag whether to traverse into the left subtree in stage 0
+		} traversalStack[33]; // 33 is enough for all time! ALL TIME!
+	
+	/* Initialize the traversal stack: */
+	TraversalStack* tsPtr=traversalStack;
+	tsPtr->left=0;
+	tsPtr->right=numNodes-1;
+	tsPtr->splitDimension=0;
+	
+	/*********************************************************************
+	Traverse the tree recursively by ping-ponging between stages 0 and 1:
+	*********************************************************************/
+	
+	doTheStage0:
+
+	/*********************************************************************
+	Stage 0: Traverse into the subtree closer to the query position.
+	*********************************************************************/
+
+	/* Calculate the root node index: */
+	tsPtr->root=(tsPtr->left+tsPtr->right)>>1;
+	
+	/* Decide whether to go left or right first: */
+	tsPtr->goLeftFirst=queryPosition[tsPtr->splitDimension]<=nodes[tsPtr->root][tsPtr->splitDimension];
+	
+	if(tsPtr->goLeftFirst)
+		{
+		if(tsPtr->left<tsPtr->root)
+			{
+			/* Traverse left subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].left;
+			tsPtr->right=tsPtr[-1].root-1;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+	else
+		{
+		if(tsPtr->root<tsPtr->right)
+			{
+			/* Traverse right subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].root+1;
+			tsPtr->right=tsPtr[-1].right;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+
+	doTheStage1:
+
+	/*********************************************************************
+	Stage 1: Test the current root node against the closest point
+	candidate:
+	*********************************************************************/
+	
+	Scalar dist2=sqrDist(nodes[tsPtr->root],queryPosition);
+	if(resultDist2>dist2)
+		{
+		result=&nodes[tsPtr->root];
+		resultDist2=dist2;
+		}
+	
+	/*********************************************************************
+	Stage 2: Traverse into the subtree farther from the query point.
+	*********************************************************************/
+	
+	/* Check whether to go left or right: */
+	if(tsPtr->goLeftFirst)
+		{
+		if(tsPtr->root<tsPtr->right&&Math::sqr(nodes[tsPtr->root][tsPtr->splitDimension]-queryPosition[tsPtr->splitDimension])<resultDist2)
+			{
+			/* Traverse right subtree, but stay in the same stack frame to avoid tail recursion: */
+			tsPtr->left=tsPtr->root+1;
+			if(++tsPtr->splitDimension==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+	else
+		{
+		if(tsPtr->left<tsPtr->root&&Math::sqr(nodes[tsPtr->root][tsPtr->splitDimension]-queryPosition[tsPtr->splitDimension])<resultDist2)
+			{
+			/* Traverse left subtree, but stay in the same stack frame to avoid tail recursion: */
+			tsPtr->right=tsPtr->root-1;
+			if(++tsPtr->splitDimension==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+
+	/* Return to caller: */
+	--tsPtr;
+	if(tsPtr>=traversalStack)
+		goto doTheStage1;
+	
+	return *result;
+	}
+
+#else
+
+template <class StoredPointParam>
+inline
+const typename ArrayKdTree<StoredPointParam>::StoredPoint&
+ArrayKdTree<StoredPointParam>::findClosestPoint(
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition) const
+	{
+	/* Traverse the kd-tree: */
+	const StoredPoint* closestPoint=0;
+	Scalar minDist2=Math::Constants<Scalar>::max;
+	findClosestPoint(0,numNodes-1,0,queryPosition,closestPoint,minDist2);
+	
+	return *closestPoint;
+	}
+
+#endif
+
+#if GEOMETRY_ARRAYKDTREE_TRAVERSAL_EXPLICIT_RECURSION
+
+template <class StoredPointParam>
+inline
+typename ArrayKdTree<StoredPointParam>::ClosePointSet&
+ArrayKdTree<StoredPointParam>::findClosestPoints(
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition,
+	typename ArrayKdTree<StoredPointParam>::ClosePointSet& closestPoints) const
+	{
+	/* Clear result point set: */
+	closestPoints.clear();
+	
+	/* Set up a traversal stack for explicit recursion: */
+	struct TraversalStack
+		{
+		/* Elements: */
+		public:
+		int left,right; // Left and right boundaries of the current subtree
+		int root; // Root of the current subtree
+		int splitDimension; // Split dimension of the current subtree
+		bool goLeftFirst; // Flag whether to traverse into the left subtree in stage 0
+		} traversalStack[33]; // 33 is enough for all time! ALL TIME!
+	
+	/* Initialize the traversal stack: */
+	TraversalStack* tsPtr=traversalStack;
+	tsPtr->left=0;
+	tsPtr->right=numNodes-1;
+	tsPtr->splitDimension=0;
+	
+	/*********************************************************************
+	Traverse the tree recursively by ping-ponging between stages 0 and 1:
+	*********************************************************************/
+	
+	doTheStage0:
+
+	/*****************************************************************
+	Stage 0: Traverse into the subtree closer to the query position.
+	*****************************************************************/
+
+	/* Calculate the root node index: */
+	tsPtr->root=(tsPtr->left+tsPtr->right)>>1;
+	
+	/* Decide whether to go left or right first: */
+	tsPtr->goLeftFirst=queryPosition[tsPtr->splitDimension]<=nodes[tsPtr->root][tsPtr->splitDimension];
+	
+	if(tsPtr->goLeftFirst)
+		{
+		if(tsPtr->left<tsPtr->root)
+			{
+			/* Traverse left subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].left;
+			tsPtr->right=tsPtr[-1].root-1;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+	else
+		{
+		if(tsPtr->root<tsPtr->right)
+			{
+			/* Traverse right subtree: */
+			++tsPtr;
+			tsPtr->left=tsPtr[-1].root+1;
+			tsPtr->right=tsPtr[-1].right;
+			if((tsPtr->splitDimension=tsPtr[-1].splitDimension+1)==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+
+	doTheStage1:
+
+	/*****************************************************************
+	Stage 1: Enter the current root node into the closest point set.
+	*****************************************************************/
+	
+	/* Insert node's point into close point set: */
+	Scalar dist2=sqrDist(nodes[tsPtr->root],queryPosition);
+	closestPoints.insertPoint(nodes[tsPtr->root],dist2);
+	
+	/*****************************************************************
+	Stage 2: Traverse into the subtree farther from the query point.
+	*****************************************************************/
+	
+	/* Check whether to go left or right: */
+	if(tsPtr->goLeftFirst)
+		{
+		if(tsPtr->root<tsPtr->right&&Math::sqr(nodes[tsPtr->root][tsPtr->splitDimension]-queryPosition[tsPtr->splitDimension])<closestPoints.getMaxSqrDist())
+			{
+			/* Traverse right subtree, but stay in the same stack frame to avoid tail recursion: */
+			tsPtr->left=tsPtr->root+1;
+			if(++tsPtr->splitDimension==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+	else
+		{
+		if(tsPtr->left<tsPtr->root&&Math::sqr(nodes[tsPtr->root][tsPtr->splitDimension]-queryPosition[tsPtr->splitDimension])<closestPoints.getMaxSqrDist())
+			{
+			/* Traverse left subtree, but stay in the same stack frame to avoid tail recursion: */
+			tsPtr->right=tsPtr->root-1;
+			if(++tsPtr->splitDimension==dimension)
+				tsPtr->splitDimension=0;
+
+			goto doTheStage0;
+			}
+		}
+
+	/* Return to caller: */
+	--tsPtr;
+	if(tsPtr>=traversalStack)
+		goto doTheStage1;
+	
+	return closestPoints;
+	}
+
+#else
+
+template <class StoredPointParam>
+inline
+typename ArrayKdTree<StoredPointParam>::ClosePointSet&
+ArrayKdTree<StoredPointParam>::findClosestPoints(
+	const typename ArrayKdTree<StoredPointParam>::Point& queryPosition,
+	typename ArrayKdTree<StoredPointParam>::ClosePointSet& closestPoints) const
+	{
+	/* Clear result point set: */
+	closestPoints.clear();
+	
+	/* Traverse the kd-tree: */
+	findClosestPoints(0,numNodes-1,0,queryPosition,closestPoints);
+	
+	return closestPoints;
+	}
+
+#endif
+
+}

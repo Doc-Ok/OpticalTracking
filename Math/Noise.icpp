@@ -1,0 +1,90 @@
+/***********************************************************************
+Noise - Class to implement multivariate band-limited noise following the
+reference implementation described in Ken Perlin's 2002 SIGGRAPH paper.
+Copyright (c) 2012 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define MATH_NOISE_IMPLEMENTATION
+
+#include <Math/Noise.h>
+
+namespace Math {
+
+/**********************
+Methods of class Noise:
+**********************/
+
+template <class ScalarParam>
+inline
+ScalarParam
+Noise::noise(
+	ScalarParam x,
+	ScalarParam y,
+	ScalarParam z)
+	{
+	/* Calculate the 3D index of the unit cube containing the given point: */
+	int cx=int(floor(x));
+	int cy=int(floor(y));
+	int cz=int(floor(z));
+	
+	/* Calculate the given point's offset inside its unit cube: */
+	x-=ScalarParam(cx);
+	y-=ScalarParam(cy);
+	z-=ScalarParam(cz);
+	
+	/* Limit each component index of the unit cube to the [0, 256) interval: */
+	cx&=0xff;
+	cy&=0xff;
+	cz&=0xff;
+	
+	/* Calculate the blending factors for the point's local position: */
+	ScalarParam u=basisFunction(x);
+	ScalarParam v=basisFunction(y);
+	ScalarParam w=basisFunction(z);
+	
+	/*******************************************************************
+	Triple-hash the index components of the unit-cube's corners and
+	blend between their hashed gradients using the blending factors:
+	*******************************************************************/
+	
+	/* Compute the first two hashing levels: */
+	int a=permutation[cx]+cy;
+	int aa=permutation[a]+cz;
+	int ab=permutation[a+1]+cz;
+	int b=permutation[cx+1]+cy;
+	int ba=permutation[b]+cz;
+	int bb=permutation[b+1]+cz;
+	
+	/* Compute the third hashing level, and do tri-variate interpolation on-the-fly: */
+	const ScalarParam s1(1);
+	ScalarParam u1=interpolate(gradient(permutation[aa  ],x   ,y   ,z   ),
+		                         gradient(permutation[ba  ],x-s1,y   ,z   ),u);
+	ScalarParam u2=interpolate(gradient(permutation[ab  ],x   ,y-s1,z   ),
+		                         gradient(permutation[bb  ],x-s1,y-s1,z   ),u);
+	ScalarParam v1=interpolate(u1,u2,v);
+	ScalarParam u3=interpolate(gradient(permutation[aa+1],x   ,y   ,z-s1),
+		                         gradient(permutation[ba+1],x-s1,y   ,z-s1),u);
+	ScalarParam u4=interpolate(gradient(permutation[ab+1],x   ,y-s1,z-s1),
+		                         gradient(permutation[bb+1],x-s1,y-s1,z-s1),u);
+	ScalarParam v2=interpolate(u3,u4,v);
+	return interpolate(v1,v2,w);
+	}
+
+}

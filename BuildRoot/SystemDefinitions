@@ -1,0 +1,237 @@
+########################################################################
+# SystemDefinitions - System-dependent settings for the WhyTools build
+# environment.
+# Copyright (c) 1999-2013 Oliver Kreylos
+# Mac OS X adaptation copyright (c) 2006 Braden Pellett
+#
+# This file is part of the WhyTools Build Environment.
+# 
+# The WhyTools Build Environment is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+# 
+# The WhyTools Build Environment is distributed in the hope that it will
+# be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with the WhyTools Build Environment; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# 02111-1307 USA
+########################################################################
+
+########################################################################
+# Settings describing the host operating system and machine architecture
+########################################################################
+
+#
+# Set up default settings: Linux on i386
+#
+
+# Where to find existing libraries, headers, and binaries?
+INCLUDEEXT := include
+LIBEXT := lib
+BINEXT := bin
+
+# Where to put newly created files?
+DEPDIR := d
+OBJDIRBASE := o
+EXEDIRBASE := bin
+
+# How to name shared libraries and plugins?
+DSOFILEEXT = so
+FULLDSONAME = $(1).$(LDEXT).$(DSOFILEEXT).$(MAJORLIBVERSION).$(MINORLIBVERSION)
+DSONAME = $(1).$(LDEXT).$(DSOFILEEXT).$(MAJORLIBVERSION)
+LINKDSONAME = $(1).$(LDEXT).$(DSOFILEEXT)
+PLUGINFILEEXT = so
+
+# Compiler and linker settings to build shared libraries and plugins:
+CDSOFLAGS = -fPIC
+DSOLINKFLAGS = -shared -Wl,-soname,$(call DSONAME,$(1))
+CPLUGINFLAGS = -fPIC
+PLUGINLINKFLAGS = -shared
+PLUGINHOSTLINKFLAGS = -rdynamic
+
+# Define if plugins can depend on other plugins:
+SYSTEM_HAVE_TRANSITIVE_PLUGINS = 1
+
+# System-dependent compiler settings:
+EXTRACSYSFLAGS = 
+EXTRACPPSYSFLAGS = 
+
+# System-dependent linker settings for applications:
+VRUIAPP_LFLAGS =
+
+# Set search paths for system libraries:
+SYSTEM_PACKAGE_SEARCH_PATHS = /usr/local /usr
+
+# System library settings:
+SYSTEM_SEPARATE_LIBDL = 1
+SYSTEM_HAVE_RT = 1
+SYSTEM_HAVE_TLS = 1
+SYSTEM_HAVE_ATOMICS = 0
+SYSTEM_HAVE_SPINLOCKS = 0
+SYSTEM_CAN_CANCEL_THREADS = 0
+SYSTEM_SEPARATE_LIBPTHREAD = 1
+SYSTEM_X11_LIBDIR = 
+SYSTEM_GL_WITH_X11 = 0
+SYSTEM_HAVE_GLXGETPROCADDRESS = 1
+SYSTEM_OPENAL_FRAMEWORK = 0
+
+# Configure if it is safe to sort the list of linked libraries passed to the linker:
+# (Might not be safe on older systems, or when using static linking.)
+ifndef STATIC_LINK
+  SORT_LINKLIBFLAGS = 1
+endif
+
+# Configure if it is possible to store library paths in shared libraries:
+SYSTEM_HAVE_RPATH = 1
+
+#
+# Tweak settings based on OS type:
+#
+
+HOST_OS = $(shell uname -s)
+HOST_ARCH = $(shell uname -m)
+
+ifeq ($(HOST_OS),Linux)
+  SYSTEM = LINUX
+  OSSPECFILEINSERT = Linux
+  ifeq ($(HOST_ARCH),x86_64)
+    ifneq ($(wildcard /usr/lib/x86_64-linux-gnu),)
+      LIBEXT := lib/x86_64-linux-gnu
+    else
+      LIBEXT := lib64
+    endif
+    # Set different object and executable file paths for mixed architectures (disabled for now):
+    # OBJDIR := $(OBJDIR)/64
+    # EXEDIR := $(EXEDIR)/64
+  endif
+  SYSTEM_HAVE_SPINLOCKS = 1
+  SYSTEM_CAN_CANCEL_THREADS = 1
+  SYSTEM_X11_LIBDIR = /usr/$(LIBEXT)
+endif
+
+ifeq ($(HOST_OS),Darwin)
+  SYSTEM = DARWIN
+  OSSPECFILEINSERT = MacOSX
+  DSOFILEEXT = dylib
+  FULLDSONAME = $(1).$(LDEXT).$(MAJORLIBVERSION).$(MINORLIBVERSION).$(DSOFILEEXT)
+  DSONAME = $(1).$(LDEXT).$(MAJORLIBVERSION).$(DSOFILEEXT)
+  LINKDSONAME = $(1).$(LDEXT).$(DSOFILEEXT)
+  PLUGINFILEEXT = bundle
+  CDSOFLAGS = 
+  DSOLINKFLAGS = -dynamiclib -compatibility_version $(MAJORLIBVERSION) -current_version $(MAJORLIBVERSION).$(MINORLIBVERSION)
+  ifneq ($(USE_RPATH),0)
+    DSOLINKFLAGS += -install_name $(LIBINSTALLDIR)/$(call DSONAME,$(1))
+  else
+    DSOLINKFLAGS += -install_name $(call DSONAME,$(1))
+  endif
+  CPLUGINFLAGS = 
+  PLUGINLINKFLAGS = -bundle -undefined dynamic_lookup
+  PLUGINHOSTLINKFLAGS = 
+  SYSTEM_HAVE_TRANSITIVE_PLUGINS = 0
+  VRUIAPP_LFLAGS = -flat_namespace -bind_at_load
+  
+  # MacPorts installs packages in /opt/local by default:
+  SYSTEM_PACKAGE_SEARCH_PATHS += /opt/local
+  
+  SYSTEM_SEPARATE_LIBDL = 0
+  SYSTEM_HAVE_RT = 0
+  SYSTEM_SEPARATE_LIBPTHREAD = 0
+  SYSTEM_X11_LIBDIR = /usr/X11/lib
+  SYSTEM_GL_WITH_X11 = 1
+  SYSTEM_HAVE_GLXGETPROCADDRESS = 0
+  SYSTEM_OPENAL_FRAMEWORK = 1
+  SYSTEM_UNAME_MAJOR = $(shell expr `uname -r` : "\([0-9]*\)")
+  ifeq ($(shell expr $(SYSTEM_UNAME_MAJOR) ">=" "9"),1)
+    ifeq ($(shell expr $(SYSTEM_UNAME_MAJOR) ">=" "10"),1)
+      SYSTEM_DARWIN_VERSION = 10.6
+    else
+      SYSTEM_DARWIN_VERSION = 10.5
+      VRUIAPP_LFLAGS += -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+    endif
+  else
+    SYSTEM_DARWIN_VERSION = 10.4
+  endif
+  export MACOSX_DEPLOYMENT_TARGET = $(SYSTEM_DARWIN_VERSION)
+  SYSTEM_HAVE_RPATH = 0
+endif
+
+#
+# Selection of compiler suite
+#
+
+# Basic C++ compiler is g++
+GNUC_BASEDIR = /usr/$(BINEXT)
+BASECCOMP = $(GNUC_BASEDIR)/g++
+
+# Default C++ compiler is g++
+ifndef CCOMP
+  CCOMP = $(BASECCOMP)
+endif
+
+# Default C compiler is gcc
+ifndef PLAINCCOMP
+  PLAINCCOMP = $(GNUC_BASEDIR)/gcc
+endif
+
+# Check for the compiler type as it influences ABI and standard strictness
+ifeq ($(shell expr `$(BASECCOMP) -dumpversion` ">=" "3.0.0"),1)
+  COMPILERTYPE = g++-3
+  # gcc versions 3.0.0 and up create dependency file with the same
+  # root name and in the same directory as the created object file
+  DEPFILETEMPLATE = '$(patsubst %.o,%.d,$@)'
+  ifeq ($(shell expr `$(BASECCOMP) -dumpversion` ">=" "4.1.0"),1)
+		# gcc version 4.1.0 and up provide built-in atomics:
+		SYSTEM_HAVE_ATOMICS = 1
+  endif
+else
+  COMPILERTYPE = g++
+  # gcc version 2.x.y creates dependency file with the same root name as
+  # the source file in the current directory:
+  DEPFILETEMPLATE = '$(*F).d'
+endif
+
+# Set the include directory extension for package-provided libraries
+MYINCLUDEEXT = include
+
+# Package-provided libraries can be built for different compiler
+# versions, and come in static and dynamic shared versions, and also in
+# optimized and debug flavors.
+
+# Specify default optimization/debug level
+ifdef DEBUG
+  DEFAULTDEBUGLEVEL = 3
+  DEFAULTOPTLEVEL = 0
+else
+  DEFAULTDEBUGLEVEL = 0
+  DEFAULTOPTLEVEL = 3
+endif
+
+# Use an extension to tell the linker which version to use
+LDEXT := $(COMPILERTYPE)
+ifdef STATIC_LINK
+  LDEXT := $(LDEXT).static
+endif
+ifdef DEBUG
+  MYLIBEXT = $(LIBEXT)/debug
+else
+  MYLIBEXT = $(LIBEXT)
+endif
+LIBDESTDIR := $(MYLIBEXT)
+
+# Determine the executable file directory:
+EXEDIR := $(EXEDIRBASE)
+ifdef DEBUG
+  EXEDIR := $(EXEDIR)/debug
+endif
+
+# Create initial values for parameters that can be overriden by project makefiles
+CFLAGS = 
+LINKFLAGS = 
+EXTRACINCLUDEFLAGS = 
+EXTRALINKDIRFLAGS = 
+EXTRALINKLIBFLAGS = 

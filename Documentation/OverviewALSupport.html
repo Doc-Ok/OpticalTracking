@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<TITLE>ALSupport -- OpenAL Support Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>ALSupport&nbsp;-- OpenAL Support Library</H1>
+
+The ALSupport library is meant to do to OpenAL what the GLSupport library does to OpenGL, but it is currently in a sorry state due to lack of interest and lack of sound support in Vrui.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the ALSupport library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>ALTemplates.h</DT>
+<DD>ALTemplates defines overloaded and templatized wrappers around selected OpenAL API calls.</DD>
+
+<DT>ALObject.h</DT>
+<DD>ALObject is a base class for objects that contain per-context OpenAL data in a multi-context sound rendering environment where OpenAL state must be kept separate from other application state. ALObject handles initialization and deinitialization of OpenAL state once for each OpenAL context an object is rendered in. All OpenAL data related to an object is stored in a per-context ALObject::DataItem object. See <A HREF="GLContextData.html">GLContextData</A> for a thorough explanation of the concepts behind the analogous OpenGL multi-pipe graphics abstraction.</DD>
+
+<DT>ALContextData.h</DT>
+<DD>ALContextData is a class associating per-context OpenAL data with objects derived from ALObject. See <A HREF="GLContextData.html">GLContextData</A> for a thorough explanation of the concepts behind the analogous OpenGL multi-pipe graphics abstraction.</DD>
+
+<DT>ALGeometryWrappers.h</DT>
+<DD>ALGeometryWrappers defines wrappers around selected OpenAL API calls which allow directly to pass matching objects from the <A HREF="OverviewGeometry.html">templatized geometry library</A>.</DD>
+</DL>
+
+</BODY>
+</HTML>

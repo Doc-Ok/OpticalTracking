@@ -1,0 +1,344 @@
+/***********************************************************************
+FactoryManager - Generic base class for managers of factory classes
+derived from a common base class. Intended to manage loading of dynamic
+shared objects.
+Copyright (c) 2003-2013 Oliver Kreylos
+
+This file is part of the Plugin Handling Library (Plugins).
+
+The Plugin Handling Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Plugin Handling Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Plugin Handling Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define PLUGINS_FACTORYMANAGER_IMPLEMENTATION
+
+#include <Plugins/FactoryManager.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dlfcn.h>
+#include <Misc/ThrowStdErr.h>
+
+#include <Plugins/FunctionPointerHack.h>
+
+namespace Plugins {
+
+/*******************************
+Methods of class FactoryManager:
+*******************************/
+
+template <class ManagedFactoryParam>
+inline
+typename FactoryManager<ManagedFactoryParam>::FactoryData
+FactoryManager<ManagedFactoryParam>::loadClassFromDSO(
+	const char* className)
+	{
+	/* Construct the DSO name from the given class name: */
+	char dsoName[256];
+	snprintf(dsoName,sizeof(dsoName),dsoNameTemplate.c_str(),className);
+	
+	/* Locate and open the DSO containing the class implementation: */
+	void* dsoHandle;
+	try
+		{
+		std::string fullDsoName=dsoLocator.locateFile(dsoName);
+		dsoHandle=dlopen(fullDsoName.c_str(),RTLD_LAZY|RTLD_GLOBAL);
+		}
+	catch(std::runtime_error err)
+		{
+		/* Re-throw the error as a DSO error: */
+		throw DsoError(err.what());
+		}
+	
+	/* Check if DSO handle is valid: */
+	if(dsoHandle==0)
+		throw DsoError(dlerror());
+	
+	/*********************************************************************
+	For all DSO function names, try a generic name first, and then a
+	class-specific name if the generic one doesn't exist. I want to move
+	to always using generic names (less editing), but need to respect
+	legacy factory classes.
+	*********************************************************************/
+	
+	/* Get address of dependency resolution function (if it exists): */
+	ResolveDependenciesFunction resolveDependenciesFunction=ResolveDependenciesFunction(nowarninghack_dlsym(dsoHandle,"resolveDependencies"));
+	if(resolveDependenciesFunction==0)
+		{
+		char resolveDependenciesFunctionName[256];
+		snprintf(resolveDependenciesFunctionName,sizeof(resolveDependenciesFunctionName),"resolve%sDependencies",className);
+		resolveDependenciesFunction=ResolveDependenciesFunction(nowarninghack_dlsym(dsoHandle,resolveDependenciesFunctionName));
+		}
+	
+	/* Get address of factory creation function: */
+	CreateFactoryFunction createFactoryFunction=CreateFactoryFunction(nowarninghack_dlsym(dsoHandle,"createFactory"));
+	if(createFactoryFunction==0)
+		{
+		char createFactoryFunctionName[256];
+		snprintf(createFactoryFunctionName,sizeof(createFactoryFunctionName),"create%sFactory",className);
+		createFactoryFunction=CreateFactoryFunction(nowarninghack_dlsym(dsoHandle,createFactoryFunctionName));
+		}
+	if(createFactoryFunction==0)
+		throw DsoError(dlerror());
+	
+	/* Get address to factory destruction function: */
+	DestroyFactoryFunction destroyFactoryFunction=DestroyFactoryFunction(nowarninghack_dlsym(dsoHandle,"destroyFactory"));
+	if(destroyFactoryFunction==0)
+		{
+		char destroyFactoryFunctionName[256];
+		snprintf(destroyFactoryFunctionName,sizeof(destroyFactoryFunctionName),"destroy%sFactory",className);
+		destroyFactoryFunction=DestroyFactoryFunction(nowarninghack_dlsym(dsoHandle,destroyFactoryFunctionName));
+		}
+	if(destroyFactoryFunction==0)
+		throw DsoError(dlerror());
+	
+	/* Resolve DSO's dependencies: */
+	if(resolveDependenciesFunction!=0)
+		resolveDependenciesFunction(*this);
+	
+	/* Create factory: */
+	ManagedFactory* factory=createFactoryFunction(*this);
+	if(factory==0)
+		throw FactoryManagerError(std::string("FactoryManager error: Unable to create factory object for class ")+std::string(className));	
+	
+	/* Store factory data: */
+	return FactoryData(dsoHandle,factory,destroyFactoryFunction);
+	}
+
+template <class ManagedFactoryParam>
+inline
+FactoryManager<ManagedFactoryParam>::FactoryManager(
+	std::string sDsoNameTemplate)
+	{
+	/* Split the DSO name template into base directory and file name and check it for validity: */
+	std::string::iterator templateStart=sDsoNameTemplate.begin();
+	bool haveClassname=false;
+	for(std::string::iterator sIt=sDsoNameTemplate.begin();sIt!=sDsoNameTemplate.end();++sIt)
+		{
+		if(*sIt=='/'&&!haveClassname) // Find the last slash before the %s placeholder
+			templateStart=sIt+1;
+		else if(*sIt=='%') // Check for invalid placeholders
+			{
+			++sIt;
+			if(sIt==sDsoNameTemplate.end()||*sIt!='s'||haveClassname)
+				Misc::throwStdErr("FactoryManager::FactoryManager: Invalid DSO name template %s",sDsoNameTemplate.c_str());
+			else
+				haveClassname=true;
+			}
+		}
+	if(!haveClassname)
+		Misc::throwStdErr("FactoryManager::FactoryManager: Invalid DSO name template %s",sDsoNameTemplate.c_str());
+	dsoNameTemplate=std::string(templateStart,sDsoNameTemplate.end());
+	if(templateStart!=sDsoNameTemplate.begin())
+		dsoLocator.addPath(std::string(sDsoNameTemplate.begin(),templateStart));
+	}
+
+template <class ManagedFactoryParam>
+inline
+FactoryManager<ManagedFactoryParam>::~FactoryManager(
+	void)
+	{
+	/* Release all classes: */
+	releaseClasses();
+	}
+
+template <class ManagedFactoryParam>
+inline
+typename FactoryManager<ManagedFactoryParam>::ManagedFactory*
+FactoryManager<ManagedFactoryParam>::loadClass(
+	const char* className)
+	{
+	/* Check if the requested class already exists: */
+	typename FactoryList::iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&strcmp(fIt->factory->getClassName(),className)!=0;++fIt)
+		;
+	if(fIt!=factories.end()) // Class already loaded?
+		return fIt->factory;
+	else
+		{
+		/* Load class from DSO: */
+		FactoryData newFactoryData=loadClassFromDSO(className);
+		
+		/* Store new factory in list: */
+		// unsigned int newClassId=className.rawHash()%maxClassId;
+		unsigned int newClassId=rand()%maxClassId;
+		while(true)
+			{
+			/* Search if the proposed classID is already taken: */
+			bool isUnique=true;
+			for(typename FactoryList::iterator fIt=factories.begin();fIt!=factories.end();++fIt)
+				{
+				if(fIt->classId==newClassId)
+					{
+					isUnique=false;
+					break;
+					}
+				}
+			if(isUnique)
+				break;
+			
+			/* Try another ID: */
+			newClassId=(newClassId+1)%maxClassId;
+			}
+		newFactoryData.classId=ClassIdType(newClassId);
+		factories.push_back(newFactoryData);
+		
+		return newFactoryData.factory;
+		}
+	}
+
+template <class ManagedFactoryParam>
+inline
+void
+FactoryManager<ManagedFactoryParam>::addClass(
+	typename FactoryManager<ManagedFactoryParam>::ManagedFactory* newFactory,
+	typename FactoryManager<ManagedFactoryParam>::DestroyFactoryFunction newDestroyFactoryFunction)
+	{
+	/* Check if the requested class already exists: */
+	typename FactoryList::iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&strcmp(fIt->factory->getClassName(),newFactory->getClassName())!=0;++fIt)
+		;
+	if(fIt!=factories.end()) // Class already loaded?
+		throw FactoryManagerError(std::string("Class ")+std::string(newFactory->getClassName())+std::string(" already exists"));
+	
+	/* Add the factory to class list: */
+	FactoryData newFactoryData(0,newFactory,newDestroyFactoryFunction);
+	
+	/* Store new factory in list: */
+	// unsigned int newClassId=className.rawHash()%maxClassId;
+	unsigned int newClassId=rand()%maxClassId;
+	while(true)
+		{
+		/* Search if the proposed classID is already taken: */
+		bool isUnique=true;
+		for(typename FactoryList::iterator fIt=factories.begin();fIt!=factories.end();++fIt)
+			{
+			if(fIt->classId==newClassId)
+				{
+				isUnique=false;
+				break;
+				}
+			}
+		if(isUnique)
+			break;
+
+		/* Try another ID: */
+		newClassId=(newClassId+1)%maxClassId;
+		}
+	newFactoryData.classId=ClassIdType(newClassId);
+	factories.push_back(newFactoryData);
+	}
+
+template <class ManagedFactoryParam>
+inline
+void
+FactoryManager<ManagedFactoryParam>::releaseClass(
+	const char* className)
+	{
+	/* Get an iterator to the requested class: */
+	typename FactoryList::iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&strcmp(fIt->factory->getClassName(),className)!=0;++fIt)
+		;
+	
+	/* Bail out if the class doesn't exist: */
+	if(fIt==factories.end())
+		return;
+	
+	/* Check if the class still has children: */
+	if(!fIt->factory->getChildren().empty())
+		throw FactoryManagerError(std::string("Class ")+std::string(className)+std::string(" cannot be removed due to dependencies"));
+	
+	/* Destroy factory and close DSO: */
+	if(fIt->destroyFactoryFunction!=0)
+		fIt->destroyFactoryFunction(fIt->factory);
+	if(fIt->dsoHandle!=0)
+		dlclose(fIt->dsoHandle);
+	
+	/* Remove the class from the factory list: */
+	factories.erase(fIt);
+	}
+
+template <class ManagedFactoryParam>
+inline
+void
+FactoryManager<ManagedFactoryParam>::releaseClasses(
+	void)
+	{
+	/* Process the class list backwards to release derived classes before their base classes: */
+	for(typename FactoryList::reverse_iterator fIt=factories.rbegin();fIt!=factories.rend();++fIt)
+		{
+		/* Destroy factory and close DSO: */
+		if(fIt->destroyFactoryFunction!=0)
+			fIt->destroyFactoryFunction(fIt->factory);
+		fIt->factory=0;
+		fIt->destroyFactoryFunction=0;
+		if(fIt->dsoHandle!=0)
+			dlclose(fIt->dsoHandle);
+		fIt->dsoHandle=0;
+		}
+	
+	/* Clear the factory list: */
+	factories.clear();
+	}
+
+template <class ManagedFactoryParam>
+inline
+typename FactoryManager<ManagedFactoryParam>::ClassIdType
+FactoryManager<ManagedFactoryParam>::getClassId(
+	const typename FactoryManager<ManagedFactoryParam>::ManagedFactory* factory)
+	const
+	{
+	typename FactoryList::const_iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&fIt->factory!=factory;++fIt)
+		;
+	if(fIt!=factories.end())
+		return fIt->classId;
+	else
+		return ClassIdType(0);
+	}
+
+template <class ManagedFactoryParam>
+inline
+typename FactoryManager<ManagedFactoryParam>::ManagedFactory*
+FactoryManager<ManagedFactoryParam>::getFactory(
+	typename FactoryManager<ManagedFactoryParam>::ClassIdType classId)
+	const
+	{
+	typename FactoryList::const_iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&fIt->classId!=classId;++fIt)
+		;
+	if(fIt!=factories.end())
+		return fIt->factory;
+	else
+		return 0;
+	}
+
+template <class ManagedFactoryParam>
+inline
+typename FactoryManager<ManagedFactoryParam>::ManagedFactory*
+FactoryManager<ManagedFactoryParam>::getFactory(
+	const char* className)
+	const
+	{
+	typename FactoryList::const_iterator fIt;
+	for(fIt=factories.begin();fIt!=factories.end()&&strcmp(fIt->factory->getClassName(),className)!=0;++fIt)
+		;
+	if(fIt!=factories.end())
+		return fIt->factory;
+	else
+		return 0;
+	}
+
+}

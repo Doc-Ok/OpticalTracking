@@ -1,0 +1,100 @@
+/***********************************************************************
+RefCountedArray - Generic class for fixed-size arrays with copy-on-write
+sharing and automatic garbage collection. Not safe to share among
+multiple threads.
+Copyright (c) 2010 Oliver Kreylos
+
+This file is part of the Miscellaneous Support Library (Misc).
+
+The Miscellaneous Support Library is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+The Miscellaneous Support Library is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Miscellaneous Support Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define MISC_REFCOUNTEDARRAY_IMPLEMENTATION
+
+#include <Misc/RefCountedArray.h>
+
+namespace Misc {
+
+/********************************
+Methods of class RefCountedArray:
+********************************/
+
+template <class ElementParam>
+inline
+typename RefCountedArray<ElementParam>::Header*
+RefCountedArray<ElementParam>::allocate(
+	size_t newSize)
+	{
+	/* Allocate a bare memory block of the required size: */
+	unsigned char* mem=new unsigned char[sizeof(Header)+newSize*sizeof(Element)];
+	
+	/* Construct the header structure in-place: */
+	Header* result=new(mem) Header;
+	result->refCount=1;
+	result->size=newSize;
+	
+	/* Construct the elements in-place, in case they have custom default constructors: */
+	for(size_t i=0;i<newSize;++i)
+		new(result->elements+i) Element;
+	
+	return result;
+	}
+
+template <class ElementParam>
+inline
+void
+RefCountedArray<ElementParam>::free(
+	typename RefCountedArray<ElementParam>::Header* header)
+	{
+	/* Destruct the elements in-place, in case they have custom destructors: */
+	for(size_t i=0;i<header->size;++i)
+		header->elements[i].~Element();
+	
+	/* Destroy the header itself: */
+	delete[] reinterpret_cast<unsigned char*>(header);
+	}
+
+template <class ElementParam>
+inline
+void
+RefCountedArray<ElementParam>::modify(
+	void)
+	{
+	/* Bail out if the array is already private: */
+	if(header->refCount==1)
+		return;
+	
+	/* Allocate a bare memory block of the required size: */
+	unsigned char* mem=new unsigned char[sizeof(Header)+header->size*sizeof(Element)];
+	
+	/* Construct the header structure in-place: */
+	Header* newHeader=new(mem) Header;
+	newHeader->refCount=1;
+	newHeader->size=header->size;
+	
+	/* Copy-construct the elements in-place: */
+	for(size_t i=0;i<header->size;++i)
+		new(newHeader->elements+i) Element(header->elements[i]);
+	
+	/* Unreference and potentially destroy the current shared array: */
+	if(header->unref())
+		free(header);
+	
+	/* Set the new array: */
+	header=newHeader;
+	}
+
+}

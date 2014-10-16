@@ -1,0 +1,136 @@
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>Multi-window Rendering in Vrui</H1>
+
+<P>Many immersive visualization environments require using multiple 3D rendering windows in parallel. For example, CAVEs have four or more screens, with one quad-buffered stereoscopic OpenGL window per screen; tiled display walls use multiple projectors with one window per projector; passive-stereo projection displays use one projector per eye; head-mounted displays typically have separate microdisplays for the two eyes, and often use an additional monoscopic window on the driving computer's main monitor to display what the HMD user is seeing to additional viewers.</P>
+
+<P>In principle, there are three ways to manage multiple 3D rendering windows in a single visualization environment:
+<OL>
+<LI><B>Multiple computers</B> The environment is driven by multiple computers, interconnected to form a (small) cluster. Users typically interact only with the cluster's <EM>head</EM> or <EM>master node</EM>, which presents a normal desktop, and, while applications are running, might use a 3D rendering window to show an overview of what is going on in the environment and allow limited interaction via mouse and/or keyboard. Most of the <EM>slave nodes</EM>, on the other hand, will be dedicated rendering nodes using high-powered graphics cards. Upon startup, an application is distributed across the cluster in some fashion, and from that point on the cluster runs in tight lockstep to create synchronized visuals on all rendering windows.</LI>
+
+<LI><B>Multiple graphics cards</B> A single computer can contain multiple discrete graphics cards. Normal desktop PCs can typically contain up to three graphics cards, and special <EM>visualization servers</EM> often contain many more. It is important to point out that multiple graphics cards in this context are different from the multiple <EM>bonded</EM> graphics cards often used in high-end gaming PCs (SLI or CrossFire). Here, the graphics cards are not bonded together, but run completely independently, and card models and even GPU types can be mixed and matched arbitrarily. In the X Window System, multiple graphics cards can be represented as multiple X servers running on the same host, or multiple X screens for one X server, or any combination thereof. <B>Note:</B> As far as the X Window System and Vrui are concerned, multiple bonded (SLI or CrossFire) graphics cards are treated as one single graphics card.</LI>
+
+<LI><B>Multiple video outputs</B> Modern graphics cards can drive multiple displays via multiple video outputs, typically between two and four. In the X Window System, multiple video outputs can be represented as multiple X servers running on the same host, multiple X screens for one X server, vendor-specific &quot;bonded desktop&quot; extensions (TwinView or Eyefinity), or any combination thereof.</LI>
+</OL></P>
+
+<P>Vrui supports all three of these methods, and any combination of them. A few concrete examples:
+<UL>
+<LI>Single computer driving a head-mounted display: one low-powered or onboard graphics card to render the desktop, and one graphics card using two video outputs to drive the HMD's left and right screens, respectively. The two graphics cards are represented by two X screens on a single X server (:0.0 and :0.1), where the second X screen uses a &quot;bonded desktop&quot; setup to distribute its pixels across the two video outputs.</LI>
+
+<LI>A six-node cluster driving a four-screen (three walls and one floor) CAVE: the head node uses a single graphics card to render the desktop and a control window, and also serves as file server for the cluster. Four slave nodes have one &quot;professional&quot; graphics card each, running a quad-buffered stereoscopic display. The fifth slave node drives a surround sound system, and does not have a graphics card at all.</LI>
+
+<LI>Nine-node cluster driving a six-tile stereoscopic display wall: the head node uses a single graphics card to render the desktop and a control window, and also serves as file server for the cluster. Six slave nodes have one high-powered graphics card each, using two video outputs in a &quot;bonded desktop&quot; setup to drive two projectors (for each tile's left and right views). The seventh and eighth slave nodes drive a surround sound system, and do not have graphics cards at all.</LI>
+
+<LI>Single computer driving a four-screen CAVE: two &quot;professional&quot; graphics cards, using three video outputs on the first graphics card to render the desktop and drive two CAVE screens in quad-buffered stereo, and two video outputs on the second graphics card to drive the remaining two CAVE screens in quad-buffered stereo. The two graphics cards are driven by two independent X servers (:0 and :1), the three displays on the first graphics cards are run as three X screens (:0.0, :0.1, and :0.2), and the two displays on the second graphics card are run as two X screens (:1.0 and :1.1).</LI>
+
+<LI>A nine-node cluster driving a six-screen &quot;super CAVE:&quot; the head node uses a single graphics card to render the desktop and a control window. Six slave nodes drive one CAVE screen each, using two graphics cards and two video outputs per graphics card to drive two pairs of stacked 4K resolution projectors, one stack for the left-eye and one for the right-eye view. On each render node, the two graphics cards are represented as two X servers with two X screens each (:0.0 to :1.1). The seventh slave node drives a surround sound system, and the eighth slave node acts as file server for the entire cluster. The latter two nodes do not have graphics cards at all.</LI>
+</UL></P>
+
+<H2>Multiple Computers</H2>
+
+<P>Unlike some other VR toolkits, Vrui only has a single run-time for single-system or cluster-based environments, which can configure itself dynamically for the two environment types via settings in the Vrui.cfg configuration file. The master switch for cluster-based multi-window rendering is the <EM>enableMultipipe</EM> tag in an environment's root configuration section. When set to <EM>true</EM>, the Vrui run-time will read additional cluster-related configuration tags, and then enter cluster mode by distributing itself across the cluster via remote shells. In Vrui, cluster mode is entirely controlled from the head node: users do not have to manually log into slave nodes to start server processes or control execution; in fact, users don't even need to be aware that they are using a cluster-based environment. Cluster-based Vrui environments work by replication. This means that instances of a Vrui application are executed locally on each cluster node. Therefore, all cluster nodes need to be able to access the same executable and library files required to start a Vrui application, and all configuration and data files required to run it. While it is possible to manually replicate programs and data to all cluster nodes' local hard drives, it is very strongly recommended to use a cluster-internal file server, and share all users' home directories, and any data directories. In typical clusters, the head node can double as file server without problems. See the Vrui Cluster Guide for details.</P>
+
+<P>For legacy reasons, all cluster-related configuration tags start with the <EM>multipipe</EM> prefix. The purpose of these tags is to define all details of intra-cluster communication. The most important tags are <EM>multipipeMaster</EM>, <EM>multipipeSlaves</EM>, and <EM>multipipeMulticastGroup</EM>. The first tag defines the IP address (given as host name or dotted address) of the cluster's head node, as visible to the slave nodes. Cluster head nodes typically have two IP addresses: one outside address connecting the entire cluster to the Internet at large, and one private address on the cluster's subnet, such as 192.168.1.1. In this example, <EM>multipipeMaster</EM> would be <EM>192.168.1.1</EM>. The <EM>multipipeSlaves</EM> tag is a list of IP addresses of the cluster's slave nodes on the cluster's internal network. For a six-node cluster, for example, <EM>multipipeSlaves</EM> could be <EM>("192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14")</EM>. IP addresses containing special characters such as dots need to be enclosed in double quotes. For simplicity, it is best to assign short names to all cluster nodes via the /etc/hosts file on each node. Here, 192.168.1.1 could be &quot;head,&quot; and 192.168.1.10 to 192.168.1.14 could be &quot;r1&quot; to &quot;r5.&quot; Then, <EM>multipipeMaster</EM> would be <EM>head</EM>, and <EM>multipipeSlaves</EM> would be <EM>(r1, r2, r3, r4, r5)</EM>. <B>Note:</B> The <EM>multipipeSlaves</EM> list should only list slave nodes that need to run instances of a Vrui application, to render video or audio. Additional cluster nodes such as dedicated file servers should not be listed.</P>
+
+<P>The third tag, <EM>multipipeMulticastGroup</EM>, defines a multicast or broadcast address the head node can use to talk to all slave nodes. In Vrui, intra-cluster communication is done using a custom UDP-based multicast protocol. Due to the special communication pattern inherent in a cluster running in tight lockstep, multicast yields very high bandwidth over commodity interconnects such as Gigabit Ethernet (around 90 MB/s, independent of number of cluster nodes). In a cluster with a private subnet, <EM>multipipeMulticastGroup</EM> should be the subnet's real broadcast address, i.e., <EM>192.168.1.255</EM> in the ongoing example. For ad-hoc clusters formed from stand-alone computers on a larger local network, a proper multicast address such as 224.0.0.1 should be used.</P>
+
+<P>The rest of the <EM>multipipe</EM> tags can be used to fine-tune communication parameters to optimize performance or work around network restrictions, such as defining the UDP ports used on the head and slave nodes, time-out values, etc. These tags are described in detail in the <A HREF="VruiConfigurationFileReference.html#rootsection">Vrui Configuration File Settings Reference</A> document.</P>
+
+<H3>Per-node Settings</H3>
+
+<P>In a Vrui cluster, nodes are only distinguished by the rendering windows they use to display 3D graphics, and the sound contexts they use to render 3D sound. In cluster mode, the <EM>windowNames</EM> and <EM>soundContextName</EM> tags are replaced by per-node tags, <EM>node&lt;index&gt;WindowNames</EM> and <EM>node&lt;index&gt;SoundContextName</EM>, where <EM>&lt;index&gt;</EM> is the index of the cluster node to which the tag applies. The head node always has index 0, and slave nodes are assigned indices based on their position in the <EM>multipipeSlaves</EM> list, starting at 1. For example, <EM>node0WindowNames</EM> lists the names of the rendering windows to be opened on the head node, and <EM>node4SoundContextName</EM> defines the name of the sound context to be used on the fourth slave node. Any node with an empty window name list, e.g., <EM>node5WindowNames ()</EM>, will not open any windows, and in fact not require a graphics card in the node. Any nodes with missing <EM>node&lt;index&gt;SoundContextName</EM> tags will not produce audio. Slave nodes that have neither windows nor sound contexts will still run a full instance of a Vrui application, but not produce any output, i.e., won't do anything useful. Head nodes with no windows or sound contexts, on the other hand, are perfectly reasonable. When a Vrui application on such a &quot;headless&quot; cluster is started from a terminal, it will continuously print the application's current frame rate, and wait for the user to press the Escape key to shut down the application.</P>
+
+<H2>Multiple Graphics Cards or Multiple Video Outputs</H2>
+
+<P>In Vrui, multiple graphics cards or multiple video outputs on one or more graphics cards are treated identically, with one potential distinction (see <A HREF="#parallelrendering">Context Sharing and Parallel Rendering</A>). The <EM>windowNames</EM> tag in an environment's root configuration section, or the <EM>node&lt;index&gt;WindowNames</EM> tags in cluster mode, list the names of configuration file sections defining one 3D rendering window each. Inside those configuration sections, windows can be directed to any X screen on any X server reachable from the stand-alone computer or cluster node.</P>
+
+<P>Window placement is controlled via three tags in a window's configuration section: <EM>display</EM>, <EM>screen</EM>, and <EM>windowPos</EM>. The <EM>display</EM> tag defines the name of the X Window System display to which to connect, such as <EM>:0.1</EM> to use the second screen on the first local X server. If the <EM>display</EM> tag is omitted, it defaults to the value of the DISPLAY environment variable. The <EM>screen</EM> tag can be used to select a different screen number than the default included in the <EM>display</EM> tag. In more detail, an X server connection is always to an X server, not a specific X screen. The &quot;.&lt;screen index&gt;&quot; suffix of the connection name merely defines the default screen to use for that X server connection. The <EM>screen</EM> tag is mostly redundant in single-window setups, but becomes important for <A HREF="#parallelrendering">context sharing and parallel rendering</A>.</P>
+
+<P>The <EM>windowPos</EM> tag requests an initial size and position for the window, specified as <EM>(&lt;left edge&gt;, &lt;top edge&gt;), (&lt;width&gt;, &lt;height&gt;)</EM>, all relative to the X screen containing the window, and measured in pixels. The left and top edge coordinates and width and height are the positions and size of the actual rendering window, not including the window decoration, i.e., title bar, resize handles, and borders. By default, Vrui windows are opened as regular desktop windows with decorations, but decorations can be disabled by setting the <EM>decorate</EM> tag to <EM>false</EM>. Non-decorated windows are a good way to place full-screen windows at exact locations inside an X screen, which is important in a &quot;bonded desktop&quot; setup. For example, a window setup to drive a head-mounted display via two video outputs configured as a &quot;bonded desktop&quot; on X screen 1 of the local X server could use the following configuration sections for its two windows:
+<PRE>
+  windowNames (LeftWindow, RightWindow)
+
+  section LeftWindow
+    display :0.1
+    windowPos (0, 0), (800, 600)
+    decorate false
+    windowType LeftEye
+    # ... other window settings
+  endsection
+
+  section RightWindow
+    display :0.1
+    windowPos (800, 0), (800, 600)
+    decorate false
+    windowType RightEye
+    # ... other window settings
+  endsection
+</PRE>
+The same setup, using two X servers with two X screens (one for each HMD microdisplay) on the second X server:
+<PRE>
+  windowNames (LeftWindow, RightWindow)
+
+  section LeftWindow
+    display :1.0
+    windowFullscreen true
+    windowType LeftEye
+    # ... other window settings
+  endsection
+
+  section RightWindow
+    display :1.1
+    windowFullscreen true
+    windowType RightEye
+    # ... other window settings
+  endsection
+</PRE>
+This example uses the <EM>windowFullscreen</EM> tag instead of <EM>windowPos</EM> and <EM>decorate</EM>. When using separate X screens, window managers will usually do the right thing and full-screen a window to its entire X screen, making the <EM>windowPos</EM> tag redundant, and the setup more robust to display configuration changes. Whether to use <EM>windowFullscreen</EM> or the combination of the <EM>windowPos</EM> and <EM>decorate</EM> tags is a matter of taste and the precise graphics driver/screen configuration/window manager setup. As a rule of thumb, it is usually better to use &quot;bonded desktops&quot; for multiple video outputs on single-system environments or cluster head nodes, because most desktop environments or window managers do not work properly with multiple X screens. On cluster slave nodes, which typically run &quot;raw&quot; X servers instead of desktop environments, multiple X screens are usually more robust.</P>
+
+<H3><A NAME="parallelrendering">Context Sharing and Parallel Rendering</A></H3>
+
+<P>Vrui sorts all windows defined on a computer into so-called <EM>window groups</EM>. Windows in the same group share a single X server connection and a single OpenGL context. As a result, windows inside the same group also share all server-side OpenGL objects, such as texture objects, vertex buffer objects, display lists, GLSL shaders, or frame buffer objects. Furthermore, windows in the same group are rendered sequentially inside the Vrui run-time's inner loop. Separate window groups, on the other hand, use separate X server connections, separate OpenGL contexts, replicate all server-side OpenGL objects, and are rendered in parallel, from multiple threads, inside Vrui's inner loop.</P>
+
+<P>The core idea behind window groups is to maximize rendering performance. Separate non-bonded physical graphics cards inside the same computer are separate entities, each having their own set of graphics processors and their own graphics memory. The benefit is that separate cards can execute rendering commands in parallel without context switching overhead, and can be driven by multiple rendering threads in parallel without a performance penalty. On the downside, server-side OpenGL objects such as texture objects need to be uploaded to each graphics card individually, which can also be done from multiple threads in parallel, only limited by the system bus' total bandwidth. On multiple windows belonging to the same graphics card, on the other hand, executing rendering commands in parallel from multiple threads incurs significant context switching overhead. Drawing to two windows on the same graphics card in parallel is often 2-3 times slower than drawing to the same windows sequentially. On the upside, multiple windows on the same card can access the same graphics memory, and therefore share server-side OpenGL objects.</P>
+
+<P><B>Note:</B> While it is possible to represent multiple video outputs on the same graphics cards as separate X servers, windows can only share OpenGL contexts and server-side OpenGL objects when they are handled by the same X server. In other words, windows handled by different X servers cannot be in the same window group, even if they are handled by the same physical graphics card.</P>
+
+<P>When creating windows during the Vrui run-time's initialization procedure, Vrui by default assigns windows to window groups based on the X server connection name defined inside each window's configuration section by the <EM>display</EM> tag. Windows with literally identical display names are put into the same group. &quot;Literally identical&quot; means that Vrui does not resolve host names or IP addresses or server names. Display names <EM>localhost:0.0</EM>, <EM>localhost:0</EM>, <EM>foo:0.0</EM>, <EM>192.168.1.1:0</EM>, <EM>:0.0</EM>, <EM>:0</EM>, etc. might all refer to the same X server, but are considered distinct. Window groups are identified by integer group IDs, and the default group ID assigned to a window based on the display name can be overriden by the <EM>groupId</EM> tag. Windows with the same group ID are put into the same window group, without regards to the values of the <EM>display</EM> and <EM>screen</EM> tags. If two windows belonging to two separate graphics cards or to two separate X servers are forced into the same window group, this will either lead to an error, or to degraded performance.</P>
+
+<P>The <EM>screen</EM> tag becomes important if multiple video outputs on the same graphics card are represented as separate X screens. It is usually possible to share OpenGL contexts across screens (and if it is possible, it will lead to better performance), but since all windows in a group share the same X server connection, the <EM>screen</EM> tag needs to be used to send them to different screens. For example, the first window could use <EM>display :0.0</EM> to be sent to the first X screen on the first X server, and the second window would have to use <EM>display :0.0</EM> and <EM>screen 1</EM> to be sent to the second X screen on the first X server. When group IDs are specified explicitly, the display names configured in all but the first window inside a group are ignored. When using <EM>groupId 0</EM> in both windows, even if the second window used <EM>display :0.1</EM>, it would still end up in the same group as the first, and the <EM>screen 1</EM> tag would still be required.</P>
+
+<P>As a concrete example, a computer driving a head-mounted display uses two graphics cards represented as separate X screens under the same X server. The first card is connected to a desktop monitor, showing the desktop and a monoscopic control window, and the second card is connected to the HMD's left and right microdisplays, using two video outputs configured as a &quot;bonded desktop.&quot; The environment's windows would be configured as follows:
+<PRE>
+  windowNames (ControlWindow, LeftWindow, RightWindow)
+
+  section ControlWindow
+    display :0.0
+    windowPos (100, 100), (640, 480)
+    windowType Mono
+    # ... other settings
+  endsection
+
+  section LeftWindow
+    display :0.1
+    windowPos (0, 0), (800, 600)
+    decorate false
+    windowType LeftEye
+    # ... other settings
+  endsection
+
+  section RightWindow
+    display :0.1
+    windowPos (800, 0), (800, 600)
+    decorate false
+    windowType RightEye
+    # ... other settings
+  endsection
+</PRE>
+In this configuration, Vrui will create two window groups. The first group, with group ID 0, contains only the control window, and the second group, with group ID 1, contains the left-eye and right-eye windows. The Vrui run-time will create two rendering threads, one per window group. The first thread will render to the control window, and the second thread will first render to the left-eye window, and then to the right-eye window. The control window and the left/right windows will be rendered in parallel.</P>
+
+</BODY>
+</HTML>

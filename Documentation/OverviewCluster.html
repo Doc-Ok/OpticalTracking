@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<TITLE>Cluster -- Cluster Abstraction Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Cluster&nbsp;-- Cluster Abstraction Library</H1>
+
+The Cluster library contains classes supporting cluster programming by providing a multicast-based intra-cluster communications mechanism, and derived cluster-transparent versions of file and pipe abstraction classes provided by the IO and Comm libraries.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the Cluster library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>Packet.h</DT>
+<DD>Packet is a structure for the data and protocol packets sent and received by a cluster multiplexer to implement intra-cluster communication.</DD>
+
+<DT>GatherOperation.h</DT>
+<DD>Defines opcodes for available intra-cluster accumulation operations using the Multiplexer::gather method.</DD>
+
+<DT>Multiplexer.h</DT>
+<DD>Multiplexer is a class mapping several intra-cluster multicast data streams to a single UDP multicast socket. It supports dynamic creation/destruction of multicast data streams, and adds reliable transmissions to the underlying UDP multicast protocol.</DD>
+
+<DT>ClusterPipe.h</DT>
+<DD>ClusterPipe is a support class to implement intra-cluster communication pipes. ClusterPipe provides pipe management and barrier and gather operations.</DD>
+
+<DT>MulticastPipe.h</DT>
+<DD>MulticastPipe is a class derived from IO::File and Cluster::ClusterPipe representing a data stream between a single sender and multiple receivers in a multiplexed cluster environment.</DD>
+
+<DT>ThreadSynchronizer</DT>
+<DD>ThreadSynchronizer is a helper class ensuring that thread IDs stay consistent across a cluster even when different code paths are executed on each node. Uses RAII to synchronize thread IDs upon object destruction.</DD>
+
+<DT>Clusterize</DT>
+<DD>Clusterize.h contains helper functions to distribute an application across a cluster, and establish communication between node instances via a multiplexer.</DD>
+
+<DT>StandardFile.h</DT>
+<DD>StandardFile is a pair of classes derived from IO::SeekableFile to represent cluster-forwarded standard operating system files.</DD>
+
+<DT>StandardDirectory.h</DT>
+<DD>StandardDirectory is a concrete class derived from IO::Directory to read standard filesystem directories in a cluster-transparent fashion.</DD>
+
+<DT>OpenFile.h</DT>
+<DD>OpenFile.h declares convenience functions to open files in a cluster-transparent fashion.</DD>
+
+<DT>TCPPipe.h</DT>
+<DD>TCPPipe is a pair of classes derived from Comm::NetPipe to represent cluster-forwarded TCP sockets connected to remote hosts.</DD>
+
+<DT>OpenPipe.h</DT>
+<DD>OpenPipe.h declares convenience functions to open pipes in a cluster-transparent fashion.</DD>
+</DL>
+
+</BODY>
+</HTML>

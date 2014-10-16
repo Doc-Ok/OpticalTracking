@@ -1,0 +1,146 @@
+/***********************************************************************
+ConfigurationFile - Class to handle permanent storage of configuration
+data in human-readable text files.
+Copyright (c) 2002-2013 Oliver Kreylos
+
+This file is part of the Miscellaneous Support Library (Misc).
+
+The Miscellaneous Support Library is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+The Miscellaneous Support Library is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Miscellaneous Support Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define MISC_CONFIGURATIONFILE_IMPLEMENTATION
+
+#include <Misc/ConfigurationFile.h>
+
+#include <Misc/StringMarshaller.h>
+
+namespace Misc {
+
+/***********************************************
+Methods of class ConfigurationFileBase::Section:
+***********************************************/
+
+template <class PipeParam>
+inline
+ConfigurationFileBase::Section::Section(
+	ConfigurationFileBase::Section* sParent,
+	PipeParam& pipe)
+	:parent(sParent),name(readCppString(pipe)),
+	 sibling(0),firstSubsection(0),lastSubsection(0),
+	 edited(true)
+	{
+	/* Read all subsections: */
+	unsigned int numSubsections=pipe.template read<unsigned int>();
+	for(unsigned int i=0;i<numSubsections;++i)
+		{
+		Section* newSubsection=new Section(this,pipe);
+		if(lastSubsection!=0)
+			lastSubsection->sibling=newSubsection;
+		else
+			firstSubsection=newSubsection;
+		lastSubsection=newSubsection;
+		}
+	
+	/* Read all tag/value pairs: */
+	unsigned int numTagValuePairs=pipe.template read<unsigned int>();
+	for(unsigned int i=0;i<numTagValuePairs;++i)
+		{
+		std::string tag=readCppString(pipe);
+		std::string value=readCppString(pipe);
+		values.push_back(TagValue(tag,value));
+		}
+	}
+
+template <class PipeParam>
+inline
+void
+ConfigurationFileBase::Section::writeToPipe(
+	PipeParam& pipe) const
+	{
+	/* Write the section name: */
+	writeCppString(name,pipe);
+	
+	/* Count the number of subsections: */
+	unsigned int numSubsections=0;
+	for(const Section* ssPtr=firstSubsection;ssPtr!=0;ssPtr=ssPtr->sibling)
+		++numSubsections;
+	
+	/* Write all subsections: */
+	pipe.template write<unsigned int>(numSubsections);
+	for(const Section* ssPtr=firstSubsection;ssPtr!=0;ssPtr=ssPtr->sibling)
+		ssPtr->writeToPipe(pipe);
+	
+	/* Write all tag/value pairs: */
+	pipe.template write<unsigned int>(values.size());
+	for(std::list<TagValue>::const_iterator tvIt=values.begin();tvIt!=values.end();++tvIt)
+		{
+		writeCppString(tvIt->tag,pipe);
+		writeCppString(tvIt->value,pipe);
+		}
+	}
+
+/**************************************
+Methods of class ConfigurationFileBase:
+**************************************/
+
+template <class PipeParam>
+inline
+ConfigurationFileBase::ConfigurationFileBase(
+	PipeParam& pipe)
+	:fileName(Misc::readCppString(pipe)),
+	 rootSection(0)
+	{
+	/* Read the root section: */
+	rootSection=new Section(0,pipe);
+	
+	/* Reset edit flag: */
+	rootSection->clearEditFlag();
+	}
+
+template <class PipeParam>
+inline
+void
+ConfigurationFileBase::readFromPipe(
+	PipeParam& pipe)
+	{
+	/* Delete current configuration file contents: */
+	delete rootSection;
+	rootSection=0;
+	
+	/* Read the new file name: */
+	fileName=Misc::readCppString(pipe);
+	
+	/* Read the new root section: */
+	rootSection=new Section(0,pipe);
+	
+	/* Reset edit flag: */
+	rootSection->clearEditFlag();
+	}
+
+template <class PipeParam>
+inline
+void
+ConfigurationFileBase::writeToPipe(
+	PipeParam& pipe) const
+	{
+	/* Write the file name: */
+	Misc::writeCppString(fileName,pipe);
+	
+	/* Write the root section: */
+	rootSection->writeToPipe(pipe);
+	}
+
+}

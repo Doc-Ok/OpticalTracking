@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="765"
+   height="990"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="DesktopOverview.svg"
+   inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+   inkscape:export-xdpi="100"
+   inkscape:export-ydpi="100">
+  <defs
+     id="defs4">
+    <marker
+       style="overflow:visible"
+       id="DistanceEnd"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="DistanceEnd">
+      <g
+         id="g3710">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.15;stroke-linecap:square"
+           d="M 0,0 L -2,0"
+           id="path2316" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 L -13,4 L -9,0 -13,-4 L 0,0 z "
+           id="path2312" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 L 0,40"
+           id="path2314" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="DistanceStart"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="DistanceStart">
+      <g
+         id="g2300">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.15;stroke-linecap:square"
+           d="M 0,0 L 2,0"
+           id="path2306" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 L 13,4 L 9,0 13,-4 L 0,0 z "
+           id="path2302" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 L 0,40"
+           id="path2304" />
+      </g>
+    </marker>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <inkscape:perspective
+       id="perspective3632"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4310"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <marker
+       style="overflow:visible"
+       id="DistanceStart-9"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DistanceStart">
+      <g
+         id="g2300-2">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.14999998;stroke-linecap:square"
+           d="M 0,0 2,0"
+           id="path2306-0" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 13,4 9,0 13,-4 0,0 z"
+           id="path2302-0" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 0,40"
+           id="path2304-7" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="DistanceEnd-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DistanceEnd">
+      <g
+         id="g3710-9">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.14999998;stroke-linecap:square"
+           d="M 0,0 -2,0"
+           id="path2316-7" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 -13,4 -9,0 -13,-4 0,0 z"
+           id="path2312-6" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 0,40"
+           id="path2314-4" />
+      </g>
+    </marker>
+    <inkscape:perspective
+       id="perspective4366"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4393"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <marker
+       style="overflow:visible"
+       id="DistanceStart-92"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DistanceStart">
+      <g
+         id="g2300-7">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.14999998;stroke-linecap:square"
+           d="M 0,0 2,0"
+           id="path2306-2" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 13,4 9,0 13,-4 0,0 z"
+           id="path2302-08" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 0,40"
+           id="path2304-4" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="DistanceEnd-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DistanceEnd">
+      <g
+         id="g3710-3">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.14999998;stroke-linecap:square"
+           d="M 0,0 -2,0"
+           id="path2316-5" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:none"
+           d="M 0,0 -13,4 -9,0 -13,-4 0,0 z"
+           id="path2312-5" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square"
+           d="M 0,-4 0,40"
+           id="path2314-42" />
+      </g>
+    </marker>
+    <inkscape:perspective
+       id="perspective4445"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4495"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8073578"
+     inkscape:cx="266.92833"
+     inkscape:cy="764.74403"
+     inkscape:document-units="in"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     units="in"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2816"
+       empspacing="4"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       units="in"
+       spacingx="0.125in"
+       spacingy="0.125in" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-62.362)">
+    <rect
+       style="fill:#ffffff;stroke:none;stroke-width:0.62500000000000000;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:0.62500000000000000, 1.25000000000000000;stroke-dashoffset:0;fill-opacity:1"
+       id="rect4464"
+       width="472.5"
+       height="292.5"
+       x="33.75"
+       y="78.75"
+       transform="translate(0,62.362)"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 360,197.362 0,180"
+       id="path2818"
+       inkscape:transform-center-x="-292.5"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <g
+       id="g3600"
+       transform="matrix(0,1,-1,0,489.862,107.362)"
+       inkscape:transform-center-x="-5.625"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100">
+      <path
+         transform="translate(0,62.362)"
+         id="path3598"
+         d="M 168.75,360 180,326.25 191.25,360"
+         style="fill:none;stroke:#000000;stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <path
+         transform="translate(0,62.362)"
+         d="m 202.5,360 c 0,12.42641 -10.07359,22.5 -22.5,22.5 -12.42641,0 -22.5,-10.07359 -22.5,-22.5 0,-12.42641 10.07359,-22.5 22.5,-22.5 12.42641,0 22.5,10.07359 22.5,22.5 z"
+         sodipodi:ry="22.5"
+         sodipodi:rx="22.5"
+         sodipodi:cy="360"
+         sodipodi:cx="180"
+         id="path3596"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:2.5;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+         sodipodi:type="arc" />
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.75, 3.75;stroke-dashoffset:0"
+       d="M 89.999995,287.362 495,152.362"
+       id="path3604"
+       inkscape:transform-center-x="-225"
+       inkscape:transform-center-y="-67.499996"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.75, 3.75;stroke-dashoffset:0"
+       d="M 89.999995,287.362 495,422.362"
+       id="path3606"
+       inkscape:transform-center-x="-225"
+       inkscape:transform-center-y="67.500004"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path3612"
+       sodipodi:cx="270"
+       sodipodi:cy="405"
+       sodipodi:rx="90"
+       sodipodi:ry="90"
+       d="m 241.44258,319.65087 a 90,90 0 0 1 57.11484,0"
+       transform="matrix(0,1,-1,0,495,17.361996)"
+       sodipodi:start="4.3895031"
+       sodipodi:end="5.0352749"
+       sodipodi:open="true"
+       inkscape:transform-center-x="-110.17456"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <text
+       xml:space="preserve"
+       style="font-size:8px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans"
+       x="278.41473"
+       y="-168.75"
+       id="text3614"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:transform-center-x="-105.38086"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"><tspan
+         sodipodi:role="line"
+         id="tspan3616"
+         x="278.41473"
+         y="-168.75"
+         style="font-size:12px">37°</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.75, 3.75;stroke-dashoffset:0"
+       d="m 270,287.362 135,135"
+       id="path3618"
+       inkscape:transform-center-x="-270"
+       inkscape:transform-center-y="67.5"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.75, 3.75;stroke-dashoffset:0"
+       d="m 270,287.362 135,-135"
+       id="path3620"
+       inkscape:transform-center-x="-270"
+       inkscape:transform-center-y="-67.5"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path3622"
+       sodipodi:cx="180"
+       sodipodi:cy="270"
+       sodipodi:rx="45"
+       sodipodi:ry="45"
+       d="m 148.18019,238.1802 a 45,45 0 0 1 63.63961,-1e-5"
+       transform="matrix(0,1,-1,0,540,107.362)"
+       sodipodi:start="3.9269908"
+       sodipodi:end="5.4977871"
+       sodipodi:open="true"
+       inkscape:transform-center-x="-240.9099"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <text
+       xml:space="preserve"
+       style="font-size:8px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans"
+       x="278.362"
+       y="-303.75"
+       id="text3614-0"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:transform-center-x="-240.38086"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"><tspan
+         sodipodi:role="line"
+         id="tspan3616-7"
+         x="278.362"
+         y="-303.75"
+         style="font-size:12px">90°</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#DistanceStart);marker-end:url(#DistanceEnd)"
+       d="m 360,411.112 -270,0"
+       id="path3649"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#DistanceStart);marker-end:url(#DistanceEnd)"
+       d="m 393.75,197.362 0,180"
+       id="path3649-9"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <text
+       xml:space="preserve"
+       style="font-size:8px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans"
+       x="216.14355"
+       y="422.362"
+       id="text4354"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"><tspan
+         sodipodi:role="line"
+         id="tspan4356"
+         x="216.14355"
+         y="422.362"
+         style="font-size:12px;text-align:start;text-anchor:start">24&quot;</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:8px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans"
+       x="-296.37372"
+       y="405"
+       id="text4354-5"
+       transform="matrix(0,-1,1,0,0,0)"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"><tspan
+         sodipodi:role="line"
+         id="tspan4356-9"
+         x="-296.37372"
+         y="405"
+         style="font-size:12px;text-align:start;text-anchor:start">16&quot;</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#DistanceStart);marker-end:url(#DistanceEnd)"
+       d="m 270,163.612 90,0"
+       id="path3649-9-5"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <text
+       xml:space="preserve"
+       style="font-size:8px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans"
+       x="309.53613"
+       y="174.862"
+       id="text4354-50"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"><tspan
+         sodipodi:role="line"
+         id="tspan4356-1"
+         x="309.53613"
+         y="174.862"
+         style="font-size:12px;text-align:start;text-anchor:start">8&quot;</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:0.625,1.25;stroke-dashoffset:0"
+       d="m 270,225 0,-101.25"
+       id="path4462"
+       transform="translate(0,62.362)"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:0.625, 1.25;stroke-dashoffset:0"
+       d="m 90,388.612 0,-101.25"
+       id="path4462-0"
+       inkscape:export-filename="/home/okreylos/Projects/Documentation/DesktopOverview.png"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100" />
+  </g>
+</svg>

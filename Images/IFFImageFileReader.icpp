@@ -1,0 +1,308 @@
+/***********************************************************************
+IFFImageFileReader - Class to read images in IFF format from a stream
+data source.
+Copyright (c) 2008-2010 Oliver Kreylos
+
+This file is part of the Image Handling Library (Images).
+
+The Image Handling Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Image Handling Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Image Handling Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define IMAGES_IFFIMAGEFILEREADER_IMPLEMENTATION
+
+#include <Images/IFFImageFileReader.h>
+
+#include <string.h>
+#include <Misc/ThrowStdErr.h>
+
+namespace Images {
+
+/*****************************
+Methods of class IFFImageFile:
+*****************************/
+
+template <class DataSourceParam>
+inline
+IFFImageFileReader<DataSourceParam>::IFFImageFileReader(
+	typename IFFImageFileReader<DataSourceParam>::DataSource& sDataSource)
+	:dataSource(sDataSource),
+	 colorMap(0),
+	 imageDataSize(0)
+	{
+	/* Initialize state: */
+	offset[0]=offset[1]=0;
+	size[0]=size[1]=0;
+	numBitPlanes=0;
+	
+	/*******************
+	Read the IFF header:
+	*******************/
+	
+	/* Read the FORM chunk header: */
+	char chunkId[4];
+	dataSource.template read<char>(chunkId,4);
+	if(memcmp(chunkId,"FORM",4)!=0)
+		Misc::throwStdErr("IFFImageFileReader::IFFImageFileReader: data source is not an IFF file");
+	unsigned int formChunkSize=dataSource.template read<unsigned int>();
+	
+	/* Read the form chunk type: */
+	char formType[4];
+	dataSource.template read<char>(formType,4);
+	if(memcmp(formType,"ILBM",4)!=0)
+		Misc::throwStdErr("IFFImageFileReader::IFFImageFileReader: data source is not an IFF image file");
+	
+	/* Read the image header chunks: */
+	dataSource.template read<char>(chunkId,4);
+	unsigned int chunkSize=dataSource.template read<unsigned int>();
+	while(memcmp(chunkId,"BODY",4)!=0)
+		{
+		/* Parse the current chunk: */
+		if(memcmp(chunkId,"BMHD",4)==0)
+			{
+			/* Read the bitmap header chunk: */
+			if(chunkSize!=20)
+				Misc::throwStdErr("IFFImageFileReader::IFFImageFileReader: data source has unsupported layout");
+			size[0]=dataSource.template read<unsigned short>();
+			size[1]=dataSource.template read<unsigned short>();
+			offset[0]=dataSource.template read<unsigned short>();
+			offset[1]=dataSource.template read<unsigned short>();
+			numBitPlanes=dataSource.template read<unsigned char>();
+			masking=dataSource.template read<unsigned char>();
+			compress=dataSource.template read<unsigned char>()!=0;
+			unsigned char padding=dataSource.template read<unsigned char>();
+			transparentColorIndex=dataSource.template read<unsigned short>();
+			unsigned char pixelWidth=dataSource.template read<unsigned char>();
+			unsigned char pixelHeight=dataSource.template read<unsigned char>();
+			unsigned short pageWidth=dataSource.template read<unsigned short>();
+			unsigned short pageHeight=dataSource.template read<unsigned short>();
+			}
+		else if(memcmp(chunkId,"CMAP",4)==0)
+			{
+			/* Read the color map chunk: */
+			unsigned int colorMapSize=chunkSize/sizeof(ColorMapEntry);
+			colorMap=new ColorMapEntry[colorMapSize];
+			for(unsigned int i=0;i<colorMapSize;++i)
+				for(int j=0;j<3;++j)
+					colorMap[i][j]=dataSource.template read<unsigned char>();
+			
+			/* Skip over any padding: */
+			unsigned int padding=chunkSize-colorMapSize*sizeof(ColorMapEntry);
+			for(unsigned int i=0;i<padding;++i)
+				dataSource.template read<unsigned char>();
+			}
+		else
+			{
+			/* Skip an unknown chunk: */
+			char* tempBuffer=new char[chunkSize];
+			dataSource.template read<char>(tempBuffer,chunkSize);
+			delete[] tempBuffer;
+			}
+		
+		/* Go to the next chunk: */
+		if(chunkSize&0x1U)
+			dataSource.template read<char>();
+		dataSource.template read<char>(chunkId,4);
+		chunkSize=dataSource.template read<unsigned int>();
+		}
+	
+	/* Check if the image is of a supported format: */
+	if(colorMap==0&&(numBitPlanes>8||numBitPlanes!=24))
+		Misc::throwStdErr("IFFImageFileReader::IFFImageFileReader: data source has unsupported true color image format");
+	
+	/* Store the image data size: */
+	imageDataSize=chunkSize;
+	}
+
+template <class DataSourceParam>
+inline
+IFFImageFileReader<DataSourceParam>::~IFFImageFileReader(
+	void)
+	{
+	delete[] colorMap;
+	}
+
+template <class DataSourceParam>
+template <class ImageParam>
+inline
+ImageParam
+IFFImageFileReader<DataSourceParam>::readImage(
+	void)
+	{
+	/* Check if the image has already been read: */
+	if(imageDataSize==0)
+		Misc::throwStdErr("IFFImageFileReader::readImage: Attempt to read more than one image from stream");
+	
+	/* Create the result image: */
+	ImageParam result(size[0],size[1]);
+	
+	/* Calculate the length of each image scanline in bytes: */
+	unsigned int scanlineSize=((size[0]+15U)/8U)&~0x1U;
+	
+	/* Calculate the number of 8-pixel blocks per scanline: */
+	unsigned int numBlocks=size[0]>>3;
+	
+	/* Allocate a scanline buffer: */
+	unsigned char* scanline=new unsigned char[scanlineSize];
+	
+	/* Allocate a pixel buffer: */
+	unsigned int* pixelValues=new unsigned int[(size[0]+7U)&~0x7U];
+	
+	/* Read the image one row at a time: */
+	for(unsigned int y=0;y<size[1];++y)
+		{
+		/* Initialize the pixel value buffer: */
+		for(unsigned int x=0;x<size[0];++x)
+			pixelValues[x]=0U;
+		
+		/* Process all scanline bit planes: */
+		unsigned int planeMask=0x1U;
+		for(unsigned int plane=0;plane<numBitPlanes;++plane,planeMask<<=1)
+			{
+			/* Read the scanline: */
+			if(compress)
+				{
+				/* Read a run-length encoded scanline: */
+				unsigned int bytesToRead=scanlineSize;
+				unsigned char* sPtr=scanline;
+				while(bytesToRead>0)
+					{
+					/* Read the next RLE packet: */
+					int repeat=dataSource.template read<signed char>();
+					if(repeat>=0)
+						{
+						/* Read a literal run of pixels: */
+						unsigned int runLength=repeat+1;
+						dataSource.template read<unsigned char>(sPtr,runLength);
+						sPtr+=runLength;
+						bytesToRead-=runLength;
+						}
+					else if(repeat>-128)
+						{
+						/* Read a pixel run: */
+						unsigned int runLength=-repeat+1;
+						unsigned char byte=dataSource.template read<unsigned char>();
+						for(unsigned int i=0;i<runLength;++i,++sPtr)
+							*sPtr=byte;
+						bytesToRead-=runLength;
+						}
+					}
+				}
+			else
+				{
+				/* Read an uncompressed scanline: */
+				dataSource.template read<unsigned char>(scanline,scanlineSize);
+				}
+			
+			/* Copy bits from the scanline into the pixel value buffer: */
+			unsigned int* pixelValueBlock=pixelValues;
+			for(unsigned int block=0;block<numBlocks;++block,pixelValueBlock+=8)
+				{
+				unsigned int byte=scanline[block];
+				for(int x=7;x>=0;--x,byte>>=1)
+					if(byte&0x1)
+						pixelValueBlock[x]|=planeMask;
+				}
+			}
+		
+		if(masking==INTERLEAVED)
+			{
+			/* Skip the extra masking bitplane: */
+			if(compress)
+				{
+				/* Read a run-length encoded scanline: */
+				unsigned int bytesToRead=scanlineSize;
+				unsigned char* sPtr=scanline;
+				while(bytesToRead>0)
+					{
+					/* Read the next RLE packet: */
+					int repeat=dataSource.template read<signed char>();
+					if(repeat>=0)
+						{
+						/* Read a literal run of pixels: */
+						unsigned int runLength=repeat+1;
+						dataSource.template read<unsigned char>(sPtr,runLength);
+						sPtr+=runLength;
+						bytesToRead-=runLength;
+						}
+					else if(repeat>-128)
+						{
+						/* Read a pixel run: */
+						unsigned int runLength=-repeat+1;
+						unsigned char byte=dataSource.template read<unsigned char>();
+						for(unsigned int i=0;i<runLength;++i,++sPtr)
+							*sPtr=byte;
+						bytesToRead-=runLength;
+						}
+					}
+				}
+			else
+				{
+				/* Read an uncompressed scanline: */
+				dataSource.template read<unsigned char>(scanline,scanlineSize);
+				}
+			}
+		
+		/* Access the current row of pixels: */
+		typename ImageParam::Color* row=result.modifyPixelRow(size[1]-1-y);
+		
+		/* Copy pixels: */
+		if(colorMap!=0)
+			{
+			/* Look up color map values: */
+			for(unsigned int x=0;x<size[0];++x)
+				row[x]=colorMap[pixelValues[x]];
+			}
+		else if(numBitPlanes==24)
+			{
+			/* Copy true color pixels: */
+			for(unsigned int x=0;x<size[0];++x)
+				{
+				unsigned int val=pixelValues[x];
+				GLubyte r=GLubyte(val&0xffU);
+				val>>=8;
+				GLubyte g=GLubyte(val&0xffU);
+				val>>=8;
+				GLubyte b=GLubyte(val&0xffU);
+				row[x]=GLColor<GLubyte,3>(r,g,b);
+				}
+			}
+		else if(numBitPlanes==8)
+			{
+			/* Copy greyscale pixels: */
+			for(unsigned int x=0;x<size[0];++x)
+				row[x]=GLColor<GLubyte,3>(pixelValues[x],pixelValues[x],pixelValues[x]);
+			}
+		else
+			{
+			/* Copy greyscale pixels with scaling: */
+			unsigned int maxValue=(0x1U<<numBitPlanes)-1U;
+			for(unsigned int x=0;x<size[0];++x)
+				{
+				GLubyte rgb=GLubyte(pixelValues[x]*255U/maxValue);
+				row[x]=GLColor<GLubyte,3>(rgb,rgb,rgb);
+				}
+			}
+		}
+	
+	/* Clean up: */
+	delete[] scanline;
+	delete[] pixelValues;
+	
+	/* Mark the stream as read and return the result image: */
+	imageDataSize=0;
+	return result;
+	}
+
+}

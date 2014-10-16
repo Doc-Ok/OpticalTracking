@@ -1,0 +1,251 @@
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+<LINK REL="MADE" HREF="mailto:kreylos@cs.ucdavis.edu">
+</HEAD>
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>GLContextData</H1>
+
+One of the main goals of the Vrui toolkit is to support development of truly portable VR software. This means a VR application is written once, and then runs on any VR environment without change&nbsp;-- including desktop environments, single-computer VR environments, and even multi-pipe or cluster-based VR environments. The GLContextData class (and its sibling, the GLObject class) provide a framework to hide differences between single-pipe and multi-pipe or cluster-based OpenGL rendering from a developer.<P>
+
+The exact problem that GLContextData/GLObject try to hide is how to store per-context OpenGL data in an application that might run in a single- or multi-pipe environment depending on from where it is started. Take, as an example, an application that renders a surface as an indexed triangle set with a texture mapped onto it. If the state related to this task is encapsulated in a single class, this class might look like the following:
+
+<PRE>
+class IndexedTriangleSet
+	{
+	...
+	Vertex* vertices; // Array of vertices
+	GLuint* indices; // Array of triangle vertex indices
+	GLuint textureObjectId; // ID of the texture object holding the surface texture
+	...
+	void render(void); // Renders the triangle set
+	};
+</PRE><P>
+
+The problem is that this class (and the application using it) would only work in a single-pipe environment. Depending on the architecture of the underlying system, it is not guaranteed that OpenGL objects (such as texture objects) will have the same IDs across different OpenGL contexts. In other words, if the above class is supposed to work in a multi-pipe environment, there are two approaches: (1) replicate entire IndexedTriangleSet objects for each context, or (2) store more than one texture object ID in each IndexedTriangleSet object. The first approach wastes resources because the vertex and triangle data live in the application's address space and can be shared between OpenGL contexts; the second approach is annoying because the programmer has to take care to allocate the proper number of object IDs, and ensure that the texture is uploaded into each OpenGL context separately. For a programmer who does not really anticipate ever using a multi-pipe system, both approaches are wasted effort, leading to many VR applications that will not run in multi-pipe VR environments.<P>
+
+<H2>Separation of Per-Application and Per-Context State</H2>
+
+The approach embodied by GLContextData/GLObject is to separate per-application state from per-context state, and to provide a mechanism to associate per-context state with an application when that state is needed for rendering. Fundamentally, any class using per-context state, such as display list indices, is derived from the GLObject base class, and stores per-context state in an embedded helper class, derived from GLObject::DataItem. The IndexedTriangleSet class, reformulated to work with GLContextData, would look like the following:
+<PRE>
+class IndexedTriangleSet:public GLObject
+	{
+	...
+	struct DataItem:public GLObject::DataItem // Structure containing per-context data
+		{
+		GLuint textureObjectId;
+		
+		DataItem(void); // Creates any per-context state
+		virtual ~DataItem(void); // Destroys all per-context state
+		};
+	...
+	Vertex* vertices; // Array of vertices
+	GLuint* indices; // Array of triangle vertex indices
+	...
+	virtual void initContext(GLContextData& contextData) const; // Creates per-context data
+	void render(GLContextData& contextData) const; // Renders the triangle set
+	...
+	};
+</PRE><P>
+
+After a class' state has been separated into per-application and per-context data, a developer does not have to know how many OpenGL contexts are used for rendering. The application will create one IndexedTriangleSet object, and initialize its per-application state. During rendering, that object's render() method will be called for every OpenGL context used by the application, each time using a different GLContextData object. The IndexedTriangleSet object will query its per-context state related to the current OpenGL context from the GLContextData object. In other words, the same IndexedTriangleSet object will see different per-context data, depending on which OpenGL context it is currently rendered in. This is also the reason why the render() method is declared const&nbsp;-- since the render() method will be called an unkown number of times, and possibly concurrently, it is not allowed to change per-application state from inside that method. Per-context state, however, can be changed&nbsp;-- that is why the GLContextData object passed into the render() method is not declared const.<P>
+
+One related problem with multi-pipe rendering is when to initialize and release per-context state. Since it is not allowed to change application state from inside a render() method, an application can only create new objects from some other method, for example an event callback. That means that per-context state must be initialized right before an object is rendered first in each context it is rendered in. Releasing per-context resources is an even bigger problem: Once an object has been deleted from somewhere outside the render() method, it is not available anymore to clean up after itself. The GLContextData method solves both these problems elegantly. Any class derived from GLObject contains a virtual method initContext(). This method is called right before the first time a new object is rendered in each OpenGL context. Inside of it, the application will typically create a new DataItem object, and store it in the passed GLContextData object (to later be retrieved in the render() method). If an object derived from GLObject is destroyed, the destructor of GLObject will ensure that any DataItem object belonging to it in any OpenGL context will be destroyed the next time that OpenGL context is made current for rendering.
+
+<H2>Proper Procedure</H2>
+
+To ensure proper handling of per-context resources, the following procedure is required:
+<OL>
+<LI>Any class that has per-context state must be derived from GLObject.</LI>
+
+<LI>Any per-context state of the class must be separated into an embedded DataItem structure derived from GLObject::DataItem.</LI>
+
+<LI>The DataItem constructor allocates OpenGL resources (texture objects, vertex buffers, etc.), but does not necessarily have to initialize those resources. Example:
+<PRE>
+IndexedTriangleSet::DataItem::DataItem(void)
+	:textureObjectId(0)
+	{
+	glGenTextures(1,&textureObjectId);
+	}
+</PRE></LI>
+
+<LI>The virtual DataItem destructor releases all allocated OpenGL resources. At the time when the destructor is called, the parent object has already been destroyed. The DataItem class must retain enough state to release all OpenGL state that was allocated in the DataItem object's constructor, and initialized in the parent object's initContext() method. Example:
+<PRE>
+IndexedTriangleSet::DataItem::~DataItem(void)
+	{
+	glDeleteTextures(1,&textureObjectId);
+	}
+</PRE></LI>
+
+<LI>The IndexedTriangleSet constructor creates per-application state, e.g., allocates and initializes the vertex and index arrays.</LI>
+
+<LI>The IndexedTriangleSet destructor destroys all per-application state.</LI>
+
+<LI>The IndexedTriangleSet initContext() method creates a data item, stores it in the GLContextData, and initializes the OpenGL resources. Example:
+<PRE>
+void IndexedTriangleSet::initContext(GLContextData& contextData) const
+	{
+	/* Create a new data item: */
+	DataItem* dataItem=new DataItem();
+	
+	/* Associate object and data item in GLContextData: */
+	contextData.addDataItem(this,dataItem);
+	
+	/* Read and upload texture image into dataItem->textureObjectId: */
+	glBindTexture(GL_TEXTURE_2D,dataItem->textureObjectId);
+	...
+	
+	/* Protect texture object: */
+	glBindTexture(GL_TEXTURE_2D,0);
+	}
+</PRE></LI>
+
+<LI>The IndexedTriangleSet render() method retrieves the data item from the GLContextData, and uses it to render. Example:
+<PRE>
+void IndexedTriangleSet::render(GLContextData& contextData) const
+	{
+	/* Retrieve data item from GLContextData: */
+	DataItem* dataItem=contextData.retrieveDataItem&lt;DataItem&gt;(this);
+	
+	/* Activate texture object: */
+	glBindTexture(GL_TEXTURE_2D,dataItem->textureObjectId);
+	
+	/* Render triangles: */
+	...
+	
+	/* Protect texture object: */
+	glBindTexture(GL_TEXTURE_2D,0);
+	}
+</PRE></LI>
+</OL>
+
+<H2>Guarantees</H2>
+
+Proper use of the GLObject/GLContextData mechanism, as described in the previous section, guarantees the following:
+
+<UL>
+<LI>Each class using per-context state will have as many copies of that state as there are OpenGL contexts in the application.</LI>
+
+<LI>During initialization and/or rendering, a class will only see the copy of its per-context state that is valid for the current OpenGL context.</LI>
+
+<LI>An object's initContext() methods will be called exactly once for each OpenGL context used by an application, before any user code could use that object for rendering in that context. However, there is no guarantee that the initContext() method will be called for all OpenGL contexts in an application, before an object could be used for rendering in any OpenGL context. Used of an object related to multiple contexts could occur in any order, or even concurrently.</LI>
+
+<LI>The destructors of an object's DataItem objects are called for each OpenGL context in an application, after the object itself has already been deleted. Each DataItem object's destructor is called when the OpenGL context that object was associated with is current.</LI>
+</UL>
+
+<H3>Initialization Sequence in Vrui</H3>
+
+In general, the initContext() method of a newly created object derived from GLObject is called at an unspecified time, but before an application would have a chance to use the object for rendering. However, the sequence of events during Vrui initialization guarantees that the initContext() methods for all GLObject-derived objects created in an application's constructor (or before explicitly calling Vrui's startDisplay() function) are called for all OpenGL contexts used by that application before the first time the application's frame() method is invoked (or before the explicitly invoked startDisplay() function returns). This guarantee is necessary for very specific circumstances in which results obtained during all invocations of initContext() influence the overall behavior of an application, and need to be queried at a specific time.<P>
+
+An example is an application that queries the availability of certain OpenGL extension in its initContext() method, and retains a &quot;minimal set&quot; of supported extensions in all used OpenGL contexts. It then checks for this minimal set during the first invocation of the frame() method, and changes its overall behavior accordingly, for example by preparing application-wide data structures needed to fall back to an alternative rendering method. It is important to remember that each object's initContext() method will be invoked an unknown number of times, once per OpenGL context, in no particular order and sometimes concurrently. Therefore, special care needs to be taken that any changes to per-application state from inside the initContext() method are reentrant and thread-safe (which is why the initContext method is declared const).<P>
+
+Here is an example of a Vrui application checking for the availability of a particular OpenGL extension in all used contexts:
+<PRE>
+class Test:public Vrui::Application,public GLObject
+	{
+	/* Embedded classes: */
+	private:
+	struct DataItem:public GLObject::DataItem
+		{
+		...
+		};
+	
+	/* Elements: */
+	mutable bool hasVertexBufferObject; // Flag whether all used OpenGL contexts support GL_ARB_vertex_buffer_object
+	mutable Threads::Mutex counterMutex; // Mutex protecting the counter element
+	mutable int counter; // Element counting how many contexts support the extension (example of non-trivial change)
+	bool firstFrame; // Flag true on the first time frame() is invoked
+	
+	/* Constructors and destructors: */
+	public:
+	Test(int&amp; argc,char**&amp; argv,char**&amp; appDefaults);
+	
+	/* Methods: */
+	virtual void initContext(GLContextData&amp; contextData) const;
+	virtual void frame(void);
+	virtual void display(GLContextData&amp; contextData) const;
+	};
+
+Test::Test(int&amp; argc,char**&amp; argv,char**&amp; appDefaults)
+	:Vrui::Application(argc,argv,appDefaults),
+	 hasVertexBufferObject(true), // Is global "all" operation; has to be initialized to true
+	 counter(0),
+	 firstFrame(true)
+	{
+	/* Initialize application: */
+	...
+	}
+
+void Test::initContext(GLContextData&amp; contextData) const
+	{
+	/* Create and register data item: */
+	...
+	
+	/* Check for extension: */
+	if(GLARBVertexBufferObject::isSupported())
+		{
+		/* Increase counter; requires locking due to possible race condition: */
+		{
+		Threads::Mutex::Lock counterLock(counterMutex);
+		++counter;
+		}
+		}
+	else
+		{
+		/* Set per-application variable to false; no locking required due to write-only access: */
+		hasVertexBufferObject=false;
+		}
+	
+	/* Initialize per-context state: */
+	...
+	}
+
+void Test::frame(void)
+	{
+	/* Check if first frame: */
+	if(firstFrame)
+		{
+		/* Check if extension is supported: */
+		if(hasVertexBufferObject)
+			{
+			/* Do something: */
+			...
+			}
+		else
+			{
+			/* Do something else: */
+			...
+			}
+		
+		/* Don't do this again: */
+		firstFrame=false;
+		}
+	
+	/* Do per-frame operations: */
+	...
+	}
+
+void Test::display(GLContextData&amp; contextData) const
+	{
+	/* Retrieve data item: */
+	...
+	
+	/* Check for rendering path: */
+	if(hasVertexBufferObject)
+		{
+		/* Render one way: */
+		...
+		}
+	else
+		{
+		/* Render another way: */
+		...
+		}
+	}
+</PRE>
+
+This scenario should be considered a special case. Normally, it is much more appropriate to handle decisions depending on capabilities of an OpenGL context, such as whether vertex buffer objects should be used, on a per-context basis from within the initContext() method and any rendering code. All state and initialization related to alternative rendering paths should be stored in the DataItem object, and paths should be selected on a per-context basis during display. The benefit is that applications running in a heterogeneous rendering environment (such as multiple graphics cards of different brands/models) could use the optimal rendering path for each card. In the IndexedTriangleSet example class introduced above, the embedded DataItem class could contain a flag whether its associated OpenGL context supports vertex buffer objects, and could use them whereever available. As a fallback, the class could render straight from the per-application vertex and index arrays.
+
+</BODY>
+</HTML>

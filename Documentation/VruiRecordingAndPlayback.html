@@ -1,0 +1,149 @@
+<HTML>
+<HEAD>
+<TITLE>Recording And Playback Of Vrui Sessions</TITLE>
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>Recording And Playback Of Vrui Sessions</H1>
+
+Vrui contains a simple recording facility that allows a user to record a Vrui session, i.e., the user's interaction with a Vrui program, and play the session back later. If the recorded Vrui application is deterministic, the result of playing back a recorded session is identical to the result of the recorded session. In a way, Vrui recording is analogous to a MIDI recording of a musician's performance, as opposed to a tape recording of the same. In the first, the musician's actions are recorded, and can be played back later at different pitches, speeds, or timbres, whereas in the latter the sound waves resulting from the musician playing an instrument are recorded, and it is impossible or very hard to change the recording later. Like a MIDI recording, a Vrui session recording can be played back in the same environment with the same settings, using different settings such as different views or background colors (as long as the differences in settings do not influence interaction), or in a different environment as long as some care is taken. It is also possible to generate a movie file while playing back a previously recorded session, which is analogous to playing back a MIDI recording and taping the resulting sound.<P>
+
+The session recorder has the additional ability of recording an audio track, such as real-time commentary by the recorded user. During playback, the audio track will be synchronized with the Vrui session playback, unless the playback system is overwhelmed (see &quot;maximumFrameRate&quot; setting below). Audio is recorded using the default audio source on the Vrui environment's head node.
+
+<H2>Recording A Vrui Session</H2>
+
+Recording is configured via Vrui's configuration file. It is recommended to create a special patch configuration file with all settings relevant for recording, and to merge that patch file only when needed. Recording is enabled by providing the following configuration tags in the environment's root section:
+<DL>
+<DT>inputDeviceDataSaver</DT>
+<DD>This tag defines the name of a configuration file section which contains all settings related to recording, with the exception of the maximumFrameRate tag.</DD>
+
+<DT>maximumFrameRate</DT>
+<DD>This tag defines an upper limit on the frame rate at which Vrui runs its main loop. While this setting is not directly dependent on recording, setting it in any other context does not make sense because it will limit a Vrui application's performance. During recording, on the other hand, it can be used to slow down the main loop. Since playback of a recorded session may be synchronized with an external timebase (such as audio playback), a session recorded on a fast system may overwhelm a slower playback system and cause loss of synchronization. The frame rate limiter allows to prepare for such situations. Additionally, when a Vrui session is recorded for the sole purpose of creating a movie, it is wasteful to record more frames than will be used for the movie. In that case, the frame rate limit can be set to a small multiple of the movie's target frame rate to account for drop-outs or random lag. For example, to generate a recording for a 30&nbsp;fps movie, maximumFrameRate should be set to 45 or 60.</DD>
+</DL><P>
+
+The configuration file section named in the inputDeviceDataSaver tag contains the following configuration tags:
+<DL>
+<DT>inputDeviceDataFileName</DT>
+<DD>Name of file to which input device data is written. The name will be made unique by inserting a four-digit numeric code before the file name extension.</DD>
+
+<DT>soundFileName</DT>
+<DD>Name of file to which audio data is written. Audio recording is only enabled if this tag has a value, and if the file name has a known sound file format extension. The name will be made unique by inserting a four-digit numeric code before the file name extension.</DD>
+
+<DT>sampleResolution, numChannels, sampleRate</DT>
+<DD>These settings define the audio recording format, and the combination of settings must be supported by the system's default audio source. The default values are 8, 1, and 8000, respectively, for 8-bit mono recording at 8&nbsp;KHz. CD-quality recording can be configured by using a sample resolution of 16 bits, 1 or 2 channels for mono or stereo, respectively, and a sampling rate of 44100&nbsp;Hz.</DD>
+</DL>
+
+<H3>Conflicting Configuration Settings</H3>
+
+Several Vrui environment settings conflict with session recording, or make playback of recorded sessions unreliable. It is recommended to change conflicting settings to safe values for recording:
+<DL>
+<DT>Automatic windows</DT>
+<DD>Automatic window management, enabled by setting autoScreenSize, panningViewport, or navigate in a window's configuration file section, makes playback of recorded sessions unreliable because interactive changes in a window's position or size are not recorded. It is best to disable these settings, and explicitly set proper sizes and positions for all screens in an environment. The displaySize setting in the environment's root section should also be set to a reasonable value.</DD>
+</DL>
+
+<H3>Template Patch Configuration File For Recording</H3>
+
+The following template file assumes that the environment's root section is called &quot;Desktop,&quot; and that the environment's only window is configured in a section called &quot;Window.&quot; Season to taste.
+<PRE>
+section Vrui
+  section Desktop
+    displaySize 7.5
+    inputDeviceDataSaver InputDeviceDataSaver
+    maximumFrameRate 45.0
+    
+    section InputDeviceDataSaver
+      inputDeviceDataFileName InputDeviceData.dat
+      soundFileName SoundData.wav
+      sampleResolution 16
+      numChannels 1
+      sampleRate 44100
+    endsection
+    
+    section Screen
+    	origin (-6.0, 0.0, -4.5)
+    	width 12.0
+    	height 9.0
+    endsection
+    
+    section Window
+      windowPos (0, 0), (1024, 768)
+      autoScreenSize false
+      panningViewport false
+      navigate false
+    endsection
+  endsection
+endsection
+</PRE>
+
+<H2>Playing Back A Recorded Vrui Session</H2>
+
+After a session has been recorded, optionally with an audio track, it can be played back by configuring a special &quot;playback&quot; input device adapter. It is recommended to create a patch configuration file containing only the necessary settings, and to load that configuration file for playback. Playback is enabled by providing the following configuration tags in the environment's root section:
+<DL>
+<DT>inputDeviceAdapterNames (PlaybackAdapter)</DT>
+<DD>This tag defines the list of input device adapters present in a Vrui environment. During playback, only a single adapter of the &quot;Playback&quot; type should be used, and this tag's value defines the name of the section configuring that adapter.</DD>
+
+<DT>inputDeviceDataFileName</DT>
+<DD>The name of the previously saved input device data file to play back.</DD>
+
+<DT>soundFileName</DT>
+<DD>The name of the previously saved sound file to play back.</DD>
+
+<DT>synchronizePlayback</DT>
+<DD>Flag to enable synchronized playback. Vrui will try hard to play back frames in the exact same time sequence as they were recorded. Since frames cannot be skipped, this will not work if the system playing back the frames is slower than the system recording them. Recording frame rate can be throttled with the maximumFrameRate setting.</DD>
+
+<DT>quitWhenDone</DT>
+<DD>Flag whether the Vrui application is to exit when all recorded frames have been played back.</DD>
+
+<DT>saveMovie</DT>
+<DD>Flag to enable saving a movie of the recorded Vrui session. Movies will be saved as sequences of frame images at exactly the specified frame rate, independently of how fast the playback system can generate frames.</DD>
+
+<DT>movieFileNameTemplate</DT>
+<DD>Printf-style template to generate movie frame image files. Must contain exactly one %u placeholder, and no other placeholders.</DD>
+
+<DT>movieWindowIndex</DT>
+<DD>Index of the window from which to record movie frames.</DD>
+
+<DT>movieFrameRate</DT>
+<DD>Desired movie frame rate in frames/second.</DD>
+</DL>
+
+<H3>Template Patch Configuration File For Playback</H3>
+
+The following template file assumes that the environment's root section is called &quot;Desktop,&quot; and that the environment's only window is configured in a section called &quot;Window.&quot; Season to taste.
+<PRE>
+section Vrui
+  section Desktop
+    displaySize 7.5
+    inputDeviceAdapterNames (PlaybackAdapter)
+    
+    section PlaybackAdapter
+      inputDeviceAdapterType Playback
+      inputDeviceDataFileName InputDeviceData0001.dat
+      soundFileName SoundData0001.wav
+      synchronizePlayback true
+      quitWhenDone true
+      saveMovie true
+      movieFileNameTemplate MovieFrame%06u.ppm
+      movieWindowIndex 0
+      movieFrameRate 30.0
+    endsection
+    
+    section Screen
+    	origin (-6.0, 0.0, -4.5)
+    	width 12.0
+    	height 9.0
+    endsection
+    
+    section Window
+      windowPos (0, 0), (1024, 768)
+      autoScreenSize false
+      panningViewport false
+      navigate false
+    endsection
+  endsection
+endsection
+</PRE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,19 @@
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+<LINK REL="MADE" HREF="mailto:kreylos@cs.ucdavis.edu">
+</HEAD>
+<BODY BGCOLOR=#FFFFFF>
+
+<H1>Multithreading in Vrui</H1>
+
+One common question is: &quot;Why doesn't Vrui split rendering and computation into two different threads, like many other VR toolkits?&quot; Well, because it's stupid, that's why. Of course multithreading is highly desirable, especially given the multicore CPUs common today, but forcing a split into two threads is an artifact from the days when starting a thread was major work, highly OS-dependent, and developers were generally afraid of them. For simple applications, having to deal with two threads is more hassle than gain, and for complex applications, two threads running all the time are not nearly parallel or flexible enough. In short, threading is highly application-dependent, and should therefore not be handled by the toolkit.<P>
+
+Vrui's approach is to leave threading up to applications. Vrui's own main loop, i.e., its internal computation (reading input devices, cluster communication, UI event handling) and rendering is happening in a single thread. Rendering itself can be multithreaded if the computer contains multiple physical graphics cards (parallel rendering to a single graphics card is inefficient due to the significant overhead of OpenGL context switches), but the multiple rendering threads run only in parallel to each other, not the rest of Vrui's main loop. While Vrui also uses many threads for other support services, its main loop is intentionally sequential to act as an implicit synchronization point for Vrui itself and applications.<P>
+
+That said, applications are free to use as many threads as they need. Those threads can be long-running, e.g., can be started at application start time and run until the end, or they can be temporary and only be started for some particular use. Threads in today's operating systems are light-weight, i.e., starting and stopping them causes very little overhead, and Vrui applications have an operating-system independent interface to their management using classes from the Threads library.<P>
+
+<EM>To be continued...</EM>
+
+</BODY>
+</HTML>

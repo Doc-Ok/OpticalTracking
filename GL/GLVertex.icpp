@@ -1,0 +1,385 @@
+/***********************************************************************
+GLVertex - Class to encapsulate OpenGL vertex properties.
+Copyright (c) 2004-2010 Oliver Kreylos
+
+This file is part of the OpenGL C++ Wrapper Library (GLWrappers).
+
+The OpenGL C++ Wrapper Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The OpenGL C++ Wrapper Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the OpenGL C++ Wrapper Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define GLVERTEX_IMPLEMENTATION
+
+#include <GL/GLVertex.h>
+
+#include <GL/gl.h>
+#include <GL/GLTexCoordTemplates.h>
+#include <GL/GLColorTemplates.h>
+#include <GL/GLNormalTemplates.h>
+#include <GL/GLVertexTemplates.h>
+#include <GL/GLVertexArrayTemplates.h>
+
+/*******************************************************************
+Helper class to generate templatized glVertex/glVertexPointer calls:
+*******************************************************************/
+
+namespace {
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class ColorScalarParam,GLsizei numColorComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                   ColorScalarParam,numColorComponentsParam,
+                   NormalScalarParam,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glTexCoord(vertex.texCoord);
+		glColor(vertex.color);
+		glNormal(vertex.normal);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::TexCoord)
+			glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		if(vertexPartsMask&GLVertexArrayParts::Color)
+			glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		if(vertexPartsMask&GLVertexArrayParts::Normal)
+			glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                    void,0,
+                                    NormalScalarParam,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                   void,0,
+                   NormalScalarParam,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glTexCoord(vertex.texCoord);
+		glNormal(vertex.normal);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::TexCoord)
+			glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		if(vertexPartsMask&GLVertexArrayParts::Normal)
+			glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class ColorScalarParam,GLsizei numColorComponentsParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                    ColorScalarParam,numColorComponentsParam,
+                                    void,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                   ColorScalarParam,numColorComponentsParam,
+                   void,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glTexCoord(vertex.texCoord);
+		glColor(vertex.color);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::TexCoord)
+			glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		if(vertexPartsMask&GLVertexArrayParts::Color)
+			glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class ColorScalarParam,GLsizei numColorComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<void,0,
+                                    ColorScalarParam,numColorComponentsParam,
+                                    NormalScalarParam,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<void,0,
+                   ColorScalarParam,numColorComponentsParam,
+                   NormalScalarParam,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glColor(vertex.color);
+		glNormal(vertex.normal);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::Color)
+			glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		if(vertexPartsMask&GLVertexArrayParts::Normal)
+			glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                    void,0,
+                                    void,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                   void,0,
+                   void,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glTexCoord(vertex.texCoord);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::TexCoord)
+			glTexCoordPointer(sizeof(vertices[0]),&vertices[0].texCoord);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<void,0,
+                                    void,0,
+                                    NormalScalarParam,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<void,0,
+                   void,0,
+                   NormalScalarParam,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glNormal(vertex.normal);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::Normal)
+			glNormalPointer(sizeof(vertices[0]),&vertices[0].normal);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class ColorScalarParam,GLsizei numColorComponentsParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<void,0,
+                                    ColorScalarParam,numColorComponentsParam,
+                                    void,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<void,0,
+                   ColorScalarParam,numColorComponentsParam,
+                   void,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		glColor(vertex.color);
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::Color)
+			glColorPointer(sizeof(vertices[0]),&vertices[0].color);
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+template <class PositionScalarParam,GLsizei numPositionComponentsParam>
+class GLVertexPointerImplementation<void,0,
+                                    void,0,
+                                    void,
+                                    PositionScalarParam,numPositionComponentsParam>
+	{
+	/* Embedded classes: */
+	public:
+	typedef GLVertex<void,0,
+                   void,0,
+                   void,
+                   PositionScalarParam,numPositionComponentsParam> Vertex;
+	
+	/* Methods: */
+	static void glVertex(const Vertex& vertex)
+		{
+		::glVertex(vertex.position);
+		}
+	static void glVertexPointer(const Vertex* vertices)
+		{
+		::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	static void glVertexPointer(int vertexPartsMask,const Vertex* vertices)
+		{
+		if(vertexPartsMask&GLVertexArrayParts::Position)
+			::glVertexPointer(sizeof(vertices[0]),&vertices[0].position);
+		}
+	};
+
+}
+
+/********************************
+Generic version of glVertex call:
+********************************/
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class ColorScalarParam,GLsizei numColorComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+inline
+void glVertex(const GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                             ColorScalarParam,numColorComponentsParam,
+                             NormalScalarParam,
+                             PositionScalarParam,numPositionComponentsParam>& vertex)
+	{
+	GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                ColorScalarParam,numColorComponentsParam,
+                                NormalScalarParam,
+                                PositionScalarParam,numPositionComponentsParam>::glVertex(vertex);
+	}
+
+/***************************************
+Generic version of glVertexPointer call:
+***************************************/
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class ColorScalarParam,GLsizei numColorComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+inline
+void glVertexPointer(const GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                                    ColorScalarParam,numColorComponentsParam,
+                                    NormalScalarParam,
+                                    PositionScalarParam,numPositionComponentsParam>* vertexPointer)
+	{
+	GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                ColorScalarParam,numColorComponentsParam,
+                                NormalScalarParam,
+                                PositionScalarParam,numPositionComponentsParam>::glVertexPointer(vertexPointer);
+	}
+
+template <class TexCoordScalarParam,GLsizei numTexCoordComponentsParam,
+          class ColorScalarParam,GLsizei numColorComponentsParam,
+          class NormalScalarParam,
+          class PositionScalarParam,GLsizei numPositionComponentsParam>
+inline
+void glVertexPointer(int vertexPartsMask,
+                     const GLVertex<TexCoordScalarParam,numTexCoordComponentsParam,
+                                    ColorScalarParam,numColorComponentsParam,
+                                    NormalScalarParam,
+                                    PositionScalarParam,numPositionComponentsParam>* vertexPointer)
+	{
+	GLVertexPointerImplementation<TexCoordScalarParam,numTexCoordComponentsParam,
+                                ColorScalarParam,numColorComponentsParam,
+                                NormalScalarParam,
+                                PositionScalarParam,numPositionComponentsParam>::glVertexPointer(vertexPartsMask,vertexPointer);
+	}

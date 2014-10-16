@@ -1,0 +1,286 @@
+########################################################################
+# BasicMakefile - Definitions and rules to build object files, shared
+# and static libraries, and executables.
+# Copyright (c) 1999-2014 Oliver Kreylos
+# Mac OS X adaptation copyright (c) 2006 Braden Pellett
+#
+# This file is part of the WhyTools Build Environment.
+# 
+# The WhyTools Build Environment is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+# 
+# The WhyTools Build Environment is distributed in the hope that it will
+# be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with the WhyTools Build Environment; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# 02111-1307 USA
+########################################################################
+
+#
+# Commands to configure library option files
+#
+
+# sed command to set the value of a numeric variable in a configuration header:
+CONFIG_SETVAR = sed -i -e 's@\#define $(2) [0-9]*@\#define $(2) $(3)@' $1
+
+# sed command to set the value of a string variable in a configuration header:
+CONFIG_SETSTRINGVAR = sed -i -e 's@\#define $(2) "[^"]*"@\#define $(2) "$(3)"@' $1
+
+# sed command to set the value of a variable in a makefile:
+CONFIG_SETMAKEVAR = sed -i -e 's@^$(2) \(:\?=\) .*@$(2) := $(3)@' $1
+
+#
+# Definitions and commands/rules to compile C/C++ source files
+#
+
+# Set up the optimization and debugging level flags:
+ifndef OPTLEVEL
+  OPTLEVEL = $(DEFAULTOPTLEVEL)
+endif
+ifndef DEBUGLEVEL
+  DEBUGLEVEL = $(DEFAULTDEBUGLEVEL)
+endif
+
+# Set compiler flags for the system environment:
+CSYSFLAGS = $(EXTRACSYSFLAGS)
+CPPSYSFLAGS = $(EXTRACPPSYSFLAGS)
+
+# Recursively expand the list of packages:
+# Well, this is not really recursion... it goes only nine levels, which should be enough ;)
+PACKAGES1 = $(foreach PACKAGENAME,$(PACKAGES),$($(PACKAGENAME)_DEPENDS))
+PACKAGES2 = $(foreach PACKAGENAME,$(PACKAGES1),$($(PACKAGENAME)_DEPENDS))
+PACKAGES3 = $(foreach PACKAGENAME,$(PACKAGES2),$($(PACKAGENAME)_DEPENDS))
+PACKAGES4 = $(foreach PACKAGENAME,$(PACKAGES3),$($(PACKAGENAME)_DEPENDS))
+PACKAGES5 = $(foreach PACKAGENAME,$(PACKAGES4),$($(PACKAGENAME)_DEPENDS))
+PACKAGES6 = $(foreach PACKAGENAME,$(PACKAGES5),$($(PACKAGENAME)_DEPENDS))
+PACKAGES7 = $(foreach PACKAGENAME,$(PACKAGES6),$($(PACKAGENAME)_DEPENDS))
+PACKAGES8 = $(foreach PACKAGENAME,$(PACKAGES7),$($(PACKAGENAME)_DEPENDS))
+PACKAGES9 = $(foreach PACKAGENAME,$(PACKAGES8),$($(PACKAGENAME)_DEPENDS))
+PACKAGES_RECEXPAND = $(PACKAGES) $(PACKAGES1) $(PACKAGES2) $(PACKAGES3) $(PACKAGES4) $(PACKAGES5) $(PACKAGES6) $(PACKAGES7) $(PACKAGES8) $(PACKAGES9)
+
+# Generate the list of include file directories from list of packages, not including the system directory:
+CINCLUDEFLAGS = $(EXTRACINCLUDEFLAGS) $(sort $(filter-out -I/usr/$(INCLUDEEXT),$(foreach PACKAGENAME,$(PACKAGES_RECEXPAND),$($(PACKAGENAME)_INCLUDE))))
+
+# Generate compiler flags from list of packages:
+CPACKAGEFLAGS = $(sort $(foreach PACKAGENAME,$(PACKAGES_RECEXPAND),$($(PACKAGENAME)_CFLAGS)))
+
+# Generate the list of library directories from list of packages, not including the system directory:
+LINKDIRFLAGS  = $(EXTRALINKDIRFLAGS) $(sort $(filter-out -L/usr/$(LIBEXT),$(foreach PACKAGENAME,$(PACKAGES_RECEXPAND),$($(PACKAGENAME)_LIBDIR))))
+
+# Generate the list of libraries from list of packages:
+ifneq ($(SORT_LINKLIBFLAGS),0)
+  LINKLIBFLAGS  = $(EXTRALINKLIBFLAGS) $(foreach PACKAGENAME,$(sort $(PACKAGES_RECEXPAND)),$($(PACKAGENAME)_LIBS))
+else
+  LINKLIBFLAGS  = $(EXTRALINKLIBFLAGS) $(foreach PACKAGENAME,$(PACKAGES_RECEXPAND),$($(PACKAGENAME)_LIBS))
+endif
+ifneq ($(USE_RPATH),0)
+  ifneq ($(SYSTEM_HAVE_RPATH),0)
+    ifdef LIBINSTALLDIR
+      LINKLIBFLAGS += -Wl,-rpath=$(LIBINSTALLDIR)
+    endif
+    LINKLIBFLAGS += $(foreach PACKAGENAME,$(PACKAGES_RECEXPAND),$($(PACKAGENAME)_LINKLIBFLAGS))
+  endif
+endif
+
+# Function to get the build dependencies of a package (depends on function LIBRARYNAME):
+DEPENDENCIES = $(patsubst -l%.$(LDEXT),$(call LIBRARYNAME,lib%),$(foreach PACKAGENAME,$(filter MY%,$($(1)_DEPENDS)),$($(PACKAGENAME)_LIBS)))
+
+# Generate the complete list of compiler flags:
+CCFLAGS = -g$(DEBUGLEVEL) -O$(OPTLEVEL) $(CFLAGS) $(CSYSFLAGS) $(CINCLUDEFLAGS) $(CPACKAGEFLAGS)
+CPPCFLAGS = -g$(DEBUGLEVEL) -O$(OPTLEVEL) $(CFLAGS) $(CPPSYSFLAGS) $(CINCLUDEFLAGS) $(CPACKAGEFLAGS)
+
+# Determine the object file directory:
+OBJDIR := $(OBJDIRBASE)/$(COMPILERTYPE).g$(DEBUGLEVEL).O$(OPTLEVEL)
+ifdef OBJDIREXT
+  OBJDIR := $(OBJDIR).$(OBJDIREXT)
+endif
+
+# sed commands to process a generated dependency file:
+define PROCESS_DEPFILE
+sed -e 's!\([^:]*:\)!$$(OBJDIR)/$*.o:!g' -e 's!/usr/[^ ]*!!g' -e '/^[ ]*\\$$/ d' < $(DEPFILETEMPLATE) > $(DEPDIR)/$*.d
+endef
+
+define PROCESS_PICDEPFILE
+sed -e 's!\([^:]*:\)!$$(OBJDIR)/pic/$*.o:!g' -e 's!/usr/[^ ]*!!g' -e '/^[ ]*\\$$/ d' < $(DEPFILETEMPLATE) > $(DEPDIR)/$*.d
+endef
+
+# Set default compile command from .c to .o:
+$(OBJDIR)/%.o: %.c
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(PLAINCCOMP) -MD -c -o $@ $(CCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(PLAINCCOMP) -MD -c -o $@ $(CCFLAGS) $<
+endif
+	@$(PROCESS_DEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+# Set default compile commands from .cc/.cpp to .o:
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) -MD -c -o $@ $(CPPCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(CCOMP) -MD -c -o $@ $(CPPCFLAGS) $<
+endif
+	@$(PROCESS_DEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+$(OBJDIR)/%.o: %.cc
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) -MD -c -o $@ $(CPPCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(CCOMP) -MD -c -o $@ $(CPPCFLAGS) $<
+endif
+	@$(PROCESS_DEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+# Set default compile command from .c to position-independent code for plugins:
+$(OBJDIR)/pic/%.o: %.c
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/pic/$(*D))
+ifdef SHOWCOMMAND
+	$(PLAINCCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(PLAINCCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+endif
+	@$(PROCESS_PICDEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+# Set default compile commands from .cc/.cpp to position-independent code for plugins:
+$(OBJDIR)/pic/%.o: %.cpp
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/pic/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(CCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+endif
+	@$(PROCESS_PICDEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+$(OBJDIR)/pic/%.o: %.cc
+	@mkdir -p $(abspath $(DEPDIR)/$(*D))
+	@mkdir -p $(abspath $(OBJDIR)/pic/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+else
+	@echo Compiling $<...
+	@$(CCOMP) -MD -c -o $@ $(CPLUGINFLAGS) $(CPPCFLAGS) $<
+endif
+	@$(PROCESS_PICDEPFILE)
+	@rm -f $(DEPFILETEMPLATE)
+
+#
+# Definitions and commands/rules to link static or shared libraries
+#
+
+MAJORLIBVERSION ?= 1
+MINORLIBVERSION ?= 0
+
+# Default link command to create dynamic library:
+$(LIBDESTDIR)/$(call FULLDSONAME,%):
+	@mkdir -p $(abspath $(LIBDESTDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) $(call DSOLINKFLAGS,$(*F)) -o $@ $(filter %.o,$^) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+else
+	@echo Linking $@...
+	@$(CCOMP) $(call DSOLINKFLAGS,$(*F)) -o $@ $(filter %.o,$^) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+endif
+	@-rm -f $(LIBDESTDIR)/$(call DSONAME,$*) $(LIBDESTDIR)/$(call LINKDSONAME,$*)
+	@ln -s $@ $(LIBDESTDIR)/$(call DSONAME,$*)
+	@ln -s $@ $(LIBDESTDIR)/$(call LINKDSONAME,$*)
+
+# Default link command to create static library:
+$(LIBDESTDIR)/%.$(LDEXT).a:
+	@mkdir -p $(abspath $(LIBDESTDIR)/$(*D))
+	@-rm -f $@
+ifdef SHOWCOMMAND
+	ar crs $@ $^
+else
+	@echo Linking $@...
+	@ar crs $@ $^
+endif
+
+# Sequence to create symlinks for dynamic libraries:
+# First argument: library name
+define CREATE_SYMLINK
+@-rm -f $(LIBINSTALLDIR)/$(call DSONAME,$(1)) $(LIBINSTALLDIR)/$(call LINKDSONAME,$(1))
+@cd $(LIBINSTALLDIR) ; ln -s $(call FULLDSONAME,$(1)) $(call DSONAME,$(1))
+@cd $(LIBINSTALLDIR) ; ln -s $(call FULLDSONAME,$(1)) $(call LINKDSONAME,$(1))
+
+endef
+
+# Sequence to destroy symlinks for dynamic libraries:
+# First argument: library name
+define DESTROY_SYMLINK
+@-rm -f $(LIBINSTALLDIR)/$(call DSONAME,$(1)) $(LIBINSTALLDIR)/$(call LINKDSONAME,$(1))
+
+endef
+
+#
+# Definitions and commands/rules to link executable files
+#
+
+# Set default link command for executables:
+$(EXEDIR)/%:
+	@mkdir -p $(abspath $(EXEDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) $(LINKFLAGS) -o $@ $(filter %.o,$^) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+else
+	@echo Linking $@...
+	@$(CCOMP) $(LINKFLAGS) -o $@ $(filter %.o,$^) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+endif
+
+# Set default compile+link command for single-source executables:
+%: %.cpp
+	@mkdir -p $(abspath $(EXEDIR)/$(*D))
+ifdef SHOWCOMMAND
+	$(CCOMP) -o $(EXEDIR)/$@ $(CCFLAGS) $(filter %.cpp,$^) $(LINKFLAGS) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+else
+	@echo Compiling and linking $<...
+	@$(CCOMP) -o $(EXEDIR)/$@ $(CCFLAGS) $(filter %.cpp,$^) $(LINKFLAGS) $(LINKDIRFLAGS) $(LINKLIBFLAGS)
+endif
+
+#
+# Commands to clean up after the compiler:
+#
+
+.PHONY: clean
+clean: extraclean
+	-find $(DEPDIR) -name "*.d" -exec rm -f \{\} \;
+	-find $(OBJDIR) -name "*.o" -exec rm -f \{\} \;
+	-rm -f $(ALL)
+
+.PHONY: squeakyclean
+squeakyclean: extrasqueakyclean
+	-rm -rf $(DEPDIR)
+	-rm -rf $(OBJDIRBASE)
+	-rm -rf $(EXEDIRBASE)
+
+# Use an empty default rule to ignore missing prerequisites and just remake their targets:
+.DEFAULT: ;
+
+#
+# Get list of dependency files from the current directory and all its subdirectories:
+#
+
+DEPFILES = $(shell find $(DEPDIR) -follow -name "*.d" 2> /dev/null)
+
+# Include all dependency files:
+include $(DEPFILES)

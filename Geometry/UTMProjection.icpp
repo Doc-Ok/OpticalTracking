@@ -1,0 +1,228 @@
+/***********************************************************************
+UTMProjection - Class to represent universal transverse Mercator
+projections as horizontal datums.
+Copyright (c) 2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_UTMPROJECTION_IMPLEMENTATION
+
+#include <Geometry/UTMProjection.h>
+
+#include <Math/Math.h>
+
+namespace Geometry {
+
+/******************************
+Methods of class UTMProjection:
+******************************/
+
+template <class ScalarParam>
+inline
+void
+UTMProjection<ScalarParam>::calcProjectionConstants(
+	void)
+	{
+	#if GEOMETRY_UTMPROJECTION_NEWFORMULA
+	
+	/*********************************************************************
+	These formulae are from Wikipedia. Don't ask me to explain them.
+	*********************************************************************/
+		
+	n=flatteningFactor/(2.0-flatteningFactor);
+	k0A=k0*radius/(1.0+n)*(1.0+n*n/4.0+n*n*n*n/64.0);
+	alpha1=n/2.0-2.0*n*n/3.0+5.0*n*n*n/16.0;
+	alpha2=13.0*n*n/48.0-3.0*n*n*n/5.0;
+	alpha3=61.0*n*n*n/240.0;
+	beta1=n/2.0-2.0*n*n/3.0+37.0*n*n*n/96.0;
+	beta2=n*n/48.0+n*n*n/15.0;
+	beta3=17.0*n*n*n/480.0;
+	delta1=2.0*n-2.0*n*n/3.0-2.0*n*n*n;
+	delta2=7.0*n*n/3.0-8.0*n*n*n/5.0;
+	delta3=56.0*n*n*n/15.0;
+	
+	#else
+	
+	/*********************************************************************
+	These formulae are from the literature. Don't ask me to explain them.
+	*********************************************************************/
+		
+	Mc1=1.0-(1.0+(3.0+5.0/4.0*e2)*e2/16.0)*e2/4.0;
+	Mc2=(3.0+(3.0+45.0/32.0*e2)*e2/4.0)*e2/8.0;
+	Mc3=(15.0+45.0/4.0*e2)*e2*e2/256.0;
+	Mc4=35.0*e2*e2*e2/3072.0;
+	
+	e1=(1.0-Math::sqrt(1.0-e2))/(1.0+Math::sqrt(1.0-e2));
+	IMc0=radius*(((-5.0/256.0*e2-3.0/64.0)*e2-1.0/4.0)*e2+1.0);
+	IMc1=(-27.0/32.0*e1*e1+3.0/2.0)*e1;
+	IMc2=(-55.0/32.0*e1*e1+21.0/16.0)*e1*e1;
+	IMc3=151.0/96.0*e1*e1*e1;
+	IMc4=1097.0/512.0*e1*e1*e1*e1;
+	
+	#endif
+	}
+
+template <class ScalarParam>
+inline
+UTMProjection<ScalarParam>::UTMProjection(
+	int sZone)
+	:zone(sZone),
+	 lng0(Math::rad(-177.0+double(zone-1)*6.0)),
+	 k0(0.9996)
+	{
+	/* Set the false easting and northing to their defaults: */
+	offset[0]=5.0e5;
+	offset[1]=0.0;
+	
+	/* Calculate the projection constants: */
+	calcProjectionConstants();
+	}
+
+template <class ScalarParam>
+inline
+UTMProjection<ScalarParam>::UTMProjection(
+	int sZone,
+	double sRadius,
+	double sFlatteningFactor)
+	:Geoid<ScalarParam>(sRadius,sFlatteningFactor),
+	 zone(sZone),
+	 lng0(Math::rad(-177.0+double(zone-1)*6.0)),
+	 k0(0.9996)
+	{
+	/* Set the false easting and northing to their defaults: */
+	offset[0]=5.0e5;
+	offset[1]=0.0;
+	
+	/* Calculate the projection constants: */
+	calcProjectionConstants();
+	}
+
+template <class ScalarParam>
+inline
+void UTMProjection<ScalarParam>::setStretching(
+	double newStretching)
+	{
+	k0=newStretching;
+	}
+
+template <class ScalarParam>
+inline
+void UTMProjection<ScalarParam>::setFalseNorthing(
+	double newFalseNorthing)
+	{
+	offset[1]=newFalseNorthing;
+	}
+
+template <class ScalarParam>
+inline
+void UTMProjection<ScalarParam>::setFalseEasting(
+	double newFalseEasting)
+	{
+	offset[0]=newFalseEasting;
+	}
+
+template <class ScalarParam>
+inline
+typename UTMProjection<ScalarParam>::PBox
+UTMProjection<ScalarParam>::geodeticToMap(
+	const typename UTMProjection<ScalarParam>::PBox& geodetic) const
+	{
+	/* Convert the box's four corner vertices from geodetic space to map space: */
+	PBox result=PBox::empty;
+	for(int i=0;i<4;++i)
+		result.addPoint(geodeticToMap(geodetic.getVertex(i)));
+	
+	/* Check for the special case of the box crossing the central meridian: */
+	if(geodetic.min[0]<lng0&&geodetic.max[0]>lng0)
+		{
+		if(geodetic.min[1]>0.0)
+			{
+			/* Add the bottom of the central meridian crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(lng0,geodetic.min[1])));
+			}
+		if(geodetic.max[1]<0.0)
+			{
+			/* Add the top of the central meridian crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(lng0,geodetic.max[1])));
+			}
+		}
+	
+	/* Check for the special case of the box crossing the equator: */
+	if(geodetic.min[1]<0.0&&geodetic.max[1]>0.0)
+		{
+		if(geodetic.min[0]<lng0)
+			{
+			/* Add the left of the equator crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(geodetic.min[0],0.0)));
+			}
+		if(geodetic.max[0]>lng0)
+			{
+			/* Add the right of the equator crossing to the result box: */
+			result.addPoint(geodeticToMap(PPoint(geodetic.max[0],0.0)));
+			}
+		}
+	
+	return result;
+	}
+
+template <class ScalarParam>
+inline
+typename UTMProjection<ScalarParam>::PBox
+UTMProjection<ScalarParam>::mapToGeodetic(
+	const typename UTMProjection<ScalarParam>::PBox& map) const
+	{
+	/* Convert the box's four corner vertices from map space to geodetic space: */
+	PBox result=PBox::empty;
+	for(int i=0;i<4;++i)
+		result.addPoint(mapToGeodetic(map.getVertex(i)));
+	
+	/* Check for the special case of the box crossing the central meridian: */
+	if(map.min[0]<offset[0]&&map.max[0]>offset[0])
+		{
+		if(map.min[1]<offset[1])
+			{
+			/* Add the bottom of the central meridian crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(offset[0],map.min[1])));
+			}
+		if(map.max[1]>offset[1])
+			{
+			/* Add the top of the central meridian crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(offset[0],map.max[1])));
+			}
+		}
+	
+	/* Check for the special case of the box crossing the equator: */
+	if(map.min[1]<offset[1]&&map.max[1]>offset[1])
+		{
+		if(map.min[0]>offset[0])
+			{
+			/* Add the left of the equator crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(map.min[0],offset[1])));
+			}
+		if(map.max[0]<offset[0])
+			{
+			/* Add the right of the equator crossing to the result box: */
+			result.addPoint(mapToGeodetic(PPoint(map.max[0],offset[1])));
+			}
+		}
+	
+	return result;
+	}
+
+}

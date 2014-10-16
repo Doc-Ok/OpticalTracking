@@ -1,0 +1,395 @@
+/***********************************************************************
+TargaImageFile - Class to represent image files in TARGA format.
+Copyright (c) 2007-2010 Oliver Kreylos
+
+This file is part of the Image Handling Library (Images).
+
+The Image Handling Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Image Handling Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Image Handling Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define IMAGES_TARGAIMAGEFILEREADER_IMPLEMENTATION
+
+#include <Images/TargaImageFileReader.h>
+
+#include <Misc/Utility.h>
+#include <Misc/ThrowStdErr.h>
+
+namespace {
+
+/**************
+Helper classes:
+**************/
+
+template <class DataSourceParam,class ColorParam>
+class PixelReader // Helper class to read pixel values from Targa files
+	{
+	/* Elements: */
+	private:
+	DataSourceParam& dataSource; // Pixel data source
+	unsigned int pixelSize; // Number of bits per pixel
+	unsigned int pixelByteSize; // Size of a pixel in bytes
+	unsigned int colorFieldSize,colorFieldMask; // Size of each color field and bit mask
+	unsigned int alphaSize,alphaMask; // Size of the alpha channel and bit mask
+	
+	/* RLE decompressor state: */
+	bool notCompressed; // Flag whether the pixel data is RLE-compressed
+	unsigned int rawLength; // Number of pixels left in current raw block
+	unsigned int repLength; // Number of pixels left in current repetition block
+	ColorParam repPixel; // Pixel value of current repetition block
+	
+	/* Private methods: */
+	void readPixel(ColorParam& dest) // Reads a pixel from the data source
+		{
+		/* Read the pixel value: */
+		unsigned char pixel[4];
+		dataSource.template read<unsigned char>(pixel,pixelByteSize);
+		unsigned int pixelBits=0x0U;
+		for(unsigned int i=0;i<pixelByteSize;++i)
+			pixelBits=(pixelBits<<8)|(unsigned int)pixel[i];
+		
+		if(ColorParam::numComponents==3)
+			{
+			/* Skip the pixel alpha value: */
+			pixelBits>>=alphaSize;
+			}
+		else if(alphaSize>0)
+			{
+			/* Read the pixel alpha value: */
+			dest[3]=GLubyte(((pixelBits&alphaMask)*255U)/alphaMask);
+			pixelBits>>=alphaSize;
+			}
+		else
+			dest[3]=GLubyte(255);
+		
+		/* Read the pixel color values: */
+		for(int i=0;i<3;++i)
+			{
+			dest[i]=GLubyte(((pixelBits&colorFieldMask)*255U)/colorFieldMask);
+			pixelBits>>=colorFieldSize;
+			}
+		};
+	
+	/* Constructors and destructors: */
+	public:
+	PixelReader(DataSourceParam& sDataSource,unsigned int sPixelSize,bool sCompressed =false)
+		:dataSource(sDataSource),
+		 pixelSize(sPixelSize),
+		 notCompressed(!sCompressed),
+		 rawLength(0),repLength(0)
+		{
+		/* Compute the field sizes and masks: */
+		pixelByteSize=(pixelSize+7U)/8U;
+		colorFieldSize=Misc::min(pixelSize/3U,8U);
+		colorFieldMask=(0x1U<<colorFieldSize)-0x1U;
+		alphaSize=pixelSize-colorFieldSize*3U;
+		alphaMask=(0x1U<<alphaSize)-0x1U;
+		}
+	
+	/* Methods: */
+	void read(ColorParam& dest) // Reads a pixel
+		{
+		if(notCompressed)
+			{
+			/* Read the pixel value: */
+			readPixel(dest);
+			}
+		else if(rawLength>0U)
+			{
+			/* Read the next pixel from the raw block: */
+			readPixel(dest);
+			--rawLength;
+			}
+		else if(repLength>0U)
+			{
+			/* Assign a pixel from the current repetition block: */
+			dest=repPixel;
+			--repLength;
+			}
+		else
+			{
+			/* Read the next block header: */
+			unsigned int blockHeader=(unsigned int)(dataSource.template read<unsigned char>());
+			if(blockHeader&0x80U)
+				{
+				/* Start a repetition packet: */
+				repLength=blockHeader&0x7fU;
+				readPixel(repPixel);
+				dest=repPixel;
+				}
+			else
+				{
+				/* Start a raw packet: */
+				rawLength=blockHeader&0x7fU;
+				readPixel(dest);
+				}
+			}
+		}
+	};
+
+template <class DataSourceParam>
+class IndexReader // Helper class to read index values from Targa files
+	{
+	/* Elements: */
+	private:
+	DataSourceParam& dataSource; // Pixel data source
+	unsigned int pixelSize; // Number of bits per pixel
+	unsigned int pixelByteSize; // Size of a pixel in bytes
+	unsigned int pixelMask; // Mask for pixel values
+	
+	/* RLE decompressor state: */
+	bool notCompressed; // Flag whether the pixel data is RLE-compressed
+	unsigned int rawLength; // Number of pixels left in current raw block
+	unsigned int repLength; // Number of pixels left in current repetition block
+	unsigned int repPixel; // Pixel value of current repetition block
+	
+	/* Private methods: */
+	unsigned int readPixel(void) // Reads a pixel value from the data source
+		{
+		/* Read the pixel value: */
+		unsigned char pixel[4];
+		dataSource.template read<unsigned char>(pixel,pixelByteSize);
+		unsigned int pixelBits=0x0U;
+		for(unsigned int i=0;i<pixelByteSize;++i)
+			pixelBits=(pixelBits<<8)|(unsigned int)pixel[i];
+		
+		/* Return the index value: */
+		return pixelBits&pixelMask;
+		};
+	
+	/* Constructors and destructors: */
+	public:
+	IndexReader(DataSourceParam& sDataSource,unsigned int sPixelSize,bool sCompressed =false)
+		:dataSource(sDataSource),
+		 pixelSize(sPixelSize),
+		 notCompressed(!sCompressed),
+		 rawLength(0U),repLength(0U),repPixel(0U)
+		{
+		/* Compute the field sizes and masks: */
+		pixelByteSize=(pixelSize+7U)/8U;
+		pixelMask=(0x1U<<pixelSize)-0x1U;
+		}
+	
+	/* Methods: */
+	unsigned int read(void) // Reads an index
+		{
+		unsigned int result;
+		
+		if(notCompressed)
+			{
+			/* Read the pixel value: */
+			result=readPixel();
+			}
+		else if(rawLength>0U)
+			{
+			/* Read the next pixel from the raw block: */
+			result=readPixel();
+			--rawLength;
+			}
+		else if(repLength>0U)
+			{
+			/* Assign a pixel from the current repetition block: */
+			result=repPixel;
+			--repLength;
+			}
+		else
+			{
+			/* Read the next block header: */
+			unsigned int blockHeader=(unsigned int)(dataSource.template read<unsigned char>());
+			if(blockHeader&0x80U)
+				{
+				/* Start a repetition packet: */
+				repLength=blockHeader&0x7fU;
+				repPixel=readPixel();
+				result=repPixel;
+				}
+			else
+				{
+				/* Start a raw packet: */
+				rawLength=blockHeader&0x7fU;
+				result=readPixel();
+				}
+			}
+		
+		return result;
+		}
+	};
+
+}
+
+namespace Images {
+
+/*******************************
+Methods of class TargaImageFile:
+*******************************/
+
+template <class DataSourceParam>
+inline
+TargaImageFileReader<DataSourceParam>::TargaImageFileReader(
+	typename TargaImageFileReader<DataSourceParam>::DataSource& sDataSource)
+	:dataSource(sDataSource),
+	 colorMap(0),
+	 imageAlreadyRead(false)
+	{
+	/*********************
+	Read the Targa header:
+	*********************/
+	
+	/* Read the ID field length: */
+	unsigned int idLength=(unsigned int)(dataSource.template read<unsigned char>());
+	
+	/* Read the color map type: */
+	bool hasColorMap=dataSource.template read<unsigned char>()!=0;
+	
+	/* Read the image type: */
+	imageType=int(dataSource.template read<unsigned char>());
+	
+	/* Read the color map specification: */
+	firstColorMapEntry=(unsigned int)(dataSource.template read<unsigned short>());
+	numColorMapEntries=(unsigned int)(dataSource.template read<unsigned short>());
+	unsigned int colorMapEntrySize=(unsigned int)(dataSource.template read<unsigned char>());
+	
+	/* Read the image specification: */
+	offset[0]=(unsigned int)(dataSource.template read<unsigned short>());
+	offset[1]=(unsigned int)(dataSource.template read<unsigned short>());
+	size[0]=(unsigned int)(dataSource.template read<unsigned short>());
+	size[1]=(unsigned int)(dataSource.template read<unsigned short>());
+	pixelSize=(unsigned int)(dataSource.template read<unsigned char>());
+	imageDescriptor=(unsigned int)(dataSource.template read<unsigned char>());
+	
+	/* Skip the image ID: */
+	unsigned char imageID[255];
+	dataSource.template read<unsigned char>(imageID,idLength);
+	
+	if(hasColorMap)
+		{
+		/******************
+		Read the color map:
+		******************/
+		
+		colorMap=new ColorMapEntry[numColorMapEntries];
+		PixelReader<DataSource,ColorMapEntry> colorMapReader(dataSource,colorMapEntrySize);
+		for(unsigned int i=0;i<numColorMapEntries;++i)
+			colorMapReader.read(colorMap[i]);
+		}
+	}
+
+template <class DataSourceParam>
+inline
+TargaImageFileReader<DataSourceParam>::~TargaImageFileReader(
+	void)
+	{
+	delete[] colorMap;
+	}
+
+template <class DataSourceParam>
+template <class ImageParam>
+inline
+ImageParam
+TargaImageFileReader<DataSourceParam>::readImage(
+	void)
+	{
+	/* Check if the image has already been read: */
+	if(imageAlreadyRead)
+		Misc::throwStdErr("TargaImageFileReader::readImage: Attempt to read more than one image from stream");
+	imageAlreadyRead=true;
+	
+	/* Create the result image: */
+	ImageParam result(size[0],size[1]);
+	
+	/* Read the image data: */
+	switch(imageType)
+		{
+		case 1: // Uncompressed color-mapped image
+		case 9: // RLE-compressed color-mapped image
+			{
+			IndexReader<DataSource> indexReader(dataSource,pixelSize,imageType==9);
+			for(unsigned int y=0;y<size[1];++y)
+				{
+				typename ImageParam::Color* rowPtr=imageDescriptor&0x20?result.modifyPixelRow(y):result.modifyPixelRow(size[1]-y-1U);
+				ptrdiff_t rowPtrInc=1;
+				if(imageDescriptor&0x10U)
+					{
+					rowPtr+=size[0]-1U;
+					rowPtrInc=-1;
+					}
+				for(unsigned int x=0;x<size[0];++x,rowPtr+=rowPtrInc)
+					{
+					/* Assign the pixel value: */
+					*rowPtr=typename ImageParam::Color(colorMap[indexReader.read()-firstColorMapEntry]);
+					}
+				}
+			
+			break;
+			}
+		
+		case 2: // Uncompressed true-color image
+		case 10: // RLE-compressed true-color image
+			{
+			PixelReader<DataSource,typename ImageParam::Color> pixelReader(dataSource,pixelSize,imageType==10);
+			for(unsigned int y=0;y<size[1];++y)
+				{
+				typename ImageParam::Color* rowPtr=imageDescriptor&0x20?result.modifyPixelRow(y):result.modifyPixelRow(size[1]-y-1U);
+				ptrdiff_t rowPtrInc=1;
+				if(imageDescriptor&0x10U)
+					{
+					rowPtr+=size[0]-1U;
+					rowPtrInc=-1;
+					}
+				for(unsigned int x=0;x<size[0];++x,rowPtr+=rowPtrInc)
+					{
+					/* Read the pixel: */
+					pixelReader.read(*rowPtr);
+					}
+				}
+			
+			break;
+			}
+		
+		case 3: // Uncompressed greyscale image
+		case 11: // RLE-compressed greyscale image
+			{
+			IndexReader<DataSource> indexReader(dataSource,pixelSize,imageType==11);
+			unsigned int pixelMask=(0x1U<<pixelSize)-0x1U;
+			for(unsigned int y=0;y<size[1];++y)
+				{
+				typename ImageParam::Color* rowPtr=imageDescriptor&0x20?result.modifyPixelRow(y):result.modifyPixelRow(size[1]-y-1U);
+				ptrdiff_t rowPtrInc=1;
+				if(imageDescriptor&0x10U)
+					{
+					rowPtr+=size[0]-1U;
+					rowPtrInc=-1;
+					}
+				for(unsigned int x=0;x<size[0];++x,rowPtr+=rowPtrInc)
+					{
+					/* Read the greyscale value: */
+					GLubyte value=(indexReader.read()*255U)/pixelMask;
+					
+					/* Assign the pixel value: */
+					for(int i=0;i<ImageParam::Color::numComponents;++i)
+						(*rowPtr)[i]=value;
+					}
+				}
+			
+			break;
+			}
+		
+		default:
+			Misc::throwStdErr("TargaImageFileReader::readImage: Unsupported image type %d",imageType);
+		}
+	
+	return result;
+	}
+
+}

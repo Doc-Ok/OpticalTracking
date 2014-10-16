@@ -1,0 +1,175 @@
+<HTML>
+<HEAD>
+<TITLE>Misc -- Miscellaneous Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Misc&nbsp;-- Miscellaneous Library</H1>
+
+The Misc library contains assorted abstraction classes such as error handling, file I/O, containers, configuration file management, etc. It is used extensively throughout the higher-level libraries.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>SizedTypes.h</DT>
+<DD>SizedTypes.h contains namespace-global type declarations for integer and floating-point types of well-defined word sizes, to guarantee matching types across binary files and network connections.</DD>
+
+<DT>Utility.h</DT>
+<DD>Utility.h contains namespace-global functions implementing common tasks, such as swapping variables.</DD>
+</DD>
+
+<DT>PrintIntegers.h</DT>
+<DD>PrintIntegers.h contains low-level namespace-global functions to print numbers of all integer types.</DD>
+
+<DT>StringPrintf.h</DT>
+<DD>StringPrintf.h contains a namespace-global function to print into a C++ string using a printf-style interface.</DD>
+</DD>
+
+<DT>SelfDestructPointer.h</DT>
+<DD>A simple wrapper class around regular pointers that destroys a new()-created object when the pointer object goes out of scope. Light-weight alternative to Misc::Autopointer to temporarily hold dynamically-allocated objects in contexts when an exception or other error handling might exit the current scope unexpectedly.</DD>
+
+<DT>SelfDestructArray.h</DT>
+<DD>Companion to Misc::SelfDestructPointer for new[]-allocated arrays of objects.</DD>
+
+<DT>RefCounted.h</DT>
+<DD>RefCounted is a base class for reference-counted objects to implement simple automatic garbage collection. It works closely with the Autopointer class.</DD>
+
+<DT>Autopointer.h</DT>
+<DD>Autopointer is a class implementing reference-counting pointers for automatic garbage collection. It works closely with the RefCounted class.</DD>
+
+<DT>RefCountedArray</DT>
+<DD>RefCountedArray is a class to represent shared C-style fixed-size arrays using a copy-on-write mechanism. This version of the class does not support sharing arrays between multiple threads.</DD>
+
+<DT>FixedArray.h</DT>
+<DD>FixedArray is a low-overhead wrapper class to represent 1-dimensional arrays of compile-time fixed sizes.</DD>
+
+<DT>ArrayIndex.h</DT>
+<DD>ArrayIndex is a class for n-dimensional multi-indices, templatized by dimension. ArrayIndex is primarily used to index array elements in the Array class. It provides convenient constructors, index comparison, and index arithmetics.</DD>
+
+<DT>Array.h</DT>
+<DD>Array is a class to represent n-dimensional arrays, templatized by the type of array element and the array dimension. It uses the ArrayIndex class to index array elements.</DD>
+
+<DT>ChunkedArray.h</DT>
+<DD>ChunkedArray is a class to represent dynamically growing arrays, implemented as a linear list of &quot;chunks&quot; containing a fixed number of elements. It is templatized by the type of array element, and the size of each chunk in bytes (meant to align chunk size to the computer's page size). It offers growing arrays without the copy passes used by std::vector, at the expense of not having constant-time random array access. It is a memory-efficient way to implement lists that only allow insertion and removal at the end.</DD>
+
+<DT>ChunkedQueue.h</DT>
+<DD>ChunkedQueue is a class to memory-efficiently represent FIFO queues, implemented as a linear list of &quot;chunks&quot; containing a fixed number of elements. It is templatized by the type of array element, and the size of each chunk in bytes (meant to align chunk size to the computer's page size).</DD>
+
+<DT>PriorityHeap.h</DT>
+<DD>PriorityHeap is a class implementing a priority queue as a heap, templatized by the type of elements stored in the queue, and the type of the comparison functor. PriorityHeap.h also defines a class StdComp, templatized by value type, that uses the <= operator of the value type for comparison. PriorityHeap uses StdComp as the default comparison functor.</DD>
+
+<DT>PoolAllocator.h</DT>
+<DD>PoolAllocator is a class to efficiently manage dynamic allocation of objects of identical type, such as list elements, by allocating memory in larger, fixed-size &quot;chunks.&quot; It is templatized by the type of allocated objects, and the size of each chunk in bytes (meant to align allocation unit size to the computer's page size).</DD>
+
+<DT>StandardHashFunction.h</DT>
+<DD>StandardHashFunction is a functor class to compute hashing functions of arbitrary objects, templatized by the type of object to be hashed. It is used as the default hash function for the HashTable class. StandardHashFunction.h provides a generic implementation for arbitrary data types using a byte-wise CRC, and specialized implementations for all integral data types and for pointers.</DD>
+
+<DT>StringHashFunctions.h</DT>
+<DD>StringHashFunctions.h contains a specialized Misc::StandardHashFunction class for C++ strings, and a new Misc::StringHashFunction class for C strings.</DD>
+
+<DT>OrderedTuple.h</DT>
+<DD>OrderedTuple is a class to represent ordered tuples (of integers) as hash table keys. Parametrized by element type, which must be a signed or unsigned integer type, and tuple dimension.</DD>
+
+<DT>UnorderedTuple.h</DT>
+<DD>UnorderedTuple is a class to represent unordered tuples (of integers) as hash table keys. Two unordered tuples are identical if one is a permutation of the other. Parametrized by element type, which must be a signed or unsigned integer type, and tuple dimension.</DD>
+
+<DT>HashTable.h</DT>
+<DD>HashTable is a class implementing hash tables using linked lists for collision management. It is templatized by the hash table key type, the type of elements stored in the hash table, and the hash function functor. HashTable.h contains a specialized implementation for void as element type, essentially implementing a set. HashTable uses StandardHashFunction as the default hash function functor.</DD>
+
+<DT>OneTimeQueue.h</DT>
+<DD>OneTimeQueue is a class combining a FIFO queue and a hash table to implement queues that allow pushing of any element at most once. It is templatized by the type of element stored in the queue, and the hash function functor. OneTimeQueue uses StandardHashFunction as the default hash function functor.</DD>
+
+<DT>ThrowStdErr.h</DT>
+<DD>ThrowStdErr contains two single namespace-global function to simplify error management. printStdErrMsg() prints an error message to a static string buffer using a printf-style interface, and throwStdErr() throws a std::runtime_error with a message generated using a printf-style interface.</DD>
+
+<DT>Time.h</DT>
+<DD>Time is a wrapper class around the C struct timespec data type. If offers constructors, conversion to struct timeval, and time arithmetic.</DD>
+
+<DT>Timer.h</DT>
+<DD>Timer is a class providing a high-resolution wall-clock timer. It returns the amount of time passed between two timer snapshots as a floating-point number in seconds.</DD>
+
+<DT>FunctionCalls.h</DT>
+<DD>FunctionCalls defines several functor classes representing function calls or method invocations as first-class objects.</DD>
+
+<DT>CallbackData.h</DT>
+<DD>CallbackData is the base class for all data passed to callbacks implemented as objects of class CallbackList. It contains a pointer back to the originating CallbackList object. CallbackData.h also declares the type of callback functions stored in CallbackList objects.</DD>
+
+<DT>CallbackList.h</DT>
+<DD>CallbackList is a class managing lists of user-registered callbacks. Callbacks can be C functions or C++ methods, the latter either taking a base CallbackData object, or an object of a class derived from CallbackData.</DD>
+
+<DT>TimerEventScheduler.h</DT>
+<DD>TimerEventScheduler is a helper class to implement application-level timer events in GLMotif and Vrui.</DD>
+
+<DT>VarInt.h</DT>
+<DD>Functions to read/write unsigned 32-bit integers from/to files using a variable number of bytes, to reduce storage for values that are predominantly very small (such as string lengths).</DD>
+
+<DT>Marshaller.h</DT>
+<DD>Marshaller is a generic base class to read or write data structures from or to binary data sources or sinks.</DD>
+
+<DT>StandardMarshallers.h</DT>
+<DD>StandardMarshallers.h contains specializations of Marshaller for atomic data types.</DD>
+
+<DT>ArrayMarshallers.h</DT>
+<DD>ArrayMarshallers.h contains Marshaller classes for standard C-style arrays with implicit or explicit array sizes.</DD>
+
+<DT>CompoundMarshallers.h</DT>
+<DD>CompoundMarshallers.h contains specializations of Marshaller for standard container data types.</DD>
+
+<DT>Endianness.h</DT>
+<DD>Endianness contains a templatized class EndiannessSwapper that swaps the endianness of objects of arbitrary types using byte-wise exchanges and can be specialized to swap the endianness of aggregate data types. Endianness.h also contains a generic function swapEndianness(), templatized by value data type, that is used by client code. The implementation of swapEndianness() is based on EndiannessSwapper.</DD>
+
+<DT>GetCurrentDirectory.h</DT>
+<DD>GetCurrentDirectory contains a namespace-global function to retrieve the name of the calling process' current working directory as a string.</DD>
+
+<DT>FileTests.h</DT>
+<DD>FileTests contains namespace-global functions query information about file system objects in an operating system-independent manner.</DD>
+
+<DT>FileNameExtensions.h</DT>
+<DD>FileNameExtensions contains namespace-global functions to manipulate the extensions of file names.</DD>
+
+<DT>CreateNumberedFileName.h</DT>
+<DD>CreateNumberedFileName contains a single namespace-global function to generate unique numbered file names based on a given base name and number of digits. The function searches for all numbered files of the given basename, and creates a new file with a number one higher than the previous maximum. The function has undefined results if called concurrently for the same basename.</DD>
+
+<DT>FdSet.h</DT>
+<DD>FdSet is a class representing file descriptor sets, as used by the select() and pselect() system calls. The header file contains wrappers for both functions that do not need the nfds argument.</DD>
+
+<DT>File.h</DT>
+<DD>File is a class providing a wrapper around the C standard FILE interface that also provides automatic endianness conversion based on the swapEndianness() function declared in Endianness. It ensures correct resource management via construction/destruction, and offers a type-safe interface to read/write binary data from/to files.</DD>
+
+<DT>Directory.h</DT>
+<DD>Directory is an exception-safe wrapper around the POSIX DIR interface.</DD>
+
+<DT>LargeFile.h</DT>
+<DD>LargeFile is a different version of the File class, using the same interface but providing access to files larger than 2GB by using 64-bit file offset values.</DD>
+
+<DT>MemMappedFile.h</DT>
+<DD>MemMappedFile provides a file wrapper around blocks of memory, such as memory-mapped files. If offers the same API as Misc::File.</DD>
+
+<DT>StringMarshaller.h</DT>
+<DD>StringMarshaller contains namespace-global template functions to send/retrieve C or C++ strings via pipe objects that provide type-safe read/write routines, such as Misc::File.</DD>
+
+<DT>ValueCoder.h</DT>
+<DD>ValueCoder is a class to encode/decode values of arbitrary types to/from strings, templatized by the type of encoded/decoded values.</DD>
+
+<DT>StandardValueCoders.h</DT>
+<DD>StandardValueCoders contains specialized versions of the ValueCoder class for atomic data types and strings.</DD>
+
+<DT>ArrayValueCoders.h</DT>
+<DD>ValueCoderArray is a generic class to encode/decode arrays of arbitrary element types to/from strings, using the ValueCoder class to encode/decode each array element.</DD>
+
+<DT>CompoundValueCoders.h</DT>
+<DD>CompoundValueCoders contains specialized versions of the ValueCoder class for lists and vectors of arbitrary element types, using the ValueCoder class to encode/decode each container element.</DD>
+
+<DT>ConfigurationFile.h</DT>
+<DD>ConfigurationFile is a class to retrieve permanent program state from hierarchical configuration files. Configuration files are human-readable text files comprised of a tree of sections, each section containing tag/value pairs. The ConfigurationFile class allows client code to retrieve tag values either as text, or directly as objects of arbitrary types using the ValueCoder mechanism.</DD>
+
+<DT>Optional.h</DT>
+<DD>Optional is a class to represent optional configuration values in configuration files.</DD>
+
+<DT>FileLocator.h</DT>
+<DD>FileLocator is a class to simplify searching for files in a list of search directories. Search lists can be built explicity, or by deriving standard resource locations from an application's executable name.</DD>
+</DL>
+
+</BODY>
+</HTML>

@@ -1,0 +1,98 @@
+<HTML>
+<HEAD>
+<TITLE>Video -- Basic Video Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Video&nbsp;-- Basic Video Library</H1>
+
+The Basic Video Library provides facilities to capture video streams from a variety of source video devices (Video4Linux2 and DC1394 on Linux), and encode&nbsp;/ decode video streams using the Theora codec library.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the Video library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>VideoDataFormat.h</DT>
+<DD>VideoDataFormat is a structure to represent video data formats (image size, pixel format, frame rate, etc.) in an API-independent format.</DD>
+
+<DT>FrameBuffer.h</DT>
+<DD>FrameBuffer is the base class for raw video frames as exposed by video devices.</DD>
+
+<DT>ImageExtractor.h</DT>
+<DD>ImageExtractor is the base class for processor objects to extract images in a variety of formats from raw video frames as exposed by video devices.</DD>
+
+<DT>VideoDevice.h</DT>
+<DD>VideoDevice is the base class for video devices from different video APIs.</DD>
+
+<DT>Colorspaces.h</DT>
+<DD>Colorspaces.h contains convenience functions to convert color values between several common color spaces.</DD>
+
+<DT>ImageExtractorRGB8.h</DT>
+<DD>ImageExtractorRGB8 is an image extractor class for video frames in 8-bit RGB pixel format.</DD>
+
+<DT>ImageExtractorY10B.h</DT>
+<DD>ImageExtractorY10B is an image extractor class for video frames in 10-bit byte-packet Y' greyscale format.</DD>
+
+<DT>ImageExtractorYUYV.h</DT>
+<DD>ImageExtractorYUYV is an image extractor class for video frames in Y'CbCr 4:2:2 pixel format.</DD>
+
+<DT>ImageExtractorYV12.h</DT>
+<DD>ImageExtractorYV12 is an image extractor class for video frames in Y'CbCr 4:2:0 pixel format.</DD>
+
+<DT>BayerPattern.h</DT>
+<DD>BayerPattern is an enumerated type for Bayer color filter patterns used by single-chip video camera sensors.</DD>
+
+<DT>ImageExtractorBA81.h</DT>
+<DD>ImageExtractorBA81 is an image extractor class for video frames in Bayer pattern pixel formats.</DD>
+
+<DT>YpCbCr420Texture.h</DT>
+<DD>YpCbCr420Texture is a class to encapsulate management of streaming video in Y'CbCr 4:2:0 pixel format as 2D textures that can be applied to arbitrary geometry.</DD>
+
+<DT>VideoPane.h</DT>
+<DD>VideoPane is a GLMotif widget class to display video streams in Y'CbCr 4:2:0 pixel format, such as those consumed and produced by the Theora video codec.</DD>
+
+<DT>ImageExtractorMJPG.h</DT>
+<DD>ImageExtractorMJPG is an image extractor class for video frames in Motion JPEG pixel format.</DD>
+
+<DT>Linux/V4L2VideoDevice.h</DT>
+<DD>V4L2VideoDevice is a class for video devices accessed through the Video4Linux2 API. This class only exists on Linux, and only if V4L2 support was enabled in the Vrui makefile.</DD>
+
+<DT>Linux/OculusRiftDK2VideoDevice.h</DT>
+<DD>OculusRiftDK2VideoDevice is a subclass of Video::V4L2VideoDevice to work around the quirky interface of the Oculus Rift DK2's optical tracking camera. This class only exists on Linux, and only if V4L2 support was enabled in the Vrui makefile.</DD>
+
+<DT>Linux/DC1394VideoDevice.h</DT>
+<DD>DC1394VideoDevice is a class for video devices accessed through the DC1394 FireWire protocol. This class only exists on Linux, and only if DC1394 support was enabled in the Vrui makefile.</DD>
+
+<DT>OggPage.h</DT>
+<DD>OggPage is a wrapper class for the ogg_page structure from the Ogg stream container API.</DD>
+
+<DT>OggSync.h</DT>
+<DD>OggSync is a wrapper class for the ogg_sync_state structure from the Ogg stream container API.</DD>
+
+<DT>OggStream.h</DT>
+<DD>OggStream is a wrapper class for the ogg_stream_state structure from the Ogg stream container API.</DD>
+
+<DT>TheoraInfo.h</DT>
+<DD>TheoraInfo is a wrapper class for the th_info structure from the Theora 1.1 API.</DD>
+
+<DT>TheoraComment.h</DT>
+<DD>TheoraComment is a wrapper class for the th_comment structure from the Theora 1.1 API.</DD>
+
+<DT>TheoraPacket.h</DT>
+<DD>TheoraPacket is a wrapper class for the ogg_packet structure, indicating that an Ogg packet contains a Theora video packet.</DD>
+
+<DT>TheoraFrame.h</DT>
+<DD>TheoraFrame is a wrapper class for the th_ycbcr_buffer structure from the Theora 1.1 API.</DD>
+
+<DT>TheoraEncoder.h</DT>
+<DD>TheoraEncoder is a wrapper class for the th_enc_ctx handle type from the Theora 1.1 API.</DD>
+
+<DT>TheoraDecoder.h</DT>
+<DD>TheoraDecoder is a wrapper class for the th_dec_ctx handle type from the Theora 1.1 API.</DD>
+</DL>
+
+</BODY>
+</HTML>

@@ -1,0 +1,186 @@
+<HTML>
+<HEAD>
+<TITLE>GLSupport -- OpenGL Support Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>GLSupport&nbsp;-- OpenGL Support Library</H1>
+
+The GLSupport library contains classes and functions providing higher-level support for applications using OpenGL. The main functions of this library are per-context data management for multi-context rendering, run-time handling of OpenGL extensions, support for texture-based font rendering, and functions to draw simple 3D models such as spheres and cylinders.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the GLSupport library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>GLPrintError.h</DT>
+<DD>GLPrintError contains a single helper function, glPrintError, to print clear-text OpenGL error messages to a std::ostream.</DD>
+
+<DT>GLMarshallers.h</DT>
+<DD>GLMarshallers.h contains specialized versions of the Misc::Marshaller class for several OpenGL-related data types.</DD>
+
+<DT>GLValueCoders.h</DT>
+<DD>GLValueCoders.h contains specialized versions of the Misc::ValueCoder class for several OpenGL-related data types.</DD>
+
+<DT>TLSHelper.h</DT>
+<DD>TLSHelper contains macro definitions to provide optimized thread-local storage for the internals of the OpenGL support library. It uses the Threads::Local class as a fallback mechanism if the compiler does not support the __thread keyword. This header file is not meant to be used directly by applications.</DD>
+
+<DT>GLLightTracker.h</DT>
+<DD>GLLightTracker is a helper class tracking the lighting state of an OpenGL context, to support just-in-time recompilation of shaders in reaction to changing lighting conditions.</DD>
+
+<DT>GLClipPlaneTracker.h</DT>
+<DD>GLClipPlaneTracker is a helper class tracking the clipping plane state of an OpenGL context, to support just-in-time recompilation of shaders in reaction to changing clipping plane conditions.</DD>
+
+<DT>GLObject.h</DT>
+<DD>GLObject is a base class for objects that contain per-context OpenGL data in a multi-pipe rendering environment where OpenGL state must be kept separate from other application state. GLObject handles initialization and deinitialization of OpenGL state once for each OpenGL context an object is rendered in. All OpenGL data related to an object is stored in a per-context GLObject::DataItem object. See <A HREF="GLContextData.html">GLContextData</A> for a thorough explanation of the concepts behind the multi-pipe abstraction.</DD>
+
+<DT>GLContextData.h</DT>
+<DD>GLContextData is a class associating per-context OpenGL data with objects derived from GLObject. See <A HREF="GLContextData.html">GLContextData</A> for a thorough explanation of the concepts behind the multi-pipe abstraction.</DD>
+
+<DT>GLExtensions.h</DT>
+<DD>GLExtensions.h contains functions to query the availability of OpenGL extensions in the current OpenGL context, and to retrieve pointers to extension entry points. This header file is deprecated; instead, OpenGL extensions are supposed to be handled by the GLExtensionManager mechanism.</DD>
+
+<DT>GLExtensionManager.h</DT>
+<DD>GLExtensionManager is a class to manage OpenGL extensions on a per-context basis. GLExtensionManager allows an application to query whether a particular extension is supported in the current context, and to initialize it. Initializing an OpenGL extension will create all of the extension's entry points such that applications can later call them directly by their name.</DD>
+
+<DT>Extensions/*</DT>
+<DD>The Extensions directory contains header files for all OpenGL extensions known to the extension manager. All extensions are represented as individual classes with identical APIs.
+<DL>
+<DT>GLExtension.h</DT>
+<DD>Base class for all extension classes.</DD>
+
+<DT>GLARBDebugOutput</DT>
+<DD>The GL_ARB_debug_output extension.</DD>
+
+<DT>GLARBDepthTexture</DT>
+<DD>The GL_ARB_depth_texture extension.</DD>
+
+<DT>GLARBDrawBuffers</DT>
+<DD>The GL_ARB_draw_buffers extension.</DD>
+
+<DT>GLARBDrawInstanced</DT>
+<DD>The GL_ARB_draw_instanced extension.</DD>
+
+<DT>GLARBFragmentProgram</DT>
+<DD>The GL_ARB_fragment_program extension.</DD>
+
+<DT>GLARBFragmentShader</DT>
+<DD>The GL_ARB_fragment_shader extension.</DD>
+
+<DT>GLARBGeometryShader4</DT>
+<DD>The GL_ARB_geometry_shader4 extension. This is functionally identical to GL_EXT_geometry_shader4, but uses ARB instead of EXT suffixes.</DD>
+
+<DT>GLARBMultitexture</DT>
+<DD>The GL_ARB_multitexture extension.</DD>
+
+<DT>GLARBPointParameters</DT>
+<DD>The GL_ARB_point_parameters extension.</DD>
+
+<DT>GLARBPointSprite</DT>
+<DD>The GL_ARB_point_sprite extension.</DD>
+
+<DT>GLARBShaderObjects</DT>
+<DD>The GL_ARB_shader_objects extension.</DD>
+
+<DT>GLARBShadow</DT>
+<DD>The GL_ARB_shadow extension.</DD>
+
+<DT>GLARBTextureCompression</DT>
+<DD>The GL_ARB_texture_compression extension.</DD>
+
+<DT>GLARBTextureFloat</DT>
+<DD>The GL_ARB_texture_float extension.</DD>
+
+<DT>GLARBTextureNonPowerOfTwo</DT>
+<DD>The GL_ARB_texture_non_power_of_two extension.</DD>
+
+<DT>GLARBVertexBufferObject</DT>
+<DD>The GL_ARB_vertex_buffer_object extension.</DD>
+
+<DT>GLARBVertexProgram</DT>
+<DD>The GL_ARB_vertex_program extension.</DD>
+
+<DT>GLARBVertexShader</DT>
+<DD>The GL_ARB_vertex_shader extension.</DD>
+
+<DT>GLEXTFogCoord</DT>
+<DD>The GL_EXT_fog_coord extension.</DD>
+
+<DT>GLEXTFramebufferBlit</DT>
+<DD>The GL_EXT_framebuffer_blit extension.</DD>
+
+<DT>GLEXTFramebufferObject</DT>
+<DD>The GL_EXT_framebuffer_object extension.</DD>
+
+<DT>GLEXTGeometryShader4</DT>
+<DD>The GL_EXT_geometry_shader4 extension. This is functionally identical to GL_ARB_geometry_shader4, but uses EXT instead of ARB suffixes.</DD>
+
+<DT>GLEXTPalettedTexture</DT>
+<DD>The GL_EXT_paletted_texture extension.</DD>
+
+<DT>GLEXTRescaleNormal</DT>
+<DD>The GL_EXT_rescale_normal extension.</DD>
+
+<DT>GLEXTTexture3D</DT>
+<DD>The GL_EXT_texture3D extension.</DD>
+
+<DT>GLEXTTextureCompressionS3TC</DT>
+<DD>The GL_EXT_texture_compression_s3tc extension.</DD>
+
+<DT>GLEXTTextureCubeMap</DT>
+<DD>The GL_EXT_texture_cube_map extension.</DD>
+
+<DT>GLEXTTextureInteger</DT>
+<DD>The GL_EXT_texture_integer extension.</DD>
+
+<DT>GLNVFogDistance</DT>
+<DD>The GL_NV_fog_distance extension.</DD>
+
+<DT>GLNVOcclusionQuery</DT>
+<DD>The GL_NV_occlusion_query extension.</DD>
+
+<DT>GLNVPointSprite</DT>
+<DD>The GL_NV_point_sprite extension.</DD>
+
+<DT>GLNVTextureShader</DT>
+<DD>The GL_NV_texture_shader extension.</DD>
+</DL></DD>
+
+<DT>GLTextureObject.h</DT>
+<DD>GLTextureObject is a helper class to simplify managing texture objects.</DD>
+
+<DT>GLShader.h<DT>
+<DD>GLShader is a helper class to simplify using GLSL shaders that compile any number of vertex and fragment shaders into a single shader program. Assumes the source code for all shaders is loaded from plain text files.</DD>
+
+<DT>GLGeometryShader.h<DT>
+<DD>GLGeometryShader is a child class of GLShader with additional support for geometry shaders following the GL_EXT_geometry_shader4 extension.</DD>
+
+<DT>GLAutomaticShader.h</DT>
+<DD>GLAutomaticShader is a base class for shaders that adapt themselves to the changing state of their associated OpenGL context.</DD>
+
+<DT>GLLineLightingShader.h</DT>
+<DD>GLLineLightingShader is an automatic shader class for Phong illumination of curves.</DD>
+
+<DT>GLColorMap.h</DT>
+<DD>GLColorMap is a class mapping scalar values in a given range to RGBA colors using linear interpolation between a number of control points.</DD>
+
+<DT>GLFont.h</DT>
+<DD>GLFont is a class to render 3D text using texture-based fonts. Text is normally rendered by uploading an entire string of text as a single texture (providing for kerning and/or aliasing), and then mapping that texture onto arbitrary polygons.</DD>
+
+<DT>GLString.h</DT>
+<DD>GLString is a class to simplify handling of 3D text using texture-based fonts, by associating a C-style string with the data required to draw said string using a GLFont object.</DD>
+
+<DT>GLLabel.h</DT>
+<DD>GLLabel is a class to simplify drawing 3D text, by encapsulating all data required to draw C-style strings using a texture-based font.</DD>
+
+<DT>GLLineIlluminator.h</DT>
+<DD>GLLineIlluminator is a class to render illuminated lines by tabulating the Phong lighting equation into a texture and manipulating the texture matrix to perform diffuse and specular illumination. It should be considered deprecated, since the same effect is much better achieved using vertex programs.</DD>
+
+<DT>GLModels.h</DT>
+<DD>GLModels.h contains several functions to draw simple 3D models such as spheres and cylinders.</DD>
+</DL>
+
+</BODY>
+</HTML>

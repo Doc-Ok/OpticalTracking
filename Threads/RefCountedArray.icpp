@@ -1,0 +1,121 @@
+/***********************************************************************
+RefCountedArray - Generic class for fixed-size arrays with copy-on-write
+sharing and automatic garbage collection. Thread-safe version.
+Copyright (c) 2010 Oliver Kreylos
+
+This file is part of the Portable Threading Library (Threads).
+
+The Portable Threading Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Portable Threading Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Portable Threading Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define THREADS_REFCOUNTEDARRAY_IMPLEMENTATION
+
+#include <Threads/RefCountedArray.h>
+
+namespace Threads {
+
+/********************************
+Methods of class RefCountedArray:
+********************************/
+
+template <class ElementParam>
+inline
+typename RefCountedArray<ElementParam>::Header*
+RefCountedArray<ElementParam>::create(
+	size_t newSize)
+	{
+	/* Allocate a bare memory block of the required size: */
+	unsigned char* mem=new unsigned char[sizeof(Header)+newSize*sizeof(Element)];
+	
+	/* Construct the header structure in-place: */
+	Header* result=new(mem) Header;
+	#if !THREADS_CONFIG_HAVE_BUILTIN_ATOMICS
+	#if THREADS_CONFIG_HAVE_SPINLOCKS
+	pthread_spin_init(&result->refCountSpinlock,0);
+	#else
+	pthread_mutex_init(&result->refCountSpinlock,0);
+	#endif
+	#endif
+	result->refCount=1;
+	result->size=newSize;
+	
+	/* Construct the elements in-place, in case they have custom default constructors: */
+	for(size_t i=0;i<newSize;++i)
+		new(result->elements+i) Element;
+	
+	return result;
+	}
+
+template <class ElementParam>
+inline
+void
+RefCountedArray<ElementParam>::destroy(
+	typename RefCountedArray<ElementParam>::Header* header)
+	{
+	/* Destruct the elements in-place, in case they have custom destructors: */
+	for(size_t i=0;i<header->size;++i)
+		header->elements[i].~Element();
+	
+	#if !THREADS_CONFIG_HAVE_BUILTIN_ATOMICS
+	/* Destroy the spinlock: */
+	#if THREADS_CONFIG_HAVE_SPINLOCKS
+	pthread_spin_destroy(&header->refCountSpinlock);
+	#else
+	pthread_mutex_destroy(&header->refCountSpinlock);
+	#endif
+	#endif
+	
+	/* Destroy the header itself: */
+	delete[] reinterpret_cast<unsigned char*>(header);
+	}
+
+template <class ElementParam>
+inline
+void
+RefCountedArray<ElementParam>::modify(
+	void)
+	{
+	/* Bail out if the array is already private: */
+	if(header->refCount==1)
+		return;
+	
+	/* Allocate a bare memory block of the required size: */
+	unsigned char* mem=new unsigned char[sizeof(Header)+header->size*sizeof(Element)];
+	
+	/* Construct the header structure in-place: */
+	Header* newHeader=new(mem) Header;
+	#if !THREADS_CONFIG_HAVE_BUILTIN_ATOMICS
+	#if THREADS_CONFIG_HAVE_SPINLOCKS
+	pthread_spin_init(&result->refCountSpinlock,0);
+	#else
+	pthread_mutex_init(&result->refCountSpinlock,0);
+	#endif
+	#endif
+	newHeader->refCount=1;
+	newHeader->size=header->size;
+	
+	/* Copy-construct the elements in-place: */
+	for(size_t i=0;i<header->size;++i)
+		new(newHeader->elements+i) Element(header->elements[i]);
+	
+	/* Unreference and potentially destroy the current shared array: */
+	if(header->unref())
+		destroy(header);
+	
+	/* Set the new array: */
+	header=newHeader;
+	}
+
+}

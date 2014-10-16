@@ -1,0 +1,235 @@
+/***********************************************************************
+CompoundValueCoders - Generic value coder classes for vectors and lists
+of other data types.
+Copyright (c) 2004-2010 Oliver Kreylos
+
+This file is part of the Miscellaneous Support Library (Misc).
+
+The Miscellaneous Support Library is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+The Miscellaneous Support Library is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Miscellaneous Support Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define MISC_COMPOUNDVALUECODERS_IMPLEMENTATION
+
+#include <Misc/CompoundValueCoders.h>
+
+namespace Misc {
+
+/***************************************************************
+Methods of class ValueCoder<std::pair<FirstParam,SecondParam> >:
+***************************************************************/
+
+template <class FirstParam,class SecondParam>
+inline
+std::string
+ValueCoder<std::pair<FirstParam,SecondParam> >::encode(
+	const std::pair<FirstParam,SecondParam>& value)
+	{
+	std::string result;
+	
+	result.append(ValueCoder<FirstParam>::encode(value.first));
+	result.push_back(',');
+	result.push_back(' ');
+	result.append(ValueCoder<SecondParam>::encode(value.second));
+	
+	return result;
+	}
+
+template <class FirstParam,class SecondParam>
+inline
+std::pair<FirstParam,SecondParam>
+ValueCoder<std::pair<FirstParam,SecondParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		std::pair<FirstParam,SecondParam> result;
+		const char* cPtr=start;
+		
+		/* Decode the first value: */
+		result.first=ValueCoder<FirstParam>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Check for comma separator: */
+		cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Decode the second value: */
+		result.second=ValueCoder<SecondParam>::decode(cPtr,end,&cPtr);
+		
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to std::pair due to ")+err.what());
+		}
+	}
+
+/***************************************************
+Methods of class ValueCoder<std::list<ValueParam> >:
+***************************************************/
+
+template <class ValueParam>
+inline
+std::string
+ValueCoder<std::list<ValueParam> >::encode(
+	const std::list<ValueParam>& value)
+	{
+	std::string result;
+	result.push_back('(');
+	
+	for(typename std::list<ValueParam>::const_iterator it=value.begin();it!=value.end();++it)
+		{
+		if(it!=value.begin())
+			{
+			/* Add a separator: */
+			result.push_back(',');
+			result.push_back(' ');
+			}
+		
+		/* Encode the next element: */
+		result.append(ValueCoder<ValueParam>::encode(*it));
+		}
+	
+	result.push_back(')');
+	return result;
+	}
+
+template <class ValueParam>
+inline
+std::list<ValueParam>
+ValueCoder<std::list<ValueParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		std::list<ValueParam> result;
+		const char* cPtr=start;
+
+		/* Check for opening parenthesis: */
+		if(cPtr==end||*cPtr!='(')
+			throw DecodingError("missing opening parenthesis");
+		++cPtr;
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Decode all elements: */
+		while(cPtr!=end&&*cPtr!=')')
+			{
+			/* Check for comma separator: */
+			if(!result.empty())
+				cPtr=checkSeparator(',',cPtr,end);
+			
+			/* Decode next element: */
+			result.push_back(ValueCoder<ValueParam>::decode(cPtr,end,&cPtr));
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		/* Check for closing parenthesis: */
+		if(cPtr==end)
+			throw DecodingError("missing closing parenthesis");
+		++cPtr;
+
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to std::list due to ")+err.what());
+		}
+	}
+
+/*****************************************************
+Methods of class ValueCoder<std::vector<ValueParam> >:
+*****************************************************/
+
+template <class ValueParam>
+inline
+std::string
+ValueCoder<std::vector<ValueParam> >::encode(
+	const std::vector<ValueParam>& value)
+	{
+	std::string result;
+	result.push_back('(');
+	
+	for(typename std::vector<ValueParam>::const_iterator it=value.begin();it!=value.end();++it)
+		{
+		if(it!=value.begin())
+			{
+			/* Add a separator: */
+			result.push_back(',');
+			result.push_back(' ');
+			}
+		
+		/* Encode the next element: */
+		result.append(ValueCoder<ValueParam>::encode(*it));
+		}
+	
+	result.push_back(')');
+	return result;
+	}
+
+template <class ValueParam>
+inline
+std::vector<ValueParam>
+ValueCoder<std::vector<ValueParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		std::vector<ValueParam> result;
+		const char* cPtr=start;
+
+		/* Check for opening parenthesis: */
+		if(cPtr==end||*cPtr!='(')
+			throw DecodingError("missing opening parenthesis");
+		++cPtr;
+		cPtr=skipWhitespace(cPtr,end);
+		
+		/* Decode all elements: */
+		while(cPtr!=end&&*cPtr!=')')
+			{
+			/* Check for comma separator: */
+			if(!result.empty())
+				cPtr=checkSeparator(',',cPtr,end);
+			
+			/* Decode next element: */
+			result.push_back(ValueCoder<ValueParam>::decode(cPtr,end,&cPtr));
+			cPtr=skipWhitespace(cPtr,end);
+			}
+		
+		/* Check for closing parenthesis: */
+		if(cPtr==end)
+			throw DecodingError("missing closing parenthesis");
+		++cPtr;
+
+		if(decodeEnd!=0)
+			*decodeEnd=cPtr;
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to std::vector due to ")+err.what());
+		}
+	}
+
+}

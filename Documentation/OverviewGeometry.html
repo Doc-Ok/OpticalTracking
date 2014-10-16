@@ -1,0 +1,210 @@
+<HTML>
+<HEAD>
+<TITLE>Geometry -- Templatized Geometry Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Geometry&nbsp;-- Templatized Geometry Library</H1>
+
+The Geometry library provides an extensive set of generic classes to simplify many aspects of geometry programming. It contains the types and operations defining linear, affine, and projective spaces, a hierarchy of geometric transformations from translations to fully projective transformations, geometric objects such as spheres and cylinders with direct support for ray casting, classes implementing several types of parametric curves and surfaces, and several spatial data structures. All classes are as generic as possible to enable integrating them closely with applications that require geometric operations in spaces of different dimensions, and with different underlying scalar types.
+
+<H2>Header Files</H2>
+
+The header files in the templatized geometry library can be grouped according to function.
+<DL>
+<DT>Basic Geometry Classes</DT>
+<DD>Classes implementing the basics of linear, affine, and homogenous spaces.</DD>
+
+<DT>Transformation Classes</DT>
+<DD>Classes implementing linear, affine, and projective transformations with increasing levels of restrictions to ensure validity of operations. Covers range from pure translations and rotations to fully general projective transformations.</DD>
+
+<DT>Geometric Object Classes</DT>
+<DD>Classes implementing geometric objects such as spheres and cylinders, with transformation operations and direct support for ray casting.</DD>
+
+<DT>Spatial Data Structure Classes</DT>
+<DD>Classes implementing several common spatial data structures.</DD>
+
+<DT>Miscellaneous Support Classes</DT>
+<DD>Classes providing assorted functionality, such as endianness conversion of geometry objects and encoding/decoding of geometry objects to/from human-readable strings.</DD>
+</DL>
+
+<H3>Basic Geometry Classes</H3>
+
+<DL>
+<DT>ComponentArray.h</DT>
+<DD>ComponentArray is a class describing a one-dimensional fixed-size array of scalars, templatized by scalar type and array size. It implements the common aspects shared by vectors, affine points, and homogeneous vectors, but does not have geometric semantics.</DD>
+
+<DT>Vector.h</DT>
+<DD>Vector is a class describing vectors, in the sense of elements of a linear or vector space. It is templatized by scalar type and the vector space dimension. The Vector class supports the full set of vector space operations and semantics.</DD>
+
+<DT>Point.h</DT>
+<DD>Point is a class describing affine points, templatized by the scalar type and the dimension of the underlying vector space. The Point class supports the full set of affine space operations and semantics, and interacts with the compatible Vector class.</DD>
+
+<DT>AffineCombiner.h</DT>
+<DD>AffineCombiner is a class ensuring the semantics of affine combination of arbitrary numbers of affine points. It is templatized by the scalar type and the dimension of the vector space underlying its affine space. The AffineCombiner class guarantees that any weighted sum of affine points is affine, i.e., that the weights add up to one.</DD>
+
+<DT>HVector.h</DT>
+<DD>HVector is a class describing homogeneous vectors, templatized by the scalar type and the dimension of the projective space. The HVector class supports the full set of projective space operations and semantics, and interacts with the compatible Vector and Point classes.</DD>
+
+<DT>MatrixHelperFunctions.h</DT>
+<DD>MatrixHelperFunctions contains functions assisting in the implementation of the Matrix class. It is not meant to be used directly by client code.</DD>
+
+<DT>Matrix.h</DT>
+<DD>Matrix is a class representing rectangular matrices, templatized by scalar type, number of rows, and number of columns. It is mostly used internally in the implementation of affine and projective transformations, but it can be used directly by client code. The Matrix class supports the full set of vector space operations and semantics on matrices, and the full set of operations and semantics of linear maps working on ComponentArray objects. The Matrix class does not directly support transformation semantics for vectors, affine points, and homogeneous vectors; those are proviced by the transformation classes using matrices.</DD>
+
+<DT>Rotation.h</DT>
+<DD>Rotation is a class representing n-dimensional rotations, i.e., elements of the n-dimensional special orthogonal group. It is templatized by the scalar type and the dimension of the underlying space. Rotation.h currently only implements 2D rotations (represented by a rotation angle in radians) and 3D rotations (represented by a quaternion). The Rotation class supports the full set of transformation operations and semantics for vectors, affine points, and homogeneous vectors. It is mostly used internally in the implementation of transformations containing rotations, but it can be used directly by client code.</DD>
+</DL>
+
+<H3>Transformation Classes</H3>
+
+<DL>
+<DT>TranslationTransformation.h</DT>
+<DD>The TranslationTransformation class represents pure translations as transformations. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>RotationTransformation.h</DT>
+<DD>The RotationTransformation class represents pure rotations as transformations. It is templatized by the scalar type and the dimension of the underlying space. The RotationTransformation class is fully generic, but it is currently only available for 2D and 3D spaces due to the limitations of the underlying Rotation class.</DD>
+
+<DT>OrthonormalTransformation.h</DT>
+<DD>The OrthonormalTransformation class represents transformations composed of a single rotation around the origin followed by a single translation, i.e., rigid body transformations. It is templatized by the scalar type and the dimension of the underlying space. The OrthonormalTransformation class is fully generic, but it is currently only available for 2D and 3D spaces due to the limitations of the underlying Rotation class.</DD>
+
+<DT>UniformScalingTransformation.h</DT>
+<DD>The UniformScalingTransformation class represents pure uniform scalings as transformations. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>OrthogonalTransformation.h</DT>
+<DD>The OrthogonalTransformation class represents transformations composed of a single uniform scaling around the origin followed by a single rotation around the origin followed by a single translation. It is templatized by the scalar type and the dimension of the underlying space. The OrthonormalTransformation class is fully generic, but it is currently only available for 2D and 3D spaces due to the limitations of the underlying Rotation class.</DD>
+
+<DT>ScalingTransformation.h</DT>
+<DD>The ScalingTransformation class represents pure non-uniform scalings along the primary axes as transformations. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>AffineTransformation.h</DT>
+<DD>The AffineTransformation class represents general affine transformations. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>ProjectiveTransformation.h</DT>
+<DD>The ProjectiveTransformation class represents general projective transformations. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+</DL>
+
+<H3>Geometric Object Classes</H3>
+
+<DL>
+<DT>Ray.h</DT>
+<DD>Ray is a class describing rays in affine space, defined by an affine starting point and a direction vector. It is templatized by the scalar type and the dimension of the vector space.</DD>
+
+<DT>HitResult.h</DT>
+<DD>HitResult is a class storing the result of an intersection query between a ray and a geometric object. It is templatized by the scalar type of the underlying space.</DD>
+
+<DT>SolidHitResult.h</DT>
+<DD>SolidHitResult is a class derived from HitResult, storing the result of an intersection query between a ray and a &quot;solid&quot; geometric object, i.e., one that has a well-defined inside. It is templatized by the scalar type of the underlying space.</DD>
+
+<DT>Plane.h</DT>
+<DD>Plane is a class describing hyperplanes or half-spaces in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Plane class supports transformation of planes with general affine or any more restrictive transformations.</DD>
+
+<DT>Sphere.h</DT>
+<DD>Sphere is a class describing spheres in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Sphere class supports transformation of spheres with orthogonal or any more restrictive transformations.</DD>
+
+<DT>Cylinder.h</DT>
+<DD>Cylinder is a class describing truncated upright circular cylinders in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Cylinder class supports transformation of cylinders with orthogonal or any more restrictive transformations.</DD>
+
+<DT>Cone.h</DT>
+<DD>Cone is a class describing truncated upright circular cones in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Cone class supports transformation of cones with orthogonal or any more restrictive transformations.</DD>
+
+<DT>Paraboloid.h</DT>
+<DD>Paraboloid is a class describing upright circular paraboloids in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Paraboloid class supports transformation of paraboloids with orthogonal or any more restrictive transformations.</DD>
+
+<DT>Box.h</DT>
+<DD>Box is a class describing axis-aligned boxes in affine space. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>Polygon.h</DT>
+<DD>Polygon is a class describing planar polygons in affine space. It is templatized by the scalar type and the dimension of the underlying space. The Polygon class supports point-in-polygon tests for arbitrary polygons, clipping for convex polygons, and transformation of polygons with arbitrary transformations.</DD>
+
+<DT>SplineCurve.h</DT>
+<DD>SplineCurve is a class representing parametric non-uniform B-spline curves in affine space. It is templatized by the scalar type and the dimension of the underlying space. The SplineCurve class supports transformation of curves with arbitrary transformations.</DD>
+
+<DT>SplinePatch.h</DT>
+<DD>SplinePatch is a class representing parametric non-uniform rectangular tensor-product B-spline surface patches in affine space. It is templatized by the scalar type and the dimension of the underlying space. The SplinePatch class supports transformation of surface patches with arbitrary transformations.</DD>
+
+<DT>BSpline</DT>
+<DD>BSpline is a fully generic class to implement non-rational and rational B-spline curves, surfaces, etc. It is parametrized by the control point type, allowing affine or projective points, and additional attributes to be interpolated along with the control point position. A second parameter defines the tensor dimension, i.e., curves for dimension=1, surfaces for dimension=2, etc.</DD>
+</DL>
+
+<H3>Geodesy Support Classes</H3>
+
+<DL>
+<DT>Geoid</DT>
+<DD>Geoid is a class representing reference ellipsoids used to define coordinate transformations in geodesy. It serves as a central place to define the somewhat complex math to convert between common coordinate systems.</DD>
+
+<DT>AlbersEqualAreaProjection</DT>
+<DD>AlbersEqualAreaProjection is a class representing the Albers equal-area conic projection as a horizontal datum.</DD>
+
+<DT>LambertConformalProjection</DT>
+<DD>LambertConformalProjection is a class representing the Lambert conformal conic projection as a horizontal datum.</DD>
+
+<DT>TransverseMercatorProjection</DT>
+<DD>TransverseMercatorProjection is a class representing generic transverse Mercator projections as horizontal datums.</DD>
+
+<DT>UTMProjection</DT>
+<DD>UTMProjection is a class representing the Universal Transverse Mercator projection as a horizontal datum, using higher-accuracy formulae for forward and inverse projections.</DD>
+
+<DT>GeoCoordinateSystem</DT>
+<DD>GeoCoordinateSystem is an abstract base class representing geodetic coordinate systems such as geocentric Cartesian coordinates, geographic (latitude/longitude) coordinate systems on arbitrary reference ellipsoids, and projected coordinate systems such as Universal Transverse Mercator.</DD>
+</DL>
+
+<H3>Spatial Data Structure Classes</H3>
+
+<DL>
+<DT>PointPicker.h</DT>
+<DD>PointPicker is a functor class to pick a point from a container based on distance from a query point. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>RayPicker.h</DT>
+<DD>RayPicker is a functor class to pick a point from a container based on distance along a query ray, with the constraint that the point has to lie within a cone of given apex angle around the ray. It is templatized by the scalar type and the dimension of the underlying space.</DD>
+
+<DT>ValuedPoint.h</DT>
+<DD>ValuedPoint is a class derived from the Point class, describing an affine point with a single associated data value of arbitrary type. It is templatized by the underlying point type and the type of associated data value.</DD>
+
+<DT>ClosePointSet.h</DT>
+<DD>ClosePointSet is a class storing the results of nearest-neighbor queries in spatial data structures. It is templatized by the type of the stored points, with the assumption that the stored point type is derived from class Point.</DD>
+
+<DT>PointOctree.h</DT>
+<DD>PointOctree is a class implementing an octree of points in affine space. It is templatized by the scalar type of the underlying space, and by the type of points stored in the octree, with the assumption that the stored point type is derived from class Point and its underlying vector space has the same scalar type and is three-dimensional. The PointOctree class is deprecated and superceded by PointTwoNTree.</DD>
+
+<DT>PointKdTree.h</DT>
+<DD>PointKdTree is a class representing kd-trees of affine points, templatized by the scalar type and the dimension of the underlying space and the type of stored points, with the assumption that the stored point type is derived from class Point and matches the underlying space. The PointKdTree class supports incremental insertion of points, and efficient nearest-neighbor lookup. The PointKdTree class is deprecated and superceded by either PointTwoNTree (if dynamic insertion/removal is required) or ArrayKdTree.</DD>
+
+<DT>PointTwoNTree.h</DT>
+<DD>PointTwoNTree is a class representing 2<SUP>n</SUP>-trees of affine points. It is templatized by the type of points stored in the tree, with the assumption that the stored point type is derived from class Point. The PointTwoNTree class supports dynamic insertion and removal of points using client-specified node split and merge thresholds, and efficient nearest-neighbor lookup.</DD>
+
+<DT>ArrayKdTree.h</DT>
+<DD>ArrayKdTree is a class representing memory-efficient kd-trees of affine points. It is templatized by the type of points stored in the tree, with the assumption that the stored point type is derived from class Point. The ArrayKdTree class was designed for optimal memory and run-time efficiency. It does not allow dynamic insertion/removal of points, but it stores any given point set with zero memory overhead and traversal-optimized memory layout.</DD>
+
+<DT>PolygonMesh.h</DT>
+<DD>PolygonMesh is an experimental class representing meshes of planar convex polygons using a split-edge data structure, with arbitrary additional data associated with every vertex, edge, and face. It is not yet completely implemented.</DD>
+</DL>
+
+<H3>Miscellanous Support Classes</H3>
+
+<DL>
+<DT>Random.h</DT>
+<DD>Random.h contains functions to create random points and vectors according to a variety of probability distributions.</DD>
+
+<DT>Endianness.h</DT>
+<DD>Endianness.h contains specialized versions of the Misc::EndiannessSwapper class for several geometry data types.</DD>
+
+<DT>IntersectionTests.h</DT>
+<DD>IntersectionTests.h contains functions to test for intersections between various geometric objects.</DD>
+
+<DT>OutputOperators.h</DT>
+<DD>OutputOperators.h contains basic std::ostream-compatible output operators for many geometry classes. The output operators respect the current stream settings for number format, precision, and width, are simple to parse when reading, but not especially pretty.</DD>
+
+<DT>GeometryMarshallers.h</DT>
+<DD>GeometryMarshallers.h contains specialized versions of the Misc::Marshaller class for several geometry data types.</DD>
+
+<DT>GeometryValueCoders.h</DT>
+<DD>GeometryValueCoders.h contains specialized versions of the Misc::ValueCoder class for several geometry data types.</DD>
+
+<DT>LinearUnit.h</DT>
+<DD>LinearUnit is a class to define common units of length measurements and their conversions.</DD>
+</DL>
+
+</BODY>
+</HTML>

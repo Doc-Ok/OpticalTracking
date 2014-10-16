@@ -1,0 +1,280 @@
+/***********************************************************************
+ArrayValueCoders - Generic value coder classes for standard C-style
+arrays with fixed or dynamic array sizes or array wrapper classes.
+Copyright (c) 2004-2013 Oliver Kreylos
+
+This file is part of the Miscellaneous Support Library (Misc).
+
+The Miscellaneous Support Library is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+The Miscellaneous Support Library is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Miscellaneous Support Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define MISC_ARRAYVALUECODERS_IMPLEMENTATION
+
+#include <Misc/ArrayValueCoders.h>
+
+#include <Misc/FixedArray.h>
+
+namespace Misc {
+
+/*********************************************************************
+Methods of class CFixedArrayValueCoder<ElementParam,numElementsParam>:
+*********************************************************************/
+
+template <class ElementParam,size_t numElementsParam>
+inline
+std::string
+CFixedArrayValueCoder<ElementParam,numElementsParam>::encode(
+	const ElementParam* elements)
+	{
+	std::string result;
+	result.push_back('(');
+	
+	for(size_t i=0;i<numElementsParam;++i)
+		{
+		if(i>0)
+			{
+			/* Add a separator: */
+			result.push_back(',');
+			result.push_back(' ');
+			}
+		
+		/* Encode the next element: */
+		result.append(ValueCoder<ElementParam>::encode(elements[i]));
+		}
+	
+	result.push_back(')');
+	return result;
+	}
+
+template <class ElementParam,size_t numElementsParam>
+inline
+ElementParam*
+CFixedArrayValueCoder<ElementParam,numElementsParam>::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd) const
+	{
+	const char* cPtr=start;
+	
+	/* Check for opening parenthesis: */
+	if(cPtr==end||*cPtr!='(')
+		throw DecodingError("missing opening parenthesis");
+	++cPtr;
+	cPtr=skipWhitespace(cPtr,end);
+	
+	/* Decode elements: */
+	for(size_t i=0;i<numElementsParam;++i)
+		{
+		/* Check for comma separator: */
+		if(i>0)
+			cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Decode the next element: */
+		elements[i]=ValueCoder<ElementParam>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		}
+	
+	/* Check for closing parenthesis: */
+	if(cPtr==end||*cPtr!=')')
+		throw DecodingError("missing closing parenthesis");
+	++cPtr;
+	
+	if(decodeEnd!=0)
+		*decodeEnd=cPtr;
+	
+	return elements;
+	}
+
+/***************************************************
+Methods of class FixedArrayValueCoder<ElementParam>:
+***************************************************/
+
+template <class ElementParam>
+inline
+std::string
+FixedArrayValueCoder<ElementParam>::encode(
+	const ElementParam* elements) const
+	{
+	std::string result;
+	result.push_back('(');
+	
+	for(size_t i=0;i<numElements;++i)
+		{
+		if(i>0)
+			{
+			/* Add a separator: */
+			result.push_back(',');
+			result.push_back(' ');
+			}
+		
+		/* Encode the next element: */
+		result.append(ValueCoder<ElementParam>::encode(elements[i]));
+		}
+	
+	result.push_back(')');
+	return result;
+	}
+
+template <class ElementParam>
+inline
+ElementParam*
+FixedArrayValueCoder<ElementParam>::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd) const
+	{
+	const char* cPtr=start;
+	
+	/* Check for opening parenthesis: */
+	if(cPtr==end||*cPtr!='(')
+		throw DecodingError("missing opening parenthesis");
+	++cPtr;
+	cPtr=skipWhitespace(cPtr,end);
+	
+	/* Decode elements: */
+	for(size_t i=0;i<numElements;++i)
+		{
+		/* Check for comma separator: */
+		if(i>0)
+			cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Decode the next element: */
+		elements[i]=ValueCoder<ElementParam>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		}
+	
+	/* Check for closing parenthesis: */
+	if(cPtr==end||*cPtr!=')')
+		throw DecodingError("missing closing parenthesis");
+	++cPtr;
+	
+	if(decodeEnd!=0)
+		*decodeEnd=cPtr;
+	
+	return elements;
+	}
+
+/*****************************************************
+Methods of class DynamicArrayValueCoder<ElementParam>:
+*****************************************************/
+
+template <class ElementParam>
+inline
+std::string
+DynamicArrayValueCoder<ElementParam>::encode(
+	const ElementParam* elements) const
+	{
+	std::string result;
+	result.push_back('(');
+	
+	for(size_t i=0;i<numElements;++i)
+		{
+		if(i>0)
+			{
+			/* Add a separator: */
+			result.push_back(',');
+			result.push_back(' ');
+			}
+		
+		/* Encode the next element: */
+		result.append(ValueCoder<ElementParam>::encode(elements[i]));
+		}
+	
+	result.push_back(')');
+	return result;
+	}
+
+template <class ElementParam>
+inline
+ElementParam*
+DynamicArrayValueCoder<ElementParam>::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	/* Reset the element counter: */
+	size_t maxNumElements=numElements;
+	numElements=0;
+	
+	const char* cPtr=start;
+	
+	/* Check for opening parenthesis: */
+	if(cPtr==end||*cPtr!='(')
+		throw DecodingError("missing opening parenthesis");
+	++cPtr;
+	cPtr=skipWhitespace(cPtr,end);
+	
+	/* Decode elements: */
+	while(cPtr!=end&&*cPtr!=')')
+		{
+		/* Check for comma separator: */
+		if(numElements>0)
+			cPtr=checkSeparator(',',cPtr,end);
+		
+		/* Decode the next element: */
+		if(numElements<maxNumElements)
+			elements[numElements]=ValueCoder<ElementParam>::decode(cPtr,end,&cPtr);
+		else
+			ValueCoder<ElementParam>::decode(cPtr,end,&cPtr);
+		cPtr=skipWhitespace(cPtr,end);
+		++numElements;
+		}
+	
+	/* Check for closing parenthesis: */
+	if(cPtr==end)
+		throw DecodingError("missing closing parenthesis");
+	++cPtr;
+	
+	if(decodeEnd!=0)
+		*decodeEnd=cPtr;
+	
+	return elements;
+	}
+
+/****************************************************************
+Methods of class ValueCoder<FixedArray<ElementParam,sizeParam> >:
+****************************************************************/
+
+template <class ElementParam,int sizeParam>
+inline
+std::string
+ValueCoder<FixedArray<ElementParam,sizeParam> >::encode(
+	const FixedArray<ElementParam,sizeParam>& value)
+	{
+	return CFixedArrayValueCoder<ElementParam,sizeParam>::encode(value.getElements());
+	}
+
+template <class ElementParam,int sizeParam>
+inline
+FixedArray<ElementParam,sizeParam>
+ValueCoder<FixedArray<ElementParam,sizeParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		FixedArray<ElementParam,sizeParam> result;
+		CFixedArrayValueCoder<ElementParam,sizeParam>(result.getElements()).decode(start,end,decodeEnd);
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Misc::FixedArray due to ")+err.what());
+		}
+	}
+
+}

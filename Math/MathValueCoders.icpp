@@ -1,0 +1,77 @@
+/***********************************************************************
+MathValueCoders - Value coder classes for math objects.
+Copyright (c) 2009-2010 Oliver Kreylos
+
+This file is part of the Templatized Math Library (Math).
+
+The Templatized Math Library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Math Library is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Math Library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+***********************************************************************/
+
+#define MATH_MATHVALUECODERS_IMPLEMENTATION
+
+#include <Math/MathValueCoders.h>
+
+#include <Misc/StandardValueCoders.h>
+#include <Misc/ArrayValueCoders.h>
+#include <Math/BrokenLine.h>
+
+namespace Misc {
+
+/***********************************************************
+Methods of class ValueCoder<Math::BrokenLine<ScalarParam> >:
+***********************************************************/
+
+template <class ScalarParam>
+inline
+std::string
+ValueCoder<Math::BrokenLine<ScalarParam> >::encode(
+	const Math::BrokenLine<ScalarParam>& value)
+	{
+	/* Encode the broken line as a vector with four elements: */
+	ScalarParam components[4];
+	components[0]=value.min;
+	components[1]=value.deadMin;
+	components[2]=value.deadMax;
+	components[3]=value.max;
+	return CFixedArrayValueCoder<ScalarParam,4>::encode(components);
+	}
+
+template <class ScalarParam>
+inline
+Math::BrokenLine<ScalarParam>
+ValueCoder<Math::BrokenLine<ScalarParam> >::decode(
+	const char* start,
+	const char* end,
+	const char** decodeEnd)
+	{
+	try
+		{
+		/* Decode the broken line as a vector with four elements: */
+		ScalarParam components[4];
+		CFixedArrayValueCoder<ScalarParam,4>(components).decode(start,end,decodeEnd);
+		Math::BrokenLine<ScalarParam> result;
+		result.min=components[0];
+		result.deadMin=components[1];
+		result.deadMax=components[2];
+		result.max=components[3];
+		return result;
+		}
+	catch(std::runtime_error err)
+		{
+		throw DecodingError(std::string("Unable to convert ")+std::string(start,end)+std::string(" to Math::BrokenLine due to ")+err.what());
+		}
+	}
+
+}

@@ -1,0 +1,140 @@
+<HTML>
+<HEAD>
+<TITLE>GLWrappers -- OpenGL Wrapper Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>GLWrappers&nbsp;-- OpenGL Wrapper Library</H1>
+
+The GLWrappers library contains classes and functions providing a C++ wrapper around the OpenGL API. This wrapper is an essential layer to support type-generic OpenGL programming in higher-level libraries. As a secondary function, the wrapper layer changes the design of the OpenGL API slightly to replace indexed enumerants such as light enums with proper indices, and to replace generic enumerants with function-specific enumerants to enable compile-time parameter checking.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>GLScalarLimits.h</DT>
+<DD>GLScalarLimits is a templatized class describing traits and limits of integral OpenGL data types, to allow automatic conversion between integral types.</DD>
+
+<DT>GLScalarConverter.h</DT>
+<DD>GLScalarConverter is a templatized class supporting type conversions between integral OpenGL types that require a value transformation, for example the range transformation when converting a color with GLubyte components to a color with GLfloat components.</DD>
+
+<DT>GLColor.h</DT>
+<DD>GLColor is a class describing an RGB color value with optional opacity component. It is templatized by color component type and number of components, with implementations provided for all integral OpenGL types used to describe colors, and three and four components. The GLColor class provides convenient constructors with automatic conversions between component types, comparison operations, and componentwise access. Objects of class GLColor can be used as parameters for all OpenGL functions that expect color values.</DD>
+
+<DT>GLColorOperations.h</DT>
+<DD>GLColorOperations.h provides operations on objects of class GLColor. It supports the full range of RGB vector space operations, componentwise multiplication, and clamping of floating-point component colors.</DD>
+
+<DT>GLVector.h</DT>
+<DD>GLVector is a class describing three-dimensional homogeneous vectors, templatized by scalar type and number of actually stored vector components. Vector components not stored are treated as 0 for the second and third components, and as 1 for the fourth component. The GLVector class provides convenient constructors with automatic conversions between component types, comparison operations, and componentwise access. Objects of class GLVector can be used as parameters for all OpenGL functions that expect vector values, such as texture coordinates, normal vectors, and vertex positions.</DD>
+
+<DT>GLBox.h</DT>
+<DD>GLBox is a class representing three-dimensional axis-aligned rectangular boxes, templatized by the scalar type of the vector space and the number of actually stored vector components. Vector components not stored are treated as 0 for the second and third components, and as 1 for the fourth component.</DD>
+
+<DT>GLTexCoordTemplates.h</DT>
+<DD>GLTexCoordTemplates.h provides overloaded versions of the glTexCoord family of functions.</DD>
+
+<DT>GLMultiTexCoordTemplates.h</DT>
+<DD>GLMultiTexCoordTemplates.h provides overloaded versions of the glMultiTexCoord family of functions. The target parameter of glMultiTexCoord has been replaced with the index of the target texture unit.</DD>
+
+<DT>GLColorTemplates.h</DT>
+<DD>GLColorTemplates.h provides overloaded versions of the glColor family of functions.</DD>
+
+<DT>GLSecondaryColorTemplates.h</DT>
+<DD>GLSecondaryColorTemplates.h provides overloaded versions of the glSecondaryColor family of functions.</DD>
+
+<DT>GLNormalTemplates.h</DT>
+<DD>GLNormalTemplates.h provides overloaded versions of the glNormal family of functions.</DD>
+
+<DT>GLVertexTemplates.h</DT>
+<DD>GLVertexTemplates.h provides overloaded versions of the glVertex family of functions.</DD>
+
+<DT>GLIndexTemplates.h</DT>
+<DD>GLIndexTemplates.h provides overloaded versions of the glIndex family of functions.</DD>
+
+<DT>GLPrimitiveTemplates.h</DT>
+<DD>GLPrimitiveTemplates.h is a container header file that includes all other header files declaring overloaded versions of functions related to vertex property specification.</DD>
+
+<DT>GLVertexArrayTemplates.h</DT>
+<DD>GLVertexArrayTemplates.h provides overloaded versions of the gl...Pointer families of functions.</DD>
+
+<DT>GLVertexArrayParts.h</DT>
+<DD>GLVertexArrayParts is a class containing an enumerated type for all vertex properties that can be stored in vertex arrays, and functions to enable/disable client state related to vertex arrays.</DD>
+
+<DT>GLVertex.h</DT>
+<DD>GLVertex is a class representing the full state of a vertex, including texture coordinates, colors, normal vectors, and vertex positions. The class is templatized by the scalar types and numbers of components for each vertex property. GLVertex.h provides specialized versions of the GLVertex class for any subset of vertex properties, storing only those properties. The GLVertex class contains the stored properties as a GLVertexArrayParts mask. Finally, GLVertex.h provides overloaded versions of the glVertex and glVertexPointer family of functions, specifying all stored vertex properties at once.</DD>
+
+<DT>GLFogEnums.h</DT>
+<DD>GLFogEnums is a class containing enumerated types for enumerants related to fog specification.</DD>
+
+<DT>GLFogTemplates.h</DT>
+<DD>GLFogTemplates.h contains overloaded versions of the glFog family of functions, and functions providing a more type-safe interface to the fog API.</DD>
+
+<DT>GLFog.h</DT>
+<DD>GLFog is a class representing the entire state of the fog API. It provides convenient constructors for all types of fog, and overloaded glFog and glGetFog functions to set/get the full fog state at once.</DD>
+
+<DT>GLLightEnums.h</DT>
+<DD>GLLightEnums is a class containing enumerated types for enumerants related to light source specification.</DD>
+
+<DT>GLLightTemplates.h</DT>
+<DD>GLLightTemplates.h contains overloaded versions of the glLight family of functions, and functions providing a more type-safe interface to the light source API.</DD>
+
+<DT>GLLight.h</DT>
+<DD>GLLight is a class representing the entire state of a light source. It provides convenient constructors, and overloaded glLight and glGetLight functions to set/get the full state of a light source at once.</DD>
+
+<DT>GLLightModelEnums.h</DT>
+<DD>GLLightModelEnums is a class containing enumerated types for enumerants related to light model specification.</DD>
+
+<DT>GLLightModelTemplates.h</DT>
+<DD>GLLightModelTemplates.h contains overloaded versions of the glLightModel family of functions, and functions providing a more type-safe interface to the light model API.</DD>
+
+<DT>GLMaterialEnums.h</DT>
+<DD>GLMaterialEnums is a class containing enumerated types for enumerants related to material property specification.</DD>
+
+<DT>GLMaterialTemplates.h</DT>
+<DD>GLMaterialTemplates.h contains overloaded versions of the glMaterial family of functions, and functions providing a more type-safe interface to the material property API.</DD>
+
+<DT>GLMaterial.h</DT>
+<DD>GLMaterial is a class representing the entire state of a material property. It provides convenient constructors, and overloaded glMaterial and glGetMaterial functions to set/get the full state of a material property at once.</DD>
+
+<DT>GLTexEnvEnums.h</DT>
+<DD>GLTexEnvEnums is a class containing enumerated types for enumerants related to texture environment specification.</DD>
+
+<DT>GLTexEnvTemplates.h</DT>
+<DD>GLTexEnvTemplates.h contains overloaded versions of the glTexEnv family of functions, and functions providing a more type-safe interface to the texture environment API.</DD>
+
+<DT>GLMatrixEnums.h</DT>
+<DD>GLMatrixEnums is a class containing an enumerated type for enumerants related to matrix specification.</DD>
+
+<DT>GLMatrixTemplates.h</DT>
+<DD>GLMatrixTemplates.h contains overloaded versions of the matrix manipulation functions.</DD>
+
+<DT>GLMiscTemplates.h</DT>
+<DD>GLMiscTemplates.h contains overloaded versions of various OpenGL functions that have not yet been separated into their own header files.</DD>
+
+<DT>GLGetTemplates.h</DT>
+<DD>GLGetTemplates.h contains overloaded versions of the glGet family of functions.</DD>
+
+<DT>GLGetPrimitiveTemplates.h</DT>
+<DD>GLGetPrimitiveTemplates.h contains overloaded versions of the glGet family of functions as related to querying current vertex attributes.</DD>
+
+<DT>GLGetFogTemplates.h</DT>
+<DD>GLGetFogTemplates.h contains overloaded versions of the glGet family of functions as related to querying current fog state.</DD>
+
+<DT>GLGetLightTemplates.h</DT>
+<DD>GLGetLightTemplates.h contains overloaded versions of the glGetLight family of functions, and overloaded functions providing a more type-safe interface to the light source query API.</DD>
+
+<DT>GLGetMaterialTemplates.h</DT>
+<DD>GLGetMaterialTemplates.h contains overloaded versions of the glGetMaterial family of functions, and overloaded functions providing a more type-safe interface to the material property query API.</DD>
+
+<DT>GLGetTexEnvTemplates.h</DT>
+<DD>GLGetTexEnvTemplates.h contains overloaded versions of the glGetTexEnv family of functions, and overloaded functions providing a more type-safe interface to the texture environment query API.</DD>
+
+<DT>GLGetMatrixTemplates.h</DT>
+<DD>GLGetMatrixTemplates.h contains overloaded versions of the glGet family of functions as related to querying current matrix state.</DD>
+
+<DT>GLGetMiscTemplates.h</DT>
+<DD>GLGetMiscTemplates.h contains overloaded versions of the glGet family of functions as related to querying parts of OpenGL state that are not yet handled by separate header files.</DD>
+</DL>
+
+</BODY>
+</HTML>

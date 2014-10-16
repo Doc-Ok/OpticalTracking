@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<TITLE>Plugins -- Plugin Handling Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Plugins&nbsp;-- Plugin Handling Library</H1>
+
+The Plugins library provides a framework supporting dynamic loading of C++ classes from shared libraries or bundles (henceforth referred to as dynamic shared objects, DSOs). The framework assumes that each DSO contains three components:
+<OL>
+<LI>A plugin class defining all objects that can be dynamically created from the DSO.</LI>
+
+<LI>A factory class that is responsible for creating and destroying objects of the plugin class. Exactly one object of this class is created when the DSO is first loaded, and persists until the DSO is released. Any factory class must be derived from the Plugins::Factory class contained in the Plugins library.</LI>
+
+<LI>Three global C-linkage functions used to initialize/release DSOs. These functions are used as well-known entry points by the DSO loader to create/destroy the factory object representing the DSO. The three functions are:
+<DL>
+<DT>extern "C" void resolve&lt;DSO&nbsp;name&gt;Dependencies(Plugins::FactoryManager&lt;FactoryBase&gt;&amp;)</DT>
+<DD>This function is optional, and, if present, will be called before the DSO's factory object is created. It was meant to provide a hook to load other plugins the current one depends on, but this functionality is currently not supported by the dynamic loader on any supported operating system.</DD>
+
+<DT>extern "C" ToolFactory* create&lt;DSO&nbsp;name&gt;Factory(Plugins::FactoryManager&lt;FactoryBase&gt;&amp;)</DT>
+<DD>This function creates the factory object representing the DSO, and gives the DSO a hook to insert that object into the factory manager's class hierarchy.</DD>
+
+<DT>extern "C" void destroy&lt;DSO&nbsp;name&gt;Factory(FactoryBase*)</DT>
+<DD>This function destroys the factory object pointed to by the argument when the DSO it represents is released.</DD>
+</DL></LI>
+</OL>
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>FunctionPointerHack.h</DT>
+<DD>FunctionPointerHack.h defines a global function as a trick to cast a pointer returned from dlsym into a function pointer without triggering a compiler warning.</DD>
+
+<DT>ObjectLoader.h</DT>
+<DD>ObjectLoader is a more light-weight implementation of dynamic linking, in which the inheritance hierarchy of loaded classes is not explicitly represented in memory, and in which there is no distinction between factory classes and object classes.</DD>
+
+<DT>Factory.h</DT>
+<DD>Factory is the base class for all factory classes.</DD>
+
+<DT>FactoryManager.h</DT>
+<DD>FactoryManager is a class used to manage DSOs and factory classes for related plugin classes, i.e., plugin classes derived from a common base class. It is templatized by the type of the common base class. A factory manager loads factory classes given by name, and maps those class names to DSO names using a printf-style DSO name template and a list of search directories using a Misc::FileLocator. The FactoryManager's constructor splits the given DSO name template into a base directory and pattern, and initializes the file locator's search path list with the base directory. Additional search paths can be added later.</DD>
+</DL>
+
+</BODY>
+</HTML>

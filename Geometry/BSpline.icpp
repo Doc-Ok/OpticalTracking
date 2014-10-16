@@ -1,0 +1,202 @@
+/***********************************************************************
+BSpline - Class for n-dimensional non-uniform B-spline curves or
+surfaces.
+Copyright (c) 2011 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_BSPLINE_IMPLEMENTATION
+
+#include <Geometry/BSpline.h>
+
+namespace Geometry {
+
+/************************
+Methods of class BSpline:
+************************/
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Index
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::findInterval(
+	const typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Parameter& u) const
+	{
+	Index result;
+	
+	/* Search in each tensor direction's knot vector independently: */
+	for(int td=0;td<tensorDimension;++td)
+		{
+		/* Perform binary search on the valid range of the knot vector: */
+		int l=degree[td]-1;
+		int r=points.getSize(td)-1;
+		while(r-l>1)
+			{
+			int t=(l+r)>>1;
+			if(u[td]<knots[td][t])
+				r=t;
+			else
+				l=t;
+			}
+		
+		result[td]=l;
+		}
+	
+	return result;
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+void
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::deBoorStage(
+	int tensorDirection,
+	typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Scalar u,
+	typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::EvaluationCache* cache,
+	int iv,
+	const typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Index& subDegree) const
+	{
+	/* Iterate over all control point array rows along the current tensor direction: */
+	Index cpRow(0);
+	int numRows=1;
+	for(int i=0;i<tensorDimension;++i)
+		if(i!=tensorDirection)
+			numRows*=subDegree[i]+1;
+	for(;numRows>0;--numRows)
+		{
+		const Scalar* knotBase=&knots[tensorDirection][iv-subDegree[tensorDirection]+1];
+		ControlPoint* pointBase=cache->points.getArray();
+		int* cprPtr=cpRow.getComponents()+(tensorDimension-1);
+		int stride=1;
+		int pointStride=0;
+		for(int i=tensorDimension-1;i>=0;--i)
+			{
+			if(i!=tensorDirection)
+				pointBase+=stride*(*(cprPtr--));
+			else
+				pointStride=stride;
+			stride*=cache->points.getSize(i);
+			}
+		
+		for(int j=0;j<subDegree[tensorDirection];++j,++knotBase,pointBase+=pointStride)
+			{
+			Scalar alpha=(u-knotBase[0])/(knotBase[subDegree[tensorDirection]]-knotBase[0]);
+			Interpolator::interpolate(pointBase[0],pointBase[pointStride],alpha,pointBase[0]);
+			}
+		
+		/* Go to the next row: */
+		int incDim;
+		for(incDim=tensorDimension-1;incDim>0&&(incDim==tensorDirection||cpRow[incDim]>=subDegree[incDim]);--incDim)
+			cpRow[incDim]=0;
+		++cpRow[incDim];
+		}
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::BSpline(
+	const typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Index& sDegree,
+	const typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Index& sNumPoints)
+	:degree(sDegree),
+	 points(sNumPoints)
+	{
+	/* Create the knot vectors: */
+	for(int td=0;td<tensorDimension;++td)
+		knots[td]=new Scalar[points.getSize(td)+degree[td]-1];
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::BSpline(
+	const BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>& source)
+	:degree(source.degree),
+	 points(source.points)
+	{
+	/* Create and copy the knot vectors: */
+	for(int td=0;td<tensorDimension;++td)
+		{
+		int numKnots=points.getSize(td)+degree[td]-1;
+		knots[td]=new Scalar[numKnots];
+		for(int i=0;i<numKnots;++i)
+			knots[td][i]=source.knots[td][i];
+		}
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>&
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::operator=(
+	const BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>& source)
+	{
+	if(this!=&source)
+		{
+		/* Copy the degree and control point array: */
+		degree=source.degree;
+		points=source.points;
+		
+		/* Copy the knot vectors: */
+		for(int td=0;td<tensorDimension;++td)
+			{
+			delete[] knots[td];
+			int numKnots=points.getSize(td)+degree[td]-1;
+			knots[td]=new Scalar[numKnots];
+			for(int i=0;i<numKnots;++i)
+				knots[td][i]=source.knots[td][i];
+			}
+		}
+	return *this;
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::~BSpline(
+	void)
+	{
+	/* Destroy the knot vectors: */
+	for(int td=0;td<tensorDimension;++td)
+		delete knots[td];
+	}
+
+template <class ControlPointParam,int tensorDimensionParam,class InterpolatorParam>
+inline
+typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::ControlPoint
+BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::evaluate(
+	const typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::Parameter& u,
+	typename BSpline<ControlPointParam,tensorDimensionParam,InterpolatorParam>::EvaluationCache* cache) const
+	{
+	/* Find the knot interval containing the given parameter: */
+	Index iv=findInterval(u);
+	
+	/* Copy the control points defining the respective curve segment into the evaluation cache: */
+	Index rank=degree+Index(1);
+	Index cpBase=iv-degree+Index(1);
+	for(Index i(0);i[0]<rank[0];i.preInc(rank))
+		cache->points[i]=points[cpBase+i];
+	
+	/* Perform steps of deBoor's algorithm along the tensor directions: */
+	Index subDegree=degree;
+	for(int td=0;td<tensorDimension;++td)
+		{
+		for(;subDegree[td]>0;--subDegree[td])
+			deBoorStage(td,u[td],cache,iv[td],subDegree);
+		}
+	
+	/* Return the result point: */
+	return *cache->points.getArray();
+	}
+
+}

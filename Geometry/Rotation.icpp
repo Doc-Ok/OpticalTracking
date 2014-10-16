@@ -1,0 +1,278 @@
+/***********************************************************************
+Rotation - Class for 2D and 3D rotations.
+Copyright (c) 2002-2013 Oliver Kreylos
+
+This file is part of the Templatized Geometry Library (TGL).
+
+The Templatized Geometry Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Templatized Geometry Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with the Templatized Geometry Library; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307 USA
+***********************************************************************/
+
+#define GEOMETRY_ROTATION_IMPLEMENTATION
+
+#include <Geometry/Rotation.h>
+
+#include <Math/Constants.h>
+#include <Geometry/Matrix.h>
+
+namespace Geometry {
+
+/*********************************
+Static elements of class Rotation:
+*********************************/
+
+template <class ScalarParam,int dimensionParam>
+const int Rotation<ScalarParam,dimensionParam>::dimension;
+template <class ScalarParam>
+const int Rotation<ScalarParam,2>::dimension;
+template <class ScalarParam>
+const Rotation<ScalarParam,2> Rotation<ScalarParam,2>::identity; // Default constructor creates identity transformation!
+template <class ScalarParam>
+const int Rotation<ScalarParam,3>::dimension;
+template <class ScalarParam>
+const Rotation<ScalarParam,3> Rotation<ScalarParam,3>::identity; // Default constructor creates identity transformation!
+
+/*************************
+Methods of class Rotation:
+*************************/
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3> Rotation<ScalarParam,3>::rotateFromTo(const typename Rotation<ScalarParam,3>::Vector& from,const typename Rotation<ScalarParam,3>::Vector& to)
+	{
+	/* Calculate the angle between the two vectors: */
+	Scalar cosAngle=(from*to)/(from.mag()*to.mag());
+	
+	if(cosAngle<Scalar(-1)+Math::Constants<Scalar>::epsilon)
+		{
+		/* Rotate by 180 degrees around an arbitrary vector orthogonal to the from vector: */
+		Vector axis=Geometry::normal(from);
+		return Rotation(axis,Math::Constants<Scalar>::pi);
+		}
+	else if(cosAngle<=Scalar(1)-Math::Constants<Scalar>::epsilon)
+		{
+		/* Rotate around a vector orthogonal to both vectors, by the angle between the vectors: */
+		Vector axis=from^to;
+		return Rotation(axis,Math::acos(cosAngle));
+		}
+	else
+		return identity;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3> Rotation<ScalarParam,3>::fromBaseVectors(const typename Rotation<ScalarParam,3>::Vector& xAxis,const typename Rotation<ScalarParam,3>::Vector& yAxis)
+	{
+	/* Create an orthonormal coordinate frame retaining the x vector and adjusting the y vector: */
+	Vector x=normalize(xAxis);
+	Vector z=normalize(x^yAxis);
+	Vector y=z^x;
+	
+	/* Convert the frame into a linear matrix and create a rotation from that: */
+	Geometry::Matrix<Scalar,3,3> rotationMatrix;
+	for(int i=0;i<3;++i)
+		{
+		rotationMatrix(i,0)=x[i];
+		rotationMatrix(i,1)=y[i];
+		rotationMatrix(i,2)=z[i];
+		}
+	return fromMatrix(rotationMatrix);
+	}
+
+template <class ScalarParam>
+template <class MatrixParam>
+inline
+Rotation<ScalarParam,3> Rotation<ScalarParam,3>::fromMatrix(const MatrixParam& matrix)
+	{
+	/* Convert the matrix into a unit quaternion: */
+	Scalar q[4];
+	Scalar trace=Scalar(matrix(0,0))+Scalar(matrix(1,1))+Scalar(matrix(2,2))+Scalar(1);
+	if(trace>Scalar(2))
+		{
+		Scalar s=Math::sqrt(trace);
+		q[3]=Math::div2(s);
+		s=Scalar(0.5)/s;
+		q[0]=(Scalar(matrix(2,1))-Scalar(matrix(1,2)))*s;
+		q[1]=(Scalar(matrix(0,2))-Scalar(matrix(2,0)))*s;
+		q[2]=(Scalar(matrix(1,0))-Scalar(matrix(0,1)))*s;
+		}
+	else
+		{
+		/* Find the largest diagonal entry of the matrix: */
+		int i=0;
+		if(matrix(1,1)>matrix(i,i))
+			i=1;
+		if(matrix(2,2)>matrix(i,i))
+			i=2;
+		int j=(i+1)%3;
+		int k=(i+2)%3;
+		
+		Scalar s=Math::sqrt(Scalar(matrix(i,i))-(Scalar(matrix(j,j))+Scalar(matrix(k,k)))+Scalar(1));
+		q[i]=Math::div2(s);
+		s=Scalar(0.5)/s;
+		q[j]=(Scalar(matrix(j,i))+Scalar(matrix(i,j)))*s;
+		q[k]=(Scalar(matrix(i,k))+Scalar(matrix(k,i)))*s;
+		q[3]=(Scalar(matrix(k,j))-Scalar(matrix(j,k)))*s;
+		}
+	
+	/* Normalize the quaternion anyways, to always get a valid rotation: */
+	Scalar l=Math::sqrt(Math::sqr(q[0])+Math::sqr(q[1])+Math::sqr(q[2])+Math::sqr(q[3]));
+	return Rotation(q[0]/l,q[1]/l,q[2]/l,q[3]/l);
+	}
+
+template <class ScalarParam>
+inline
+typename Rotation<ScalarParam,3>::Vector Rotation<ScalarParam,3>::getDirection(int j) const
+	{
+	Vector result;
+	Scalar wx,wy,wz,xx,xy,xz,yy,yz,zz;
+	switch(j)
+		{
+		case 0:
+			wy=Math::mul2(q[3]*q[1]);
+			wz=Math::mul2(q[3]*q[2]);
+			xy=Math::mul2(q[0]*q[1]);
+			xz=Math::mul2(q[0]*q[2]);
+			yy=Math::mul2(q[1]*q[1]);
+			zz=Math::mul2(q[2]*q[2]);
+			result[0]=Scalar(1)-yy-zz;
+			result[1]=xy+wz;
+			result[2]=xz-wy;
+			break;
+		
+		case 1:
+			wx=Math::mul2(q[3]*q[0]);
+			wz=Math::mul2(q[3]*q[2]);
+			xx=Math::mul2(q[0]*q[0]);
+			xy=Math::mul2(q[0]*q[1]);
+			yz=Math::mul2(q[1]*q[2]);
+			zz=Math::mul2(q[2]*q[2]);
+			result[0]=xy-wz;
+			result[1]=Scalar(1)-xx-zz;
+			result[2]=yz+wx;
+			break;
+		
+		default:
+			wx=Math::mul2(q[3]*q[0]);
+			wy=Math::mul2(q[3]*q[1]);
+			xx=Math::mul2(q[0]*q[0]);
+			xz=Math::mul2(q[0]*q[2]);
+			yy=Math::mul2(q[1]*q[1]);
+			yz=Math::mul2(q[1]*q[2]);
+			result[0]=xz+wy;
+			result[1]=yz-wx;
+			result[2]=Scalar(1)-xx-yy;
+			break;
+		}
+	
+	return result;
+	}
+
+template <class ScalarParam>
+template <class MatrixParam>
+inline
+MatrixParam& Rotation<ScalarParam,3>::writeMatrix(MatrixParam& matrix) const
+	{
+	Scalar x2=Math::mul2(q[0]);
+	Scalar y2=Math::mul2(q[1]);
+	Scalar z2=Math::mul2(q[2]);
+	Scalar wx=q[3]*x2;
+	Scalar wy=q[3]*y2;
+	Scalar wz=q[3]*z2;
+	Scalar xx=q[0]*x2;
+	Scalar xy=q[0]*y2;
+	Scalar xz=q[0]*z2;
+	Scalar yy=q[1]*y2;
+	Scalar yz=q[1]*z2;
+	Scalar zz=q[2]*z2;
+	matrix(0,0)=typename MatrixParam::Scalar(Scalar(1)-yy-zz);
+	matrix(1,0)=typename MatrixParam::Scalar(xy+wz);
+	matrix(2,0)=typename MatrixParam::Scalar(xz-wy);
+	matrix(0,1)=typename MatrixParam::Scalar(xy-wz);
+	matrix(1,1)=typename MatrixParam::Scalar(Scalar(1)-xx-zz);
+	matrix(2,1)=typename MatrixParam::Scalar(yz+wx);
+	matrix(0,2)=typename MatrixParam::Scalar(xz+wy);
+	matrix(1,2)=typename MatrixParam::Scalar(yz-wx);
+	matrix(2,2)=typename MatrixParam::Scalar(Scalar(1)-xx-yy);
+	return matrix;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3>& Rotation<ScalarParam,3>::operator*=(const Rotation<ScalarParam,3>& other)
+	{
+	Scalar nX=q[1]*other.q[2]-q[2]*other.q[1]+q[3]*other.q[0]+q[0]*other.q[3];
+	Scalar nY=q[2]*other.q[0]-q[0]*other.q[2]+q[3]*other.q[1]+q[1]*other.q[3];
+	Scalar nZ=q[0]*other.q[1]-q[1]*other.q[0]+q[3]*other.q[2]+q[2]*other.q[3];
+	q[3]=q[3]*other.q[3]-q[0]*other.q[0]-q[1]*other.q[1]-q[2]*other.q[2];
+	q[0]=nX;
+	q[1]=nY;
+	q[2]=nZ;
+	return *this;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3>& Rotation<ScalarParam,3>::leftMultiply(const Rotation<ScalarParam,3>& other)
+	{
+	Scalar nX=other.q[1]*q[2]-other.q[2]*q[1]+other.q[3]*q[0]+other.q[0]*q[3];
+	Scalar nY=other.q[2]*q[0]-other.q[0]*q[2]+other.q[3]*q[1]+other.q[1]*q[3];
+	Scalar nZ=other.q[0]*q[1]-other.q[1]*q[0]+other.q[3]*q[2]+other.q[2]*q[3];
+	q[3]=other.q[3]*q[3]-other.q[0]*q[0]-other.q[1]*q[1]-other.q[2]*q[2];
+	q[0]=nX;
+	q[1]=nY;
+	q[2]=nZ;
+	return *this;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3> operator*(const Rotation<ScalarParam,3>& r1,const Rotation<ScalarParam,3>& r2)
+	{
+	Rotation<ScalarParam,3> result;
+	result.q[0]=r1.q[1]*r2.q[2]-r1.q[2]*r2.q[1]+r1.q[3]*r2.q[0]+r1.q[0]*r2.q[3];
+	result.q[1]=r1.q[2]*r2.q[0]-r1.q[0]*r2.q[2]+r1.q[3]*r2.q[1]+r1.q[1]*r2.q[3];
+	result.q[2]=r1.q[0]*r2.q[1]-r1.q[1]*r2.q[0]+r1.q[3]*r2.q[2]+r1.q[2]*r2.q[3];
+	result.q[3]=r1.q[3]*r2.q[3]-r1.q[0]*r2.q[0]-r1.q[1]*r2.q[1]-r1.q[2]*r2.q[2];
+	return result;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3>& Rotation<ScalarParam,3>::operator/=(const Rotation<ScalarParam,3>& other)
+	{
+	Scalar nX=q[1]*other.q[2]-q[2]*other.q[1]+q[3]*other.q[0]-q[0]*other.q[3];
+	Scalar nY=q[2]*other.q[0]-q[0]*other.q[2]+q[3]*other.q[1]-q[1]*other.q[3];
+	Scalar nZ=q[0]*other.q[1]-q[1]*other.q[0]+q[3]*other.q[2]-q[2]*other.q[3];
+	q[3]=-q[3]*other.q[3]-q[0]*other.q[0]-q[1]*other.q[1]-q[2]*other.q[2];
+	q[0]=nX;
+	q[1]=nY;
+	q[2]=nZ;
+	return *this;
+	}
+
+template <class ScalarParam>
+inline
+Rotation<ScalarParam,3> operator/(const Rotation<ScalarParam,3>& r1,const Rotation<ScalarParam,3>& r2)
+	{
+	Rotation<ScalarParam,3> result;
+	result.q[0]=r1.q[1]*r2.q[2]-r1.q[2]*r2.q[1]+r1.q[3]*r2.q[0]-r1.q[0]*r2.q[3];
+	result.q[1]=r1.q[2]*r2.q[0]-r1.q[0]*r2.q[2]+r1.q[3]*r2.q[1]-r1.q[1]*r2.q[3];
+	result.q[2]=r1.q[0]*r2.q[1]-r1.q[1]*r2.q[0]+r1.q[3]*r2.q[2]-r1.q[2]*r2.q[3];
+	result.q[3]=-r1.q[3]*r2.q[3]-r1.q[0]*r2.q[0]-r1.q[1]*r2.q[1]-r1.q[2]*r2.q[2];
+	return result;
+	}
+
+}

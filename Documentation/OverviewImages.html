@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+<TITLE>Images -- RGB Image Abstraction Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Images&nbsp;-- RGB Image Abstraction Library</H1>
+
+The Images library contains classes and functions to represent RGB images, and to load/save images from/to a variety of image file formats.
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the Images library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>Image.h</DT>
+<DD>Image is a base class to represent images in variable formats. The Image class uses a handle mechanism to allow passing images as values to functions, and return images from functions without incurring copy overhead.</DD>
+
+<DT>RGBImage.h</DT>
+<DD>RGBImage is a class to represent color images in RGB format, derived from the Image base class.</DD>
+
+<DT>RGBAImage.h</DT>
+<DD>RGBAImage is a class to represent color images with alpha channels in RGBA format, derived from the Image base class.</DD>
+
+<DT>GetImageFileSize.h</DT>
+<DD>GetImageFileSize.h contains a function to extract the pixel size from image files with reading the minimum required amount of information from the image file. The function detects the format of the given image file by its extension, and supports PPM, PNG, and JPEG image formats (the latter two rely on the libpng and libjpeg libraries, respectively).</DD>
+
+<DT>ReadPNMImage.h</DT>
+<DD>ReadPNMImage.h contains functions to read RGB images from image files in Portable AnyMap format over an IO::File abstraction.</DD>
+
+<DT>ReadPNGImage.h</DT>
+<DD>ReadPNGImage.h contains functions to read RGB or RGBA images from image files in PNG format over an IO::File abstraction. It relies on the libpng library.</DD>
+
+<DT>ReadJPEGImage.h</DT>
+<DD>ReadJPEGImage.h contains functions to read RGB images from image files in JPEG format over an IO::File abstraction. It relies on the libjpeg library.</DD>
+
+<DT>ReadTIFFImage.h</DT>
+<DD>ReadTIFFImage.h contains functions to read RGB or RGBA images from image files in TIFF format over an IO::SeekableFile abstraction. It relies on the libtiff library.</DD>
+
+<DT>ReadImageFile.h</DT>
+<DD>ReadImageFile.h contains a function to read RGB images from image files. The function detects the format of the given image file by its extension, and supports PPM, PNG, and JPEG image formats (the latter two rely on the libpng and libjpeg libraries, respectively). It also contains a function to read RGBA images from cursor files in Xcursor format.</DD>
+
+<DT>WriteImageFile.h</DT>
+<DD>WriteImageFile.h contains a function to write RGB images to image files. The function detects the format of the given image file by its extension, and supports PPM, PNG, and JPEG image formats (the latter two rely on the libpng and libjpeg libraries, respectively).</DD>
+
+<DT>ExtractBlobs.h</DT>
+<DD>ExtractBlobs.h contains functions to extract &quot;blobs,&quot; sets of connected foreground pixels, from images with arbitrary pixel types. The header file defines several blob structures, each holding one specific additional attribute, that can be stacked on top of each other to collect multiple attributes at the same time.</DD>
+</DL>
+
+</BODY>
+</HTML>

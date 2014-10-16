@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<TITLE>Sound -- Low-Level Sound Library</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Sound&nbsp;-- Low-Level Sound Library</H1>
+
+The Low-Level Sound Library provides facilities to record and play back sound using low-level sound APIs (ALSA on Linux, CoreAudio and AudioToolbox on Mac OS&nbsp;X).
+
+<H2>Header Files</H2>
+
+<DL>
+<DT>Config.h</DT>
+<DD>Config.h defines configuration-dependent macros used by the Sound library. It should be included by client code that wants to make decisions based on the availability of optional features.</DD>
+
+<DT>SoundDataFormat.h</DT>
+<DD>SoundDataFormat is a structure to represent sound data formats (sample resolution, number of channels, sample rate, etc.) in an API-independent format.</DD>
+
+<DT>Linux/ALSAPCMDevice.h</DT>
+<DD>Abstraction class for PCM devices as represented by the Advanced Linux Sound Architecture (ALSA) library. This class only exists on Linux, and only if sound support was enabled in the Vrui makefile.</DD>
+
+<DT>Linux/SpeexEncoder.h</DT>
+<DD>SpeexEncoder is a class to encode sound collected from an ALSA PCM device and compress it using the SPEEX spoken sound codec. This class only exists on Linux, and only if the SPEEX codec library is found on the system.</DD>
+
+<DT>Linux/SpeexDecoder.h</DT>
+<DD>SpeexDecoder is a class to uncompress sound that was compressed using the SPEEX spoken sound codec. This class only exists on Linux, and only if the SPEEX codec library is found on the system.</DD>
+
+<DT>SoundRecorder.h</DT>
+<DD>SoundRecorder is a simple class to record sound from a sound capture device to a sound file in several supported formats. The class currently supports raw and WAV files under Linux, and WAV and AIFF files under Mac OS&nbsp;X.</DD>
+
+<DT>SoundPlayer.h</DT>
+<DD>SoundPlayer is a simple class to play sound from a sound file on a sound playback device.</DD>
+</DL>
+
+</BODY>
+</HTML>
