@@ -59,6 +59,8 @@ class IMUTracker
 	Scalar driftCorrectionWeight; // Weight for orientation drift correction based on gravity and magnetic flux direction
 	bool magnetometer; // Flag whether the IMU device has a built-in magnetometer
 	bool useMagnetometer; // Flag whether to use the IMU device's built-in magnetometer for orientation drift correction
+	unsigned int numInitialSamples; // Number of samples still to collect to initialize tracking state
+	Vector initialAccel,initialMag; // Vectors to initialize tracking state by accumulating initial samples
 	Threads::TripleBuffer<State> states; // Triple buffer of tracking states communicated to the main thread
 	
 	/* Constructors and destructors: */

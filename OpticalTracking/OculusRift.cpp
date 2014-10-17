@@ -55,11 +55,15 @@ void OculusRift::initialize(void)
 			deviceType=UNKNOWN;
 		}
 	
+	/* Initialize other state: */
+	opticalTracking=false;
+	keepSampling=false;
+	
 	/* Initialize the calibration data structure: */
 	calibrationData.accelerometerFactor=Scalar(0.0001);
 	calibrationData.gyroscopeFactor=Scalar(0.0001);
 	calibrationData.magnetometer=true;
-	calibrationData.magnetometerFactor=Scalar(0.001);
+	calibrationData.magnetometerFactor=Scalar(0.0001);
 	calibrationData.timeStepFactor=Scalar(0.001);
 	
 	/* Try loading calibration data from a calibration file: */
@@ -177,7 +181,7 @@ void* OculusRift::samplingThreadMethod(void)
 					}
 				else
 					{
-					KeepAliveDK2 ka(keepAliveInterval);
+					KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
 					ka.set(*this,0x0000U);
 					}
 				
@@ -249,15 +253,13 @@ class OculusRiftMatcher:public RawHID::Device::DeviceMatcher
 }
 
 OculusRift::OculusRift(unsigned int deviceIndex)
-	:RawHID::Device(OculusRiftMatcher(),deviceIndex),
-	 keepSampling(false)
+	:RawHID::Device(OculusRiftMatcher(),deviceIndex)
 	{
 	initialize();
 	}
 
 OculusRift::OculusRift(const std::string& deviceSerialNumber)
-	:RawHID::Device(OculusRiftMatcher(),deviceSerialNumber),
-	 keepSampling(false)
+	:RawHID::Device(OculusRiftMatcher(),deviceSerialNumber)
 	{
 	initialize();
 	}
@@ -316,50 +318,62 @@ void OculusRift::stopStreaming(void)
 
 void OculusRift::startOpticalTracking(void)
 	{
-	/* Run the initialization sequence of unknown semantics: */
-	Unknown0x02 unknown0x02(0x01U);
-	unknown0x02.get(*this);
-	unknown0x02.value=0x01U;
-	unknown0x02.set(*this,0x0000U);
-	
-	/* Turn on the LEDs: */
-	LEDControl ledControl;
-	ledControl.get(*this);
-	ledControl.pattern=1;
-	ledControl.enable=true;
-	ledControl.autoIncrement=true;
-	ledControl.useCarrier=true;
-	ledControl.syncInput=false;
-	ledControl.vsyncLock=false;
-	ledControl.customPattern=false;
-	ledControl.exposureLength=350U;
-	ledControl.frameInterval=16666U;
-	ledControl.vsyncOffset=0U;
-	ledControl.dutyCycle=127U;
-	ledControl.set(*this,0x0000U);
+	if(deviceType==DK1&&!opticalTracking)
+		{
+		/* Run the initialization sequence of unknown semantics: */
+		Unknown0x02 unknown0x02(0x01U);
+		unknown0x02.get(*this);
+		unknown0x02.value=0x01U;
+		unknown0x02.set(*this,0x0000U);
+		
+		/* Turn on the LEDs: */
+		LEDControl ledControl;
+		ledControl.get(*this);
+		ledControl.pattern=1; // This should have been 0, but I ran the wrong pattern when noting down LED IDs
+		ledControl.enable=true;
+		ledControl.autoIncrement=true;
+		ledControl.useCarrier=true;
+		ledControl.syncInput=false;
+		ledControl.vsyncLock=false;
+		ledControl.customPattern=false;
+		ledControl.exposureLength=350U;
+		ledControl.frameInterval=16666U;
+		ledControl.vsyncOffset=0U;
+		ledControl.dutyCycle=127U;
+		ledControl.set(*this,0x0000U);
+		
+		/* Remember that optical tracking is on to send the appropriate keep-alive report: */
+		opticalTracking=true;
+		}
 	}
 
 void OculusRift::stopOpticalTracking(void)
 	{
-	/* Turn off the LEDs: */
-	LEDControl ledControl;
-	ledControl.get(*this);
-	ledControl.pattern=0;
-	ledControl.enable=false;
-	ledControl.autoIncrement=false;
-	ledControl.useCarrier=false;
-	ledControl.syncInput=false;
-	ledControl.vsyncLock=false;
-	ledControl.customPattern=false;
-	ledControl.exposureLength=350U;
-	ledControl.frameInterval=16666U;
-	ledControl.vsyncOffset=0U;
-	ledControl.dutyCycle=127U;
-	ledControl.set(*this,0x0000U);
-	
-	/* Run the shutdown sequence of unknown semantics: */
-	Unknown0x02 unknown0x02(0x01U);
-	unknown0x02.get(*this);
-	unknown0x02.value=0x13U;
-	unknown0x02.set(*this,0x0000U);
+	if(deviceType==DK1&&opticalTracking)
+		{
+		/* Turn off the LEDs: */
+		LEDControl ledControl;
+		ledControl.get(*this);
+		ledControl.pattern=0;
+		ledControl.enable=false;
+		ledControl.autoIncrement=false;
+		ledControl.useCarrier=false;
+		ledControl.syncInput=false;
+		ledControl.vsyncLock=false;
+		ledControl.customPattern=false;
+		ledControl.exposureLength=350U;
+		ledControl.frameInterval=16666U;
+		ledControl.vsyncOffset=0U;
+		ledControl.dutyCycle=127U;
+		ledControl.set(*this,0x0000U);
+		
+		/* Run the shutdown sequence of unknown semantics: */
+		Unknown0x02 unknown0x02(0x01U);
+		unknown0x02.get(*this);
+		unknown0x02.value=0x13U;
+		unknown0x02.set(*this,0x0000U);
+		
+		/* Remember that optical tracking is off to send the appropriate keep-alive report: */
+		opticalTracking=false;
+		}
 	}

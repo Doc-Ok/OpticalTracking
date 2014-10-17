@@ -524,8 +524,8 @@ unsigned int LEDPosition::get(RawHID::Device& device)
 Methods of class KeepAliveDK2:
 *****************************/
 
-KeepAliveDK2::KeepAliveDK2(unsigned int sInterval)
-	:interval(sInterval)
+KeepAliveDK2::KeepAliveDK2(bool sKeepLeds,unsigned int sInterval)
+	:keepLeds(sKeepLeds),interval(sInterval)
 	{
 	}
 
@@ -544,7 +544,8 @@ unsigned int KeepAliveDK2::get(RawHID::Device& device)
 	/* Unpack the packet buffer: */
 	pktBuffer.skip<Misc::UInt8>(1); // Skip report ID
 	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
-	pktBuffer.skip<Misc::UInt8>(1); // Skip unknown byte
+	unsigned int flags=pktBuffer.read<Misc::UInt8>();
+	keepLeds=flags==0x0bU;
 	interval=pktBuffer.read<Misc::UInt16>();
 	
 	return commandId;
@@ -559,7 +560,7 @@ void KeepAliveDK2::set(RawHID::Device& device,unsigned int commandId) const
 	/* Pack the packet buffer: */
 	pktBuffer.write<Misc::UInt8>(0x11U); // Report ID
 	pktBuffer.write<Misc::UInt16>(commandId);
-	pktBuffer.write<Misc::UInt8>(0x0bU); // Unknown byte
+	pktBuffer.write<Misc::UInt8>(keepLeds?0x0bU:0x01U);
 	pktBuffer.write<Misc::UInt16>(interval);
 	
 	/* Write the keep-alive interval feature report: */

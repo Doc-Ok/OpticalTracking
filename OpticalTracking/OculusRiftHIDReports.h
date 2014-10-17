@@ -183,10 +183,11 @@ class KeepAliveDK2 // Feature report 0x11: Get/set keep-alive interval for Rift 
 	{
 	/* Elements: */
 	public:
+	bool keepLeds; // Flag to keep the LEDs going as well; if enabled, no IMU data will be sent if LEDs are off
 	unsigned int interval; // Keep-alive interval in ms
 	
 	/* Constructors and destructors: */
-	KeepAliveDK2(unsigned int sInterval =10000U); // Creates a keep-alive interval with the given timeout
+	KeepAliveDK2(bool sKeepLeds =true,unsigned int sInterval =10000U); // Creates a keep-alive interval with the given LED flag and timeout
 	
 	/* Methods: */
 	unsigned int get(RawHID::Device& device); // Reads keep-alive interval from given raw HID device; returns command ID

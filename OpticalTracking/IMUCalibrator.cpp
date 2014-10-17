@@ -408,9 +408,18 @@ void IMUCalibrator::eventCallback(EventID eventId,Vrui::InputDevice::ButtonCallb
 				
 				/* Write a nominal gyroscope calibration matrix: */
 				double gyroFactor=imu->getCalibrationData().gyroscopeFactor;
+				{
+				Threads::Mutex::Lock gyroLock(gyroMutex);
 				for(int i=0;i<3;++i)
-					for(int j=0;j<4;++j)
+					{
+					for(int j=0;j<3;++j)
 						calibFile->write<Misc::Float64>(i==j?gyroFactor:0.0);
+					if(gyroNumSamples>0)
+						calibFile->write<Misc::Float64>(double(gyroSum[i])/double(gyroNumSamples)*gyroFactor);
+					else
+						calibFile->write<Misc::Float64>(0);
+					}
+				}
 				
 				/* Write the magnetometer calibration matrix: */
 				for(int i=0;i<3;++i)

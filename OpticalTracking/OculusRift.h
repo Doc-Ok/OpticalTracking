@@ -45,6 +45,7 @@ class OculusRift:public RawHID::Device,public IMU
 	/* Elements: */
 	private:
 	DeviceType deviceType; // Type of Oculus Rift HMD
+	bool opticalTracking; // Flag whether optical tracking is currently enabled
 	Threads::Thread samplingThread; // Thread object for the background sampling thread
 	volatile bool keepSampling; // Flag to shut down the background sampling thread
 	

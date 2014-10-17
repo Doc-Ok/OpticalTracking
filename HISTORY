@@ -4251,3 +4251,5 @@ Vrui-3.2-001:
 - Added missing include files in USB/TransferBuffer.h and
   USB/TransferBuffer.cpp.
 - Added initial version of RawHID library to Vrui installation.
+- Added code to properly initialize HMD orientation to OculusRift
+  VRDeviceDaemon module; removed previous fast-start code.

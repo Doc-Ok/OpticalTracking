@@ -33,16 +33,9 @@ IMUTracker::IMUTracker(const IMU& imu)
 	:gravity(9.81),
 	 driftCorrectionWeight(0.0001),
 	 magnetometer(imu.getCalibrationData().magnetometer),
-	 useMagnetometer(magnetometer)
+	 useMagnetometer(magnetometer),
+	 numInitialSamples(10),initialAccel(Vector::zero),initialMag(Vector::zero)
 	{
-	/* Create the initial tracking state: */
-	State& initial=states.startNewValue();
-	initial.linearAcceleration=Vector::zero;
-	initial.linearVelocity=Vector::zero;
-	initial.translation=Vector::zero;
-	initial.angularVelocity=Vector::zero;
-	initial.rotation=Rotation::identity;
-	states.postNewValue();
 	}
 
 void IMUTracker::setGravity(Scalar newGravity)
@@ -63,6 +56,42 @@ void IMUTracker::setUseMagnetometer(bool newUseMagnetometer)
 
 void IMUTracker::integrateSample(const IMU::CalibratedSample& sample)
 	{
+	if(numInitialSamples>0)
+		{
+		/* Accumulate the initial acceleration and magnetic flux vectors: */
+		initialAccel+=sample.accelerometer;
+		initialMag+=sample.magnetometer;
+		
+		--numInitialSamples;
+		if(numInitialSamples==0)
+			{
+			/* Create the initial tracking state: */
+			State& initial=states.startNewValue();
+			initial.linearAcceleration=Vector::zero;
+			initial.linearVelocity=Vector::zero;
+			initial.translation=Vector::zero;
+			initial.angularVelocity=Vector::zero;
+			if(useMagnetometer)
+				{
+				/* Align acceleration vector with +Z and magnetic flux density vector with +X: */
+				initialMag.orthogonalize(initialAccel);
+				initial.rotation=Rotation::fromBaseVectors(initialMag,initialAccel);
+				initial.rotation.leftMultiply(Rotation::rotateX(Math::rad(Scalar(90))));
+				}
+			else
+				{
+				/* Align acceleration vector with +Z: */
+				Vector initialX(1,0,0);
+				initialX.orthogonalize(initialAccel);
+				initial.rotation=Rotation::fromBaseVectors(initialX,initialAccel);
+				initial.rotation.leftMultiply(Rotation::rotateX(Math::rad(Scalar(90))));
+				}
+			states.postNewValue();
+			}
+		
+		return;
+		}
+	
 	/* Get the current and next tracking states: */
 	const State& current=states.getMostRecentValue();
 	State& next=states.startNewValue();

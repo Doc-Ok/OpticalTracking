@@ -337,13 +337,62 @@ void OculusRift::deviceThreadMethod(void)
 	Misc::Timer sampleTimer;
 	double nextKeepAliveTime=keepAliveInterval;
 	
-	/* Start with fast drift correction to quickly initialize the device's orientation; then back off: */
-	Scalar dcw=driftCorrectionWeight*Scalar(100);
-	int numFastSamples=1000; // Go back to slow drift correction after 1000 samples (1 second)
+	/* Collect ten initial samples to create an initial reference frame based on gravity and optionally magnetic north: */
+	Vector mag=Vector::zero;
+	Vector accel=Vector::zero;
+	SensorData sensorData;
+	for(int sample=0;sample<10;++sample)
+		{
+		/* Read a sensor message from the device and create a time stamp: */
+		sensorData.get(oculus);
+		
+		/* Transform magnetic flux density from magnetometer frame to HMD frame: */
+		Vector magSample;
+		for(int i=0;i<3;++i)
+			magSample[i]=magCorrect(i,0)*Scalar(sensorData.mag[0])
+			            +magCorrect(i,1)*Scalar(sensorData.mag[1])
+			            +magCorrect(i,2)*Scalar(sensorData.mag[2])
+			            +magCorrect(i,3);
+		
+		/* Accumulate magnetometer sample: */
+		mag+=magSample;
+		
+		/* Process all accelerometer samples: */
+		unsigned int numSamples=sensorData.numSamples;
+		if(numSamples>3)
+			numSamples=3;
+		for(unsigned int s=0;s<numSamples;++s)
+			{
+			/* Convert raw linear accelerometer measurements from accelerometer frame to HMD frame and m/s^2: */
+			Vector accelSample;
+			for(int i=0;i<3;++i)
+				accelSample[i]=accelCorrect(i,0)*Scalar(sensorData.samples[s].accel[0])
+				              +accelCorrect(i,1)*Scalar(sensorData.samples[s].accel[1])
+				              +accelCorrect(i,2)*Scalar(sensorData.samples[s].accel[2])
+				              +accelCorrect(i,3);
+			
+			/* Accumulate accelerometer sample: */
+			accel+=accelSample;
+			}
+		}
+	
+	/* Create the initial HMD orientation: */
+	if(useMagnetometer)
+		{
+		/* Align acceleration vector with +Y and magnetic flux density vector with +X: */
+		mag.orthogonalize(accel);
+		currentOrientation=Rotation::fromBaseVectors(mag,accel);
+		}
+	else
+		{
+		/* Align acceleration vector with +Y: */
+		Vector x(1,0,0);
+		x.orthogonalize(accel);
+		currentOrientation=Rotation::fromBaseVectors(x,accel);
+		}
 	
 	/* Receive and process sensor data until interrupted: */
 	unsigned int numProcessedSamples=0U;
-	SensorData sensorData;
 	while(keepRunning)
 		{
 		/* Check if the sensor needs waking up: */
@@ -415,7 +464,7 @@ void OculusRift::deviceThreadMethod(void)
 					/* Nudge the current global frame towards the desired global frame, where x points north and y points up: */
 					globalFrame.doInvert();
 					Vector globalRotation=globalFrame.getScaledAxis();
-					currentOrientation.leftMultiply(Rotation::rotateScaledAxis(globalRotation*dcw));
+					currentOrientation.leftMultiply(Rotation::rotateScaledAxis(globalRotation*driftCorrectionWeight));
 					}
 				else
 					{
@@ -425,19 +474,11 @@ void OculusRift::deviceThreadMethod(void)
 					/* Rotate the current orientation's Y axis towards the true vertical: */
 					Rotation globalOffset=Rotation::rotateFromTo(gAccel,Vector(0,1,0));
 					Vector globalRotation=globalOffset.getScaledAxis();
-					currentOrientation.leftMultiply(Rotation::rotateScaledAxis(globalRotation*dcw));
+					currentOrientation.leftMultiply(Rotation::rotateScaledAxis(globalRotation*driftCorrectionWeight));
 					}
 				}
 			}
 		currentOrientation.renormalize();
-		
-		if(numFastSamples>0)
-			{
-			/* Count back until it's time to return to slow drift correction: */
-			numFastSamples-=numSamples;
-			if(numFastSamples<=0)
-				dcw=driftCorrectionWeight;
-			}
 		
 		/* Check if it is time to send new tracker data to the device manager: */
 		numProcessedSamples+=numSamples;

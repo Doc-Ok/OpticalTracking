@@ -173,7 +173,7 @@ void* RiftLEDControl::keepAliveThreadMethod(void)
 				}
 			
 			/* Send a keep-alive report to the device: */
-			KeepAliveDK2 ka(10000);
+			KeepAliveDK2 ka(true,10000);
 			ka.set(rift,0x0000U);
 			}
 		}
