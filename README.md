@@ -13,8 +13,8 @@ Dependencies:
 
 * On Ubuntu:
 $ sudo apt-get install build-essential zlib1g-dev mesa-common-dev libgl1-mesa-dev
-  libglu1-mesa-dev libudev-dev libusb-1.0-0-dev libpng12-dev libjpeg62-dev
-  libtiff4-dev libasound2-dev libdc1394-22-dev libspeex-dev libogg-dev
+  libglu1-mesa-dev libudev-dev libusb-1.0-0-dev libpng12-dev libjpeg-dev
+  libtiff5-dev libasound2-dev libdc1394-22-dev libspeex-dev libogg-dev
   libtheora-dev libbluetooth-dev libopenal-dev
 
 * On Fedora:
