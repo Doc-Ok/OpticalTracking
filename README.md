@@ -40,7 +40,7 @@ $ make
 $ ./bin/LEDFinder <video device name>
 ```
 
-where <video device name> is the Video-4-Linux device name of the tracking
+where &lt;video device name&gt; is the Video-4-Linux device name of the tracking
 camera. This *should* be "Camera DK2", in which case the command line is:
 ```
 $ ./bin/LEDFinder "Camera DK2"
