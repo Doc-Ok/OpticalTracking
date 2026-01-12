@@ -2,7 +2,7 @@
 IMUCalibrator - Simple utility to calibrate an IMU's accelerometer and
 magnetometer readings, and visualize 3-DOF and dead-reckoning 6-DOF
 tracking results.
-Copyright (c) 2013 Oliver Kreylos
+Copyright (c) 2013-2018 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -30,12 +30,13 @@ Boston, MA 02111-1307 USA
 #include <Threads/Mutex.h>
 #include <Threads/TripleBuffer.h>
 #include <IO/File.h>
+#include <IO/OpenFile.h>
+#include <Geometry/OrthogonalTransformation.h>
 #include <GL/gl.h>
 #include <GL/GLMaterialTemplates.h>
 #include <GL/GLModels.h>
 #include <GL/GLGeometryWrappers.h>
 #include <Vrui/Application.h>
-#include <Vrui/OpenFile.h>
 
 #include "IMU.h"
 #include "EllipsoidFitter.h"
@@ -234,24 +235,27 @@ void IMUCalibrator::display(GLContextData& contextData) const
 	if(showAxes)
 		{
 		/* Draw a global coordinate frame: */
+		float shaftRadius=0.25f; // float(Vrui::getUiSize()*Vrui::getInverseNavigationTransformation().getScaling());
+		float length=20.0f; // float(Vrui::getDisplaySize()*Vrui::Scalar(0.5)*Vrui::getInverseNavigationTransformation().getScaling());
+		
 		glPushMatrix();
 		glColor3f(1.0f,0.5f,0.5f);
 		glRotated(90.0,0.0,1.0,0.0);
-		glTranslated(0.0,0.0,2.5);
-		glDrawArrow(0.25f,0.5f,0.75f,5.0f,16);
+		// glTranslated(0.0,0.0,double(length)*0.5);
+		glDrawArrow(shaftRadius,shaftRadius*2.0f,shaftRadius*3.0f,length,16);
 		glPopMatrix();
 		
 		glPushMatrix();
 		glColor3f(0.5f,1.0f,0.5f);
 		glRotated(-90.0,1.0,0.0,0.0);
-		glTranslated(0.0,0.0,2.5);
-		glDrawArrow(0.25f,0.5f,0.75f,5.0f,16);
+		// glTranslated(0.0,0.0,double(length)*0.5);
+		glDrawArrow(shaftRadius,shaftRadius*2.0f,shaftRadius*3.0f,length,16);
 		glPopMatrix();
 		
 		glPushMatrix();
 		glColor3f(0.5f,0.5f,1.0f);
-		glTranslated(0.0,0.0,2.5);
-		glDrawArrow(0.25f,0.5f,0.75f,5.0f,16);
+		// glTranslated(0.0,0.0,double(length)*0.5);
+		glDrawArrow(shaftRadius,shaftRadius*2.0f,shaftRadius*3.0f,length,16);
 		glPopMatrix();
 		}
 	
@@ -324,10 +328,10 @@ void IMUCalibrator::display(GLContextData& contextData) const
 	
 	/* Draw the current accelerometer and magnetometer samples: */
 	glDisable(GL_LIGHTING);
-	const IMU::CalibrationData& cd=imu->getCalibrationData();
+	double accelScale=imu->getAccelerometerScale()*10.0/gravity;
 	
 	glPushMatrix();
-	glScaled(cd.accelerometerFactor,cd.accelerometerFactor,cd.accelerometerFactor);
+	glScaled(accelScale,accelScale,accelScale);
 	
 	glPointSize(5.0f);
 	glBegin(GL_POINTS);
@@ -345,7 +349,8 @@ void IMUCalibrator::display(GLContextData& contextData) const
 	glPopMatrix();
 	
 	glPushMatrix();
-	glScaled(cd.magnetometerFactor,cd.magnetometerFactor,cd.magnetometerFactor);
+	double magScale=imu->getMagnetometerScale()*10.0/magneticFluxDensity;
+	glScaled(magScale,magScale,magScale);
 	
 	glPointSize(5.0f);
 	glBegin(GL_POINTS);
@@ -398,7 +403,7 @@ void IMUCalibrator::eventCallback(EventID eventId,Vrui::InputDevice::ButtonCallb
 				/* Write the calibration matrices to a calibration file: */
 				std::string calibFileName="Calibration-";
 				calibFileName.append(imu->getSerialNumber());
-				IO::FilePtr calibFile=Vrui::openFile(calibFileName.c_str(),IO::File::WriteOnly);
+				IO::FilePtr calibFile=IO::openFile(calibFileName.c_str(),IO::File::WriteOnly);
 				calibFile->setEndianness(Misc::LittleEndian);
 				
 				/* Write the accelerometer calibration matrix: */
@@ -407,15 +412,15 @@ void IMUCalibrator::eventCallback(EventID eventId,Vrui::InputDevice::ButtonCallb
 						calibFile->write<Misc::Float64>(accelCalib.first(i,j)*gravity/accelCalib.second);
 				
 				/* Write a nominal gyroscope calibration matrix: */
-				double gyroFactor=imu->getCalibrationData().gyroscopeFactor;
+				double gyroScale=imu->getGyroscopeScale();
 				{
 				Threads::Mutex::Lock gyroLock(gyroMutex);
 				for(int i=0;i<3;++i)
 					{
 					for(int j=0;j<3;++j)
-						calibFile->write<Misc::Float64>(i==j?gyroFactor:0.0);
+						calibFile->write<Misc::Float64>(i==j?gyroScale:0.0);
 					if(gyroNumSamples>0)
-						calibFile->write<Misc::Float64>(double(gyroSum[i])/double(gyroNumSamples)*gyroFactor);
+						calibFile->write<Misc::Float64>(double(gyroSum[i])/double(gyroNumSamples)*gyroScale);
 					else
 						calibFile->write<Misc::Float64>(0);
 					}

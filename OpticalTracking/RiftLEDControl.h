@@ -1,7 +1,7 @@
 /***********************************************************************
 RiftLEDControl - Vislet class to control the tracking LEDs on an Oculus
 Rift DK2 interactively from inside a Vrui application.
-Copyright (c) 2014 Oliver Kreylos
+Copyright (c) 2014-2019 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -87,8 +87,8 @@ class RiftLEDControl:public Vrui::Vislet
 	/* Methods from Vislet: */
 	public:
 	virtual Vrui::VisletFactory* getFactory(void) const;
-	virtual void disable(void);
-	virtual void enable(void);
+	virtual void enable(bool startup);
+	virtual void disable(bool shutdown);
 	};
 
 #endif

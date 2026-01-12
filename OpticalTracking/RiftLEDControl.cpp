@@ -1,7 +1,7 @@
 /***********************************************************************
 RiftLEDControl - Vislet class to control the tracking LEDs on an Oculus
 Rift DK2 interactively from inside a Vrui application.
-Copyright (c) 2014 Oliver Kreylos
+Copyright (c) 2014-2019 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -97,10 +97,10 @@ void* RiftLEDControl::keepAliveThreadMethod(void)
 	
 	#if 1
 	/* Run some reports: */
-	Unknown0x02 currentUnknown0x02(0x01U);
-	currentUnknown0x02.get(rift);
-	Unknown0x02 unknown0x02(0x01U);
-	unknown0x02.set(rift,0x0000U);
+	SensorConfig currentSensorConfig;
+	currentSensorConfig.get(rift);
+	SensorConfig sensorConfig;
+	sensorConfig.set(rift,0x0000U);
 	#endif
 	
 	/* Send the initial LED control report: */
@@ -384,7 +384,16 @@ Vrui::VisletFactory* RiftLEDControl::getFactory(void) const
 	return factory;
 	}
 
-void RiftLEDControl::disable(void)
+void RiftLEDControl::enable(bool startup)
+	{
+	/* Call the base class method: */
+	Vislet::enable(startup);
+	
+	/* Show the viewer configuration dialog: */
+	Vrui::popupPrimaryWidget(dialogWindow);
+	}
+
+void RiftLEDControl::disable(bool shutdown)
 	{
 	if(dialogWindow!=0)
 		{
@@ -392,13 +401,6 @@ void RiftLEDControl::disable(void)
 		Vrui::popdownPrimaryWidget(dialogWindow);
 		}
 	
-	active=false;
-	}
-
-void RiftLEDControl::enable(void)
-	{
-	/* Show the viewer configuration dialog: */
-	Vrui::popupPrimaryWidget(dialogWindow);
-	
-	active=true;
+	/* Call the base class method: */
+	Vislet::disable(shutdown);
 	}

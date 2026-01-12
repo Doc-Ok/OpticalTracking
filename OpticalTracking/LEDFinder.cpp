@@ -1,7 +1,7 @@
 /***********************************************************************
 LEDFinder - A simple viewer for live video from a video source
 connected to the local computer.
-Copyright (c) 2013-2014 Oliver Kreylos
+Copyright (c) 2013-2025 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -28,15 +28,17 @@ Boston, MA 02111-1307 USA
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include <Misc/ThrowStdErr.h>
+#include <Misc/StdError.h>
 #include <Misc/FunctionCalls.h>
 #include <Misc/Timer.h>
 #include <Misc/CreateNumberedFileName.h>
 #include <Realtime/Time.h>
 #include <IO/File.h>
+#include <IO/OpenFile.h>
 #include <RawHID/BusType.h>
 #include <Math/Math.h>
 #include <Math/Constants.h>
+#include <Math/OutputOperators.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Geometry/OrthonormalTransformation.h>
@@ -56,7 +58,6 @@ Boston, MA 02111-1307 USA
 #include <Video/Linux/OculusRiftDK2VideoDevice.h>
 #include <Video/ImageExtractor.h>
 #include <Vrui/Vrui.h>
-#include <Vrui/OpenFile.h>
 #include <Vrui/VisletManager.h>
 
 #include "RiftLEDControl.h"
@@ -68,7 +69,7 @@ Boston, MA 02111-1307 USA
 
 #define SAVEFRAMES 0
 
-#define SAVEBLOBS 1
+#define SAVEBLOBS 0
 #if SAVEBLOBS
 std::ofstream blobFile;
 #endif
@@ -101,7 +102,7 @@ void LEDFinder::videoFrameCallback(const Video::FrameBuffer* frameBuffer)
 	static Realtime::TimePointMonotonic frameTimer;
 	Realtime::TimeVector delta=frameTimer.setAndDiff();
 	if(delta.tv_nsec>=100000000) // First frame after tracking was disabled
-		frameIndex=9;
+		frameIndex=0;
 	else if(delta.tv_nsec>=25000000) // One frame was dropped
 		++frameIndex;
 	
@@ -147,13 +148,15 @@ void LEDFinder::videoFrameCallback(const Video::FrameBuffer* frameBuffer)
 	#if SAVEFRAMES
 	
 	/* Write the just-extracted frame to a greyscale PPM image: */
+	static unsigned int frameNumber=0;
 	char fileName[256];
-	snprintf(fileName,sizeof(fileName),"Frames/Frame%04u.pgm",frame.frameIndex);
-	IO::FilePtr ppmFile=Vrui::openFile(fileName,IO::File::WriteOnly);
+	snprintf(fileName,sizeof(fileName),"Frames/Frame%04u.pgm",frameNumber);
+	IO::FilePtr ppmFile=IO::openFile(fileName,IO::File::WriteOnly);
 	static char header[]="P5\n752 480\n255\n";
 	ppmFile->write(header,strlen(header));
 	for(int y=0;y<videoFormat.size[1];++y)
 		ppmFile->write(frame.frame+(videoFormat.size[1]-1-y)*videoFormat.size[0],videoFormat.size[0]);
+	++frameNumber;
 	
 	#endif
 	}
@@ -198,6 +201,7 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 		if(!runBlobExtractorThread)
 			break;
 		
+		// DEBUGGING
 		// Realtime::TimePointMonotonic processingTimer;
 		
 		/* Process the most recent video frame: */
@@ -206,6 +210,7 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 		
 		typedef Images::CentroidBlob<Images::BboxBlob<Images::Blob<Misc::UInt8> > > Blob;
 		BlobForegroundSelector bfs(112);
+		#if 1 // Extract blobs and create blob image
 		std::vector<Blob> blobs=Images::extractBlobs<Blob>(frameSize,videoFrames.getLockedValue().frame,bfs,Blob::Creator(),blobIdImage);
 		
 		/* Create the next blobbed video frame: */
@@ -216,9 +221,12 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 		for(unsigned int y=0;y<frameSize[1];++y)
 			for(unsigned int x=0;x<frameSize[0];++x,++sPtr,++biPtr,++dPtr)
 				if(*biPtr!=~0x0U)
-					*dPtr=Images::RGBImage::Color(0,255,0);
+					*dPtr=Images::RGBImage::Color(0,*sPtr,0);
 				else
 					*dPtr=Images::RGBImage::Color(*sPtr,*sPtr,*sPtr);
+		#else // Extract blobs without blob image
+		std::vector<Blob> blobs=Images::extractBlobs<Blob>(frameSize,videoFrames.getLockedValue().frame,bfs,Blob::Creator());
+		#endif
 		
 		/* Create an array of all circle-like blobs and match them with blobs from the previous frame: */
 		unsigned int currentMask=0x200U>>(lastFrameIndex%10);
@@ -351,6 +359,7 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 			newTransform.valid=error2<=2.0*double(modelTracker.getNumModelPoints());
 			
 			/* Post the result: */
+			lastTransform=newTransform;
 			modelTransforms.postNewValue();
 			delete[] imagePoints;
 			
@@ -381,7 +390,10 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 				}
 			}
 		else
+			{
 			modelTransforms.postNewValue(ModelTransform());
+			lastTransform.valid=false;
+			}
 		
 		/* Post the list of identified LEDs and the new blobbed video frame: */
 		identifiedLeds.postNewValue();
@@ -391,6 +403,7 @@ void* LEDFinder::blobExtractorThreadMethod(void)
 		/* Store the new array of LEDs as the association kd-tree for the next frame: */
 		lastFrameLeds.donatePoints(numLeds,leds); // Kd-tree now owns LED array and will delete it
 		
+		// DEBUGGING
 		// double processingTime=double(processingTimer.setAndDiff())*1000.0;
 		// std::cout<<processingTime<<std::endl;
 		}
@@ -471,7 +484,7 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 	/* Parse the command line: */
 	const char* videoDeviceName=0;
 	bool requestSize=false;
-	int videoSize[2];
+	Video::Size videoSize;
 	bool requestRate=false;
 	int videoRate;
 	const char* pixelFormat=0;
@@ -573,19 +586,17 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 				}
 		}
 	if(videoDevice==0)
-		Misc::throwStdErr("LEDFinder: Could not find requested video device");
+		throw Misc::makeStdErr(__PRETTY_FUNCTION__,"Could not find requested video device");
 	Video::OculusRiftDK2VideoDevice* ordk2vd=dynamic_cast<Video::OculusRiftDK2VideoDevice*>(videoDevice);
 	
 	/* Get and modify the video device's current video format: */
 	videoFormat=videoDevice->getVideoFormat();
 	if(requestSize)
-		for(int i=0;i<2;++i)
-			videoFormat.size[i]=(unsigned int)videoSize[i];
+			videoFormat.size=videoSize;
 	if(requestRate)
 		{
 		/* Convert from frame rate in Hz to frame interval as a rational number: */
-		videoFormat.frameIntervalCounter=1;
-		videoFormat.frameIntervalDenominator=videoRate;
+		videoFormat.frameInterval=Math::Rational(1,videoRate);
 		}
 	if(pixelFormat!=0)
 		videoFormat.setPixelFormat(pixelFormat);
@@ -593,7 +604,7 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 	
 	/* Print the actual video format after adaptation: */
 	std::cout<<"Selected video format on video device "<<(videoDeviceName!=0?videoDeviceName:"Default")<<":"<<std::endl;
-	std::cout<<"Frame size "<<videoFormat.size[0]<<"x"<<videoFormat.size[1]<<" at "<<double(videoFormat.frameIntervalDenominator)/double(videoFormat.frameIntervalCounter)<<" Hz"<<std::endl;
+	std::cout<<"Frame size "<<videoFormat.size[0]<<"x"<<videoFormat.size[1]<<" at "<<videoFormat.frameInterval.inverse()<<" Hz"<<std::endl;
 	char videoPixelFormatBuffer[5];
 	std::cout<<"Pixel format "<<videoFormat.getFourCC(videoPixelFormatBuffer)<<std::endl;
 	
@@ -625,7 +636,7 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 			/* Load the intrinsic camera parameters: */
 			std::string icpFileName=videoDeviceName;
 			icpFileName.append(".icp");
-			modelTracker.loadCameraIntrinsics(*Vrui::openDirectory("."),icpFileName.c_str());
+			modelTracker.loadCameraIntrinsics(*IO::openDirectory("."),icpFileName.c_str());
 			}
 		catch(std::runtime_error err)
 			{
@@ -650,8 +661,7 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 	modelTracker.setMaxMatchDist(5.0);
 	
 	/* Initialize the incoming video frame triple buffer: */
-	for(int i=0;i<2;++i)
-		frameSize[i]=videoFormat.size[i];
+	frameSize=videoFormat.size;
 	for(int i=0;i<3;++i)
 		videoFrames.getBuffer(i).frame=new Misc::UInt8[frameSize[1]*frameSize[0]];
 	
@@ -661,7 +671,7 @@ LEDFinder::LEDFinder(int& argc,char**& argv)
 	/* Initialize the blobbed video frame triple buffer: */
 	for(int i=0;i<3;++i)
 		{
-		Images::RGBImage img(frameSize[0],frameSize[1]);
+		Images::RGBImage img(frameSize);
 		img.clear(Images::RGBImage::Color(128,128,128));
 		blobbedFrames.getBuffer(i)=img;
 		}

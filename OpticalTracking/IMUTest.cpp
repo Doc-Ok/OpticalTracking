@@ -1,6 +1,6 @@
 /***********************************************************************
 IMUTest - Simple visualization utility for 6-DOF IMU tracking.
-Copyright (c) 2013 Oliver Kreylos
+Copyright (c) 2013-2026 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -24,7 +24,9 @@ Boston, MA 02111-1307 USA
 #include <iostream>
 #include <iomanip>
 #include <Misc/FunctionCalls.h>
-#include <Threads/TripleBuffer.h>
+#include <Realtime/Time.h>
+#include <Threads/Spinlock.h>
+#include <Math/Constants.h>
 #include <GL/gl.h>
 #include <GL/GLMaterialTemplates.h>
 #include <GL/GLModels.h>
@@ -46,7 +48,17 @@ class IMUTest:public Vrui::Application
 	private:
 	IMU* imu; // Pointer to the connected inertial measurement unit
 	IMUTracker* tracker; // 6-DOF tracker attached to the connected IMU
-	Threads::TripleBuffer<IMU::CalibratedSample> samples; // Triple buffer of incoming calibrated samples
+	
+	// DEBUGGING
+	Realtime::TimePointMonotonic firstSample; // Time at which the first sample arrived
+	size_t numSamples; // Number of received samples
+	Realtime::TimePointMonotonic lastSample; // Time at which the last sample arrived
+	
+	unsigned int sampleHistorySize; // Size of sample history buffer
+	IMU::CalibratedSample* sampleHistory; // Array of recently-received calibrated IMU samples
+	Threads::Spinlock sampleHistoryMutex; // Mutex protecting the most recent IMU sample
+	unsigned int mostRecentSample; // Index of most recent IMU sample in history buffer
+	bool trackPosition; // Flag whether positional tracking is enabled
 	
 	/* Private methods: */
 	void sampleCallback(const IMU::CalibratedSample& sample); // Callback called when a new calibrated sample from the IMU arrives
@@ -57,6 +69,7 @@ class IMUTest:public Vrui::Application
 	virtual ~IMUTest(void);
 	
 	/* Methods from Vrui::Application: */
+	virtual void resetNavigation();
 	virtual void frame(void);
 	virtual void display(GLContextData& contextData) const;
 	virtual void eventCallback(EventID eventId,Vrui::InputDevice::ButtonCallbackData* cbData);
@@ -68,51 +81,46 @@ Methods of class IMUTest:
 
 void IMUTest::sampleCallback(const IMU::CalibratedSample& sample)
 	{
-	/* Store the calibrated sample: */
-	samples.postNewValue(sample);
+	// DEBUGGING
+	if(numSamples==0)
+		firstSample.set();
+	++numSamples;
+	lastSample.set();
+	
+	// std::cout<<sample.timeStamp<<std::endl;
+	
+	/* Store the calibrated sample in the history buffer: */
+	{
+	Threads::Spinlock::Lock sampleHistoryLock(sampleHistoryMutex);
+	unsigned int nextSample=mostRecentSample+1;
+	if(nextSample==sampleHistorySize)
+		nextSample=0;
+	sampleHistory[nextSample]=sample;
+	sampleHistory[nextSample].gyroscope-=tracker->getGyroscopeBias();
+	mostRecentSample=nextSample;
+	}
 	
 	/* Forward the calibrated sample to the 6-DOF tracker: */
 	tracker->integrateSample(sample);
-	
-	#if 0
-	
-	static IMU::Vector accel(0.0,0.0,0.0);
-	static IMU::Vector mag(0.0,0.0,0.0);
-	const double w=1.0/1024.0;
-	accel=accel*(1.0-w)+sample.accelerometer*w;
-	mag=mag*(1.0-w)+sample.magnetometer*w;
-	
-	std::cout<<std::fixed;
-	std::cout.precision(4);
-	std::cout<<'\r';
-	std::cout<<std::setw(10)<<accel.mag()<<", ";
-	std::cout<<std::setw(10)<<mag.mag();
-	std::cout<<std::flush;
-	
-	#endif
-	
-	#if 0
-	
-	std::cout<<std::fixed;
-	std::cout.precision(4);
-	std::cout<<'\r';
-	for(int i=0;i<3;++i)
-		std::cout<<std::setw(10)<<sample.magnetometer[i];
-	std::cout<<std::flush;
-	
-	#endif
 	
 	Vrui::requestUpdate();
 	}
 
 IMUTest::IMUTest(int& argc,char**& argv)
 	:Vrui::Application(argc,argv),
-	 imu(0),tracker(0)
+	 imu(0),tracker(0),
+	 // DEBUGGING
+	 numSamples(0),
+	 sampleHistorySize(1000),sampleHistory(new IMU::CalibratedSample[sampleHistorySize]),mostRecentSample(0),
+	 trackPosition(false)
 	{
 	/* Parse the command line: */
 	IMUTracker::Scalar gravity(9.81);
-	IMUTracker::Scalar driftCorrectionWeight(0.001);
+	IMUTracker::Scalar zeta(0.001*Math::sqrt(0.75));
+	IMUTracker::Scalar beta(0.5*Math::sqrt(0.75));
 	bool useMagnetometer=true;
+	bool optical=false;
+	unsigned char psMoveLedColor[3]={0,0,0};
 	for(int i=1;i<argc;++i)
 		{
 		if(argv[i][0]=='-')
@@ -167,13 +175,31 @@ IMUTest::IMUTest(int& argc,char**& argv)
 				/* Disable magnetometer-based drift correction: */
 				useMagnetometer=false;
 				}
+			else if(strcasecmp(argv[i]+1,"ledColor")==0)
+				{
+				if(i+3<argc)
+					{
+					for(int j=0;j<3;++j)
+						psMoveLedColor[j]=(unsigned char)(atoi(argv[i+1+j]));
+					i+=3;
+					}
+				else
+					std::cerr<<"Ignoring dangling -ledColor argument"<<std::endl;
+				}
+			else if(strcasecmp(argv[i]+1,"optical")==0)
+				{
+				/* Set up an Oculus Rift DK2 for optical tracking: */
+				optical=true;
+				}
 			else if(strcasecmp(argv[i]+1,"drift")==0)
 				{
 				++i;
-				if(i<argc)
+				if(i+1<argc)
 					{
-					/* Update the drift correction weight: */
-					driftCorrectionWeight=IMUTracker::Scalar(atof(argv[i]));
+					/* Update the drift correction weights: */
+					zeta=IMUTracker::Scalar(atof(argv[i]));
+					++i;
+					beta=IMUTracker::Scalar(atof(argv[i]));
 					}
 				else
 					std::cerr<<"Ignoring dangling -drift argument"<<std::endl;
@@ -186,40 +212,76 @@ IMUTest::IMUTest(int& argc,char**& argv)
 	/* Set up the 6-DOF tracker: */
 	tracker=new IMUTracker(*imu);
 	tracker->setGravity(gravity);
-	tracker->setDriftCorrectionWeight(driftCorrectionWeight);
+	tracker->setBiasDriftGain(zeta);
+	tracker->setOrientationDriftGain(beta);
 	tracker->setUseMagnetometer(useMagnetometer);
+	
+	/* If the IMU is a Playstation Move controller, set its LED color: */
+	PSMove* psMove=dynamic_cast<PSMove*>(imu);
+	if(psMove!=0)
+		psMove->setLedColor(psMoveLedColor[0],psMoveLedColor[1],psMoveLedColor[2]);
+	
+	/* If the IMU is an Oculus Rift, enable optical tracking if requested: */
+	OculusRift* rift=dynamic_cast<OculusRift*>(imu);
+	if(rift!=0&&optical)
+		rift->startOpticalTracking();
+	
+	/* Initialize the sample history buffer: */
+	for(unsigned int i=0;i<sampleHistorySize;++i)
+		{
+		IMU::CalibratedSample& s=sampleHistory[i];
+		s.accelerometer=IMU::Vector::zero;
+		s.gyroscope=IMU::Vector::zero;
+		s.magnetometer=IMU::Vector::zero;
+		}
 	
 	/* Start streaming IMU measurements: */
 	imu->startStreamingCalibrated(Misc::createFunctionCall(this,&IMUTest::sampleCallback));
 	
 	/* Add event tool classes to control the application: */
 	addEventTool("Reset Tracker",0,0);
-	
-	Vrui::setNavigationTransformation(Vrui::Point(0,0,0),Vrui::Scalar(15),Vrui::Vector(0,1,0));
+	addEventTool("Zero Velocities",0,1);
+	addEventTool("Toggle Position Tracking",0,2);
 	}
 
 IMUTest::~IMUTest(void)
 	{
+	/* If the IMU is a Playstation Move controller, reset its LED color: */
+	PSMove* psMove=dynamic_cast<PSMove*>(imu);
+	if(psMove!=0)
+		psMove->setLedColor(0,0,0);
+	
 	/* Stop sampling and disconnect from the IMU: */
 	imu->stopStreaming();
 	delete tracker;
 	delete imu;
+	
+	delete[] sampleHistory;
+	
+	// DEBUGGING
+	std::cout<<"Average sample interval: "<<double(lastSample-firstSample)*1000.0/double(numSamples-1)<<std::endl;
+	}
+
+void IMUTest::resetNavigation(void)
+	{
+	Vrui::setNavigationTransformation(Vrui::Point(0,0,0),Vrui::Scalar(15),Vrui::Vector(0,1,0));
 	}
 
 void IMUTest::frame(void)
 	{
-	/* Lock the most recent sample and tracker state: */
+	/* Lock the most recent tracker state: */
 	tracker->lockNewState();
-	samples.lockNewValue();
 	}
 
 void IMUTest::display(GLContextData& contextData) const
 	{
-	glPushAttrib(GL_ENABLE_BIT);
+	glPushAttrib(GL_ENABLE_BIT|GL_LINE_BIT);
 	glEnable(GL_COLOR_MATERIAL);
 	glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
 	glMaterialSpecular(GLMaterialEnums::FRONT,GLColor<GLfloat,4>(1.0f,1.0f,1.0f));
 	glMaterialShininess(GLMaterialEnums::FRONT,25.0f);
+	
+	#if 1
 	
 	/* Draw a global coordinate frame: */
 	glPushMatrix();
@@ -245,10 +307,8 @@ void IMUTest::display(GLContextData& contextData) const
 	/* Draw a local coordinate frame: */
 	glPushMatrix();
 	const IMUTracker::State& state=tracker->getLockedState();
-	// if(lockPosition)
-	// 	glTranslated(5.0,5.0,5.0);
-	// else
-	// 	glTranslate(state.translation*IMUTracker::Scalar(10));
+	if(trackPosition)
+		glTranslate(state.translation*IMUTracker::Scalar(100));
 	glRotate(state.rotation);
 	
 	glPushMatrix();
@@ -271,7 +331,9 @@ void IMUTest::display(GLContextData& contextData) const
 	glDrawArrow(0.5f,1.0f,1.5f,5.0f,16);
 	glPopMatrix();
 	
-	const IMU::CalibratedSample& sample=samples.getLockedValue();
+	const IMU::CalibratedSample& sample=sampleHistory[mostRecentSample];
+	
+	#if 0
 	
 	/* Draw the current linear acceleration vector: */
 	glPushMatrix();
@@ -291,6 +353,65 @@ void IMUTest::display(GLContextData& contextData) const
 	glDrawArrow(0.5f,1.0f,1.5f,len*2.0f,16);
 	glPopMatrix();
 	
+	#endif
+	
+	glPopMatrix();
+	
+	#endif
+	
+	/* Draw the recent sample history: */
+	glDisable(GL_LIGHTING);
+	glLineWidth(1.0f);
+	
+	glPushMatrix();
+	
+	glTranslated(-50.0,20.0,0.0);
+	
+	/* Draw accelerometer history: */
+	glBegin(GL_LINES);
+	glColor3f(0.5f,0.5f,0.5f);
+	glVertex2d(-5.0,0.0);
+	glVertex2d(double(sampleHistorySize-1)*0.1+5.0,0.0);
+	glVertex2d(0.0,-9.81*0.5);
+	glVertex2d(double(sampleHistorySize-1)*0.1,-9.81*0.5);
+	glVertex2d(0.0,9.81*0.5);
+	glVertex2d(double(sampleHistorySize-1)*0.1,9.81*0.5);
+	glVertex2d(0.0,-9.81*0.5);
+	glVertex2d(0.0,9.81*0.5);
+	glEnd();
+	
+	for(int axis=0;axis<3;++axis)
+		{
+		glBegin(GL_LINE_STRIP);
+		glColor3f(axis==0?1.0f:0.0f,axis==1?1.0f:0.0f,axis==2?1.0f:0.0f);
+		for(unsigned int i=0;i<sampleHistorySize;++i)
+			glVertex2d(double(i)*0.1,sampleHistory[i].accelerometer[axis]*0.5);
+		glEnd();
+		}
+	
+	glTranslated(0.0,20.0,0.0);
+	
+	/* Draw gyroscope history: */
+	glBegin(GL_LINES);
+	glColor3f(0.5f,0.5f,0.5f);
+	glVertex2d(-5.0,0.0);
+	glVertex2d(double(sampleHistorySize-1)*0.1+5.0,0.0);
+	glVertex2d(0.0,-2.0*Math::Constants<double>::pi);
+	glVertex2d(double(sampleHistorySize-1)*0.1,-2.0*Math::Constants<double>::pi);
+	glVertex2d(0.0,2.0*Math::Constants<double>::pi);
+	glVertex2d(double(sampleHistorySize-1)*0.1,2.0*Math::Constants<double>::pi);
+	glVertex2d(0.0,-2.0*Math::Constants<double>::pi);
+	glVertex2d(0.0,2.0*Math::Constants<double>::pi);
+	glEnd();
+	for(int axis=0;axis<3;++axis)
+		{
+		glBegin(GL_LINE_STRIP);
+		glColor3f(axis==0?1.0f:0.0f,axis==1?1.0f:0.0f,axis==2?1.0f:0.0f);
+		for(unsigned int i=0;i<sampleHistorySize;++i)
+			glVertex2d(double(i)*0.1,sampleHistory[i].gyroscope[axis]);
+		glEnd();
+		}
+	
 	glPopMatrix();
 	
 	glPopAttrib();
@@ -303,6 +424,16 @@ void IMUTest::eventCallback(EventID eventId,Vrui::InputDevice::ButtonCallbackDat
 		switch(eventId)
 			{
 			case 0:
+				// tracker->restart(IMUTracker::Vector::zero);
+				tracker->restart(IMUTracker::Vector::zero,IMUTracker::Rotation::identity);
+				break;
+			
+			case 1:
+				tracker->restart();
+				break;
+			
+			case 2:
+				trackPosition=!trackPosition;
 				break;
 			}
 		}

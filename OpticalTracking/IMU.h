@@ -1,6 +1,6 @@
 /***********************************************************************
 IMU - Abstract base class for inertial measurement units.
-Copyright (c) 2013-2014 Oliver Kreylos
+Copyright (c) 2013-2020 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -25,6 +25,7 @@ Boston, MA 02111-1307 USA
 #define IMU_INCLUDED
 
 #include <string>
+#include <Misc/SizedTypes.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Matrix.h>
 
@@ -36,6 +37,7 @@ class FunctionCall;
 namespace IO {
 class File;
 }
+typedef Misc::SInt32 TimeStamp; // Type for cyclic time stamps at microsecond resolution
 
 class IMU
 	{
@@ -48,7 +50,8 @@ class IMU
 		int accelerometer[3]; // Raw accelerometer measurement
 		int gyroscope[3]; // Raw gyroscopy measurement
 		int magnetometer[3]; // Raw magnetometer measurement
-		int timeStep; // Raw time step since last reported sample
+		TimeStamp timeStamp; // Absolute time at which the sample was taken in microseconds
+		bool warmup; // Flag if this sample was taken during the "warm-up" period, when time stamps are not yet reliable
 		};
 	
 	typedef Misc::FunctionCall<const RawSample&> RawSampleCallback; // Type of callback called when a new raw IMU sample arrives
@@ -64,7 +67,8 @@ class IMU
 		Vector accelerometer; // Calibrated and rectified accelerometer measurement in m/s^2
 		Vector gyroscope; // Calibrated and rectified gyroscope measurement in radians/s
 		Vector magnetometer; // Calibrated and rectified magnetometer measurement in uT
-		Scalar timeStep; // Time step since last reported sample in s
+		TimeStamp timeStamp; // Absolute time at which the sample was taken in microseconds
+		bool warmup; // Flag if this sample was taken during the "warm-up" period, when time stamps are not yet reliable
 		};
 	
 	typedef Misc::FunctionCall<const CalibratedSample&> CalibratedSampleCallback; // Type of callback called when a new calibrated IMU sample arrives
@@ -73,14 +77,10 @@ class IMU
 		{
 		/* Elements: */
 		public:
-		Scalar accelerometerFactor; // Nominal conversion factor from raw accelerometer measurements to m/s^2
 		Matrix accelerometerMatrix; // Calibration matrix from raw accelerometer measurements to rectified measurements in m/s^2
-		Scalar gyroscopeFactor; // Nominal conversion factor from raw gyroscope measurements to radians/s
 		Matrix gyroscopeMatrix; // Calibration matrix from raw gyroscope measurements to rectified measurements in radians/s
 		bool magnetometer; // Flag whether the IMU device has a magnetometer
-		Scalar magnetometerFactor; // Nominal conversion factor from raw magnetometer measurements to uT
 		Matrix magnetometerMatrix; // Calibration matrix from raw magnetometer measurements to rectified measurements in uT
-		Scalar timeStepFactor; // Conversion factor from raw time step units to s
 		
 		/* Methods: */
 		void calibrate(const RawSample& rawSample,CalibratedSample& calibratedSample) const // Calibrates a raw sample
@@ -106,19 +106,35 @@ class IMU
 			                                		+magnetometerMatrix(i,3);
 				}
 			
-			calibratedSample.timeStep=Scalar(rawSample.timeStep)*timeStepFactor;
+			calibratedSample.timeStamp=rawSample.timeStamp;
+			calibratedSample.warmup=rawSample.warmup;
 			}
 		};
+	
+	struct BatteryState // Structure to report a change to an inertial measurement unit's battery state
+		{
+		/* Elements: */
+		public:
+		int level; // Current battery charge level in percent
+		bool charging; // Flag if the battery is currently charging
+		bool chargingComplete; // Flag if the battery is fully charged
+		};
+	
+	typedef Misc::FunctionCall<const BatteryState&> BatteryStateCallback; // Type of callback called when an inertial measurement unit's battery state changes
 	
 	/* Elements: */
 	protected:
 	CalibrationData calibrationData; // Calibration data for the IMU device
 	RawSampleCallback* rawSampleCallback; // Callback called when a new raw sample arrives
 	CalibratedSampleCallback* calibratedSampleCallback; // Callback called when a new calibrated sample arrives
+	BatteryStateCallback* batteryStateCallback; // Callback called when an inertial measurement unit's battery state changes
 	
 	/* Protected methods: */
+	static TimeStamp getTime(void); // Returns the current host time as an absolute time stamp at microsecond resolution
+	void initCalibrationData(Scalar accelerometerScale,Scalar gyroscopeScale,Scalar magnetometerScale); // Initializes calibration data from nominal sensor scale factors
 	void loadCalibrationData(IO::File& calibrationFile); // Loads device's calibration data from an already-open binary file
 	void sendSample(const RawSample& sample); // Sends a new raw sample to all registered callbacks
+	void sendBatteryState(int level,bool charging,bool chargingComplete); // Sends a battery state update to all registered callbacks
 	
 	/* Constructors and destructors: */
 	IMU(void); // Default constructor
@@ -134,6 +150,11 @@ class IMU
 		return calibrationData;
 		}
 	virtual std::string getSerialNumber(void) const =0; // Returns a unique serial number among all IMU devices
+	virtual Scalar getAccelerometerScale(void) const =0; // Returns nominal scale factor to convert from raw accelerometer sample units to m/s^2
+	virtual Scalar getGyroscopeScale(void) const =0; // Returns nominal scale factor to convert from raw gyroscope sample units to radians/s
+	virtual Scalar getMagnetometerScale(void) const =0; // Returns nominal scale factor to convert from raw magnetometer units to uT
+	virtual bool hasBattery(void) const; // Returns true if the IMU device has a battery
+	virtual void setBatteryStateCallback(BatteryStateCallback* newBatteryStateCallback); // Sets a callback to be called when an inertial measurement unit's battery state changes
 	virtual void startStreamingRaw(RawSampleCallback* newRawSampleCallback); // Starts streaming raw sample data to the given callback function; will be called from background thread
 	virtual void startStreamingCalibrated(CalibratedSampleCallback* newCalibratedSampleCallback); // Starts streaming calibrated sample data to the given callback function; will be called from background thread
 	virtual void stopStreaming(void); // Stops streaming sample data

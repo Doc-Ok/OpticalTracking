@@ -1,7 +1,7 @@
 /***********************************************************************
 PSMove - Class to represent a PlayStation Move game controller as an
 inertially-tracked input device.
-Copyright (c) 2013-2014 Oliver Kreylos
+Copyright (c) 2013-2020 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -27,13 +27,18 @@ Boston, MA 02111-1307 USA
 #include <string.h>
 #include <string>
 #include <stdexcept>
-#include <iostream>
 #include <Misc/SizedTypes.h>
 #include <Misc/FunctionCalls.h>
+#include <Misc/MessageLogger.h>
 #include <IO/File.h>
 #include <IO/OpenFile.h>
 #include <RawHID/BusType.h>
 #include <Math/Constants.h>
+
+#include "TimeStampSource.h"
+
+// DEBUGGING
+#include <iostream>
 
 /***********************
 Methods of class PSMove:
@@ -42,11 +47,7 @@ Methods of class PSMove:
 void PSMove::initialize(void)
 	{
 	/* Initialize the calibration data structure: */
-	calibrationData.accelerometerFactor=Scalar(0.001);
-	calibrationData.gyroscopeFactor=Scalar(0.001);
 	calibrationData.magnetometer=true;
-	calibrationData.magnetometerFactor=Scalar(0.001);
-	calibrationData.timeStepFactor=Scalar(0.00001);
 	
 	/* Try loading calibration data from a calibration file: */
 	std::string calibrationFileName="Calibration-PSMove-";
@@ -56,12 +57,10 @@ void PSMove::initialize(void)
 		IO::FilePtr calibFile=IO::openFile(calibrationFileName.c_str());
 		loadCalibrationData(*calibFile);
 		}
-	catch(std::runtime_error)
+	catch(const std::runtime_error&)
 		{
 		/* Ignore the error and reset calibration data to the default: */
-		calibrationData.accelerometerMatrix=Matrix::one;
-		calibrationData.gyroscopeMatrix=Matrix::one;
-		calibrationData.magnetometerMatrix=Matrix::one;
+		initCalibrationData(getAccelerometerScale(),getGyroscopeScale(),getMagnetometerScale());
 		}
 	
 	/* Negate the magnetometer's x and z axes: */
@@ -75,7 +74,112 @@ void PSMove::initialize(void)
 	for(int i=0;i<3;++i)
 		ledColor[i]=0x00U;
 	ledColorChanged=true;
+	
+	showSamplingError=true;
 	}
+
+void PSMove::setLed(void)
+	{
+	/* Send a setLED report: */
+	unsigned char setLedReport[49];
+	memset(setLedReport,0,sizeof(setLedReport));
+	setLedReport[0]=0x02U;
+	for(int i=0;i<3;++i)
+		setLedReport[2+i]=ledColor[i];
+	setLedReport[5]=0U;
+	setLedReport[6]=0U;
+	try
+		{
+		writeReport(setLedReport,sizeof(setLedReport));
+		}
+	catch(const std::runtime_error&)
+		{
+		/* Bug in new kernel's hidraw bluetooth stack; returns 0 on successful write */
+		}
+	
+	/* Reset the change flag: */
+	ledColorChanged=false;
+	}
+
+namespace {
+
+/**************
+Helper classes:
+**************/
+
+class SensorData // Input report: Receive sensor data from PS Move's IMU
+	{
+	/* Elements: */
+	private:
+	Misc::UInt8 pktBuffer[49]; // Buffer to unpack sensor data messages
+	public:
+	static const TimeStamp packetInterval=11299; // True update rate between input reports in microseconds; update rate 177/2Hz
+	static const TimeStamp sampleInterval=5650; // True update rate between IMU samples in microseconds; update rate 177Hz
+	Misc::UInt16 sequenceNumber;
+	Misc::UInt16 timeStamp;
+	int batteryState; // Reported battery state
+	int temperature; // Reported device temperature
+	
+	/* Methods: */
+	void read(RawHID::Device& device) // Reads the next sensor data packet from the given raw HID device
+		{
+		/* Read the next input report: */
+		memset(pktBuffer,0,sizeof(pktBuffer));
+		pktBuffer[0]=0x01U;
+		device.readReport(pktBuffer,sizeof(pktBuffer));
+		}
+	unsigned int parse(IMU::RawSample rawSamples[2],PSMove::FeatureState& featureState) // Parses a sensor data packet into the given raw sample structures; returns number of lost and received packets since last call
+		{
+		/* Extract set of button states and valuator state: */
+		featureState.buttons[0]=(pktBuffer[1]&0x01U)!=0;
+		featureState.buttons[1]=(pktBuffer[1]&0x08U)!=0;
+		featureState.buttons[2]=(pktBuffer[2]&0x10U)!=0;
+		featureState.buttons[3]=(pktBuffer[2]&0x20U)!=0;
+		featureState.buttons[4]=(pktBuffer[2]&0x40U)!=0;
+		featureState.buttons[5]=(pktBuffer[2]&0x80U)!=0;
+		featureState.buttons[6]=(pktBuffer[3]&0x01U)!=0;
+		featureState.buttons[7]=(pktBuffer[3]&0x08U)!=0;
+		featureState.buttons[8]=(pktBuffer[3]&0x10U)!=0;
+		
+		featureState.valuators[0]=pktBuffer[6];
+		
+		/* Unpack the report sequence number and time stamp: */
+		Misc::UInt16 newSequenceNumber=Misc::UInt16(pktBuffer[4]&0x0fU);
+		Misc::UInt16 sequenceNumberDelta=(newSequenceNumber-sequenceNumber)&0x0f;
+		sequenceNumber=newSequenceNumber;
+		timeStamp=(Misc::UInt16(pktBuffer[11])<<8)|Misc::UInt16(pktBuffer[43]);
+		
+		struct // Helper bitfield structure to sign-extend a 12-bit integer
+			{
+			signed int si:12;
+			} s;
+		
+		/* Unpack the battery and temperature state: */
+		batteryState=int(pktBuffer[12]);
+		temperature=s.si=((int(pktBuffer[37])<<4)|(int(pktBuffer[38])>>4))&0x0fff;
+		
+		/* Fill in the raw sample structure for the first half-sample: */
+		for(int i=0;i<3;++i)
+			rawSamples[0].accelerometer[i]=((int(pktBuffer[14+i*2])<<8)|int(pktBuffer[13+i*2]))-0x8000;
+		for(int i=0;i<3;++i)
+			rawSamples[0].gyroscope[i]=((int(pktBuffer[26+i*2])<<8)|int(pktBuffer[25+i*2]))-0x8000;
+		rawSamples[0].magnetometer[0]=s.si=((int(pktBuffer[38])<<8)|int(pktBuffer[39]))&0x0fff;
+		rawSamples[0].magnetometer[1]=s.si=((int(pktBuffer[40])<<4)|(int(pktBuffer[41])>>4))&0x0fff;
+		rawSamples[0].magnetometer[2]=s.si=((int(pktBuffer[41])<<8)|int(pktBuffer[42]))&0x0fff;
+		
+		/* Fill in the raw sample callback structure for the second half-sample: */
+		for(int i=0;i<3;++i)
+			rawSamples[1].accelerometer[i]=((int(pktBuffer[20+i*2])<<8)|int(pktBuffer[19+i*2]))-0x8000;
+		for(int i=0;i<3;++i)
+			rawSamples[1].gyroscope[i]=((int(pktBuffer[32+i*2])<<8)|int(pktBuffer[31+i*2]))-0x8000;
+		for(int i=0;i<3;++i)
+			rawSamples[1].magnetometer[i]=rawSamples[0].magnetometer[i];
+		
+		return sequenceNumberDelta;
+		}
+	};
+
+}
 
 void* PSMove::samplingThreadMethod(void)
 	{
@@ -85,114 +189,193 @@ void* PSMove::samplingThreadMethod(void)
 	
 	try
 		{
-		/* Read the first input report from the device's raw HID node to start sampling: */
-		unsigned char getInputReport[49];
-		getInputReport[0]=0x01U;
-		readReport(getInputReport,sizeof(getInputReport));
+		/* Create report structures: */
+		SensorData sensorData;
+		RawSample rawSamples[2];
+		FeatureState featureState;
 		
-		/* Initialize time step calculation and packet loss detection: */
-		unsigned int lastTimeStamp=((unsigned int)(getInputReport[11])<<8)|(unsigned int)(getInputReport[43]);
-		unsigned int lastSequenceNumber=getInputReport[4]&0x0fU;
+		/* Set the initial LED color: */
+		setLed();
+		TimeStamp lastSetLedTime=getTime();
 		
-		/* Create an update timer to refresh the LED ball color at regular intervals: */
-		int timeToLedUpdate=0;
+		/*******************************************************************
+		Warm-up period: Collect an initial set of samples to establish an
+		initial offset between the PS Move's internal clock and the CPU's
+		monotonic clock.
+		*******************************************************************/
 		
-		/* Read from the device's raw HID node until interrupted: */
-		RawSample rawSample;
+		/* Read the first input report: */
+		sensorData.read(*this);
+		TimeStamp warmupStartTime=getTime();
+		
+		/* Parse the first input report: */
+		sensorData.parse(rawSamples,featureState);
+		
+		/* Keep track of received and lost packets: */
+		unsigned int receivedPackets=1;
+		unsigned int lostPackets=0;
+		
+		/* Initialize the sensor time stamp: */
+		Misc::UInt16 rawSensorTime=sensorData.timeStamp;
+		TimeStamp sensorTime=warmupStartTime;
+		
+		/* Send a battery state update: */
+		batteryLevel=sensorData.batteryState;
+		if(batteryStateCallback!=0)
+			sendBatteryState(batteryLevel>=0&&batteryLevel<=5?batteryLevel*20:50,batteryLevel==0xee,batteryLevel==0xef);
+		else if(batteryLevel==0)
+			Misc::userWarning("PSMove: Battery is critically low");
+		else if(batteryLevel==0xee)
+			Misc::userNote("PSMove: Battery is charging");
+		else if(batteryLevel==0xef)
+			Misc::userNote("PSMove: Battery is fully charged");
+		
+		/* Warm up for one second: */
+		TimeStamp sensorTimeOffset(0);
+		TimeStamp hostTime=warmupStartTime;
+		for(int i=0;i<2;++i)
+			rawSamples[i].warmup=true;
+		while(keepSampling&&TimeStamp(hostTime-warmupStartTime)<TimeStamp(1000000))
+			{
+			/* Read the next input report: */
+			sensorData.read(*this);
+			
+			/* Take the current time: */
+			hostTime=getTime();
+			
+			/* Parse the input report: */
+			++receivedPackets;
+			lostPackets+=sensorData.parse(rawSamples,featureState)-1;
+			
+			/* Advance sensor time: */
+			sensorTime+=TimeStamp(Misc::UInt16(sensorData.timeStamp-rawSensorTime))*TimeStamp(10);
+			rawSensorTime=sensorData.timeStamp;
+			
+			/* Estimate sensor packet's host time: */
+			TimeStamp packetHostTime=sensorTime+sensorTimeOffset;
+			
+			/* Adjust timer offsets: */
+			TimeStamp offset(hostTime-sensorTime);
+			if(sensorTimeOffset>offset)
+				sensorTimeOffset=offset;
+			
+			// DEBUGGING
+			// std::cout<<hostTime<<','<<sensorTime<<','<<packetHostTime<<std::endl;
+			
+			/* Send off each raw sample: */
+			rawSamples[0].timeStamp=packetHostTime-SensorData::sampleInterval;
+			sendSample(rawSamples[0]);
+			rawSamples[1].timeStamp=packetHostTime;
+			sendSample(rawSamples[1]);
+			
+			/* Send off new feature state if requested: */
+			if(featureStateCallback!=0)
+				(*featureStateCallback)(featureState);
+			}
+		
+		/*******************************************************************
+		Main tracking loop: Collect and distribute samples while keeping the
+		host and sensor timers synchronized.
+		*******************************************************************/
+		
+		for(int i=0;i<2;++i)
+			rawSamples[i].warmup=false;
 		while(keepSampling)
 			{
-			if(ledColorChanged||timeToLedUpdate<=0)
+			/* Read the next input report: */
+			sensorData.read(*this);
+			
+			/* Take the current time: */
+			TimeStamp hostTime=getTime();
+			
+			/* Parse the input report: */
+			++receivedPackets;
+			lostPackets+=sensorData.parse(rawSamples,featureState)-1;
+			
+			/* Advance sensor time: */
+			sensorTime+=TimeStamp(Misc::UInt16(sensorData.timeStamp-rawSensorTime))*TimeStamp(10);
+			rawSensorTime=sensorData.timeStamp;
+			
+			/* Estimate sensor packet's host time: */
+			TimeStamp packetHostTime=sensorTime+sensorTimeOffset;
+			
+			/* Adjust timer offsets: */
+			TimeStamp offset(hostTime-sensorTime);
+			if(sensorTimeOffset>offset)
+				sensorTimeOffset=offset;
+			else
+				sensorTimeOffset+=TimeStamp(TimeStamp(offset-sensorTimeOffset)+500)/TimeStamp(1000);
+			
+			// DEBUGGING
+			// std::cout<<hostTime<<','<<sensorTime<<','<<packetHostTime<<std::endl;
+			
+			/* Send off each raw sample: */
+			rawSamples[0].timeStamp=packetHostTime-SensorData::sampleInterval;
+			sendSample(rawSamples[0]);
+			rawSamples[1].timeStamp=packetHostTime;
+			sendSample(rawSamples[1]);
+			
+			/* Send off new feature state if requested: */
+			if(featureStateCallback!=0)
+				(*featureStateCallback)(featureState);
+			
+			/* Check battery state: */
+			int bs=sensorData.batteryState;
+			if(batteryLevel!=bs)
 				{
-				/* Send a setLED report: */
-				unsigned char setLedReport[49];
-				memset(setLedReport,0,sizeof(setLedReport));
-				setLedReport[0]=0x02U;
-				for(int i=0;i<3;++i)
-					setLedReport[2+i]=ledColor[i];
-				setLedReport[5]=0U;
-				setLedReport[6]=0U;
-				writeReport(setLedReport,sizeof(setLedReport));
+				/* Send a battery state update: */
+				if(batteryStateCallback!=0)
+					sendBatteryState(bs>=0&&bs<=5?bs*20:50,bs==0xee,bs==0xef);
+				else if(sensorData.batteryState==0)
+					Misc::userWarning("PSMove: Battery is critically low");
+				else if(sensorData.batteryState==0xee)
+					Misc::userNote("PSMove: Battery is charging");
+				else if(sensorData.batteryState==0xef)
+					Misc::userNote("PSMove: Battery is fully charged");
 				
-				/* Send another LED update in 2 seconds: */
-				if(ledColorChanged)
-					timeToLedUpdate=200000;
-				else
-					timeToLedUpdate+=200000;
-				ledColorChanged=false;
+				batteryLevel=bs;
 				}
 			
-			/* Read the next input report: */
-			getInputReport[0]=0x01U;
-			readReport(getInputReport,sizeof(getInputReport));
-			
-			/*******************************************************************
-			Create one sample callback structure for each of the two samples
-			reported in a single input report. Use the time stamps in the input
-			reports to account for dropped packets or uneven sample rates.
-			Assume that the first sample comes 1/177s before the second one.
-			*******************************************************************/
-			
-			/* Calculate the number of lost packets: */
-			unsigned int sequenceNumber=getInputReport[4]&0x0fU;
-			unsigned int numLostPackets=(sequenceNumber-(lastSequenceNumber+1))&0x0fU;
-			
-			/* Calculate the time difference: */
-			unsigned int timeStamp=((unsigned int)(getInputReport[11])<<8)|(unsigned int)(getInputReport[43]);
-			int fullTimeStep=int((timeStamp-lastTimeStamp)&0xffffU);
-			
-			/* Fill in the raw sample callback structure for the first half-sample: */
-			for(int i=0;i<3;++i)
-				rawSample.accelerometer[i]=((int(getInputReport[14+i*2])<<8)|int(getInputReport[13+i*2]))-0x8000;
-			for(int i=0;i<3;++i)
-				rawSample.gyroscope[i]=((int(getInputReport[26+i*2])<<8)|int(getInputReport[25+i*2]))-0x8000;
-			rawSample.magnetometer[0]=((int(getInputReport[38])<<8)|int(getInputReport[39]))&0x0fff;
-			rawSample.magnetometer[1]=((int(getInputReport[40])<<4)|(int(getInputReport[41])>>4))&0x0fff;
-			rawSample.magnetometer[2]=((int(getInputReport[41])<<8)|int(getInputReport[42]))&0x0fff;
-			for(int i=0;i<3;++i)
-				if(rawSample.magnetometer[i]&0x0800)
-					rawSample.magnetometer[i]|=~int(0x0fff);
-			rawSample.timeStep=fullTimeStep-565; // First half-sample occurs 1/2 average time step (1130us) before second
-			
-			/* Call the sample callback with the first half-sample: */
-			sendSample(rawSample);
-			
-			/* Fill in the raw sample callback structure for the second half-sample: */
-			for(int i=0;i<3;++i)
-				rawSample.accelerometer[i]=((int(getInputReport[14+i*2])<<8)|int(getInputReport[13+i*2]))-0x8000;
-			for(int i=0;i<3;++i)
-				rawSample.gyroscope[i]=((int(getInputReport[26+i*2])<<8)|int(getInputReport[25+i*2]))-0x8000;
-			
-			/* Magnetometer data is only reported once per sample, so keep the previous values */
-			
-			rawSample.timeStep=565; // Second half-sample occurs 1/2 average time step (1130) after first
-			
-			/* Call the sample callback with the second half-sample: */
-			sendSample(rawSample);
-			
-			/* Update sampling state for next sample: */
-			lastSequenceNumber=sequenceNumber;
-			lastTimeStamp=timeStamp;
-			timeToLedUpdate-=fullTimeStep;
+			/* Check if a setLED report needs to be sent: */
+			if(ledColorChanged||TimeStamp(hostTime-lastSetLedTime)>=TimeStamp(2000000))
+				{
+				setLed();
+				lastSetLedTime=hostTime;
+				}
 			}
+		
+		// DEBUGGING
+		// std::cout<<receivedPackets<<" received, "<<lostPackets<<" lost"<<std::endl;
 		}
-	catch(std::runtime_error err)
+	catch(const std::runtime_error& err)
 		{
-		std::cerr<<"PSMove::samplingThreadMethod: Terminating due to exception "<<err.what()<<std::endl;
+		if(showSamplingError)
+			Misc::formattedUserError("PSMove::samplingThreadMethod: Terminating due to exception %s",err.what());
 		}
 	
 	return 0;
 	}
 
+PSMove::PSMove(const char* devnode,const char* serialNumber)
+	:RawHID::Device(devnode,RawHID::BUSTYPE_BLUETOOTH,0x054cU,0x03d5U,serialNumber),
+	 featureStateCallback(0),
+	 keepSampling(false),batteryLevel(-1)
+	{
+	initialize();
+	}
+
 PSMove::PSMove(unsigned int deviceIndex)
 	:RawHID::Device(RawHID::BUSTYPE_BLUETOOTH,0x054cU,0x03d5U,deviceIndex),
-	 keepSampling(false)
+	 featureStateCallback(0),
+	 keepSampling(false),batteryLevel(-1)
 	{
 	initialize();
 	}
 
 PSMove::PSMove(const std::string& deviceSerialNumber)
 	:RawHID::Device(RawHID::BUSTYPE_BLUETOOTH,0x054cU,0x03d5U,deviceSerialNumber),
-	 keepSampling(false)
+	 featureStateCallback(0),
+	 keepSampling(false),batteryLevel(-1)
 	{
 	initialize();
 	}
@@ -205,6 +388,8 @@ PSMove::~PSMove(void)
 		keepSampling=false;
 		samplingThread.join();
 		}
+	
+	delete featureStateCallback;
 	}
 
 std::string PSMove::getSerialNumber(void) const
@@ -213,6 +398,29 @@ std::string PSMove::getSerialNumber(void) const
 	std::string result="PSMove-";
 	result.append(RawHID::Device::getSerialNumber());
 	return result;
+	}
+
+IMU::Scalar PSMove::getAccelerometerScale(void) const
+	{
+	/* One g corresponds to 4096 in raw units: */
+	return Scalar(9.81/4096.0);
+	}
+
+IMU::Scalar PSMove::getGyroscopeScale(void) const
+	{
+	/* Raw measurements are in decidegrees/s: */
+	return Scalar(0.1)*Math::Constants<Scalar>::pi/Scalar(180);
+	}
+
+IMU::Scalar PSMove::getMagnetometerScale(void) const
+	{
+	/* Raw measurements are 1/3 uT: */
+	return Scalar(1.0/3.0);
+	}
+
+bool PSMove::hasBattery(void) const
+	{
+	return true;
 	}
 
 void PSMove::startStreamingRaw(IMU::RawSampleCallback* newRawSampleCallback)
@@ -248,6 +456,20 @@ void PSMove::stopStreaming(void)
 	IMU::stopStreaming();
 	}
 
+void PSMove::disableSamplingError(void)
+	{
+	showSamplingError=false;
+	}
+
+void PSMove::setFeatureStateCallback(PSMove::FeatureStateCallback* newFeatureStateCallback)
+	{
+	if(keepSampling)
+		throw std::runtime_error("PSMove::setFeatureStateCallback: Cannot change callbacks while streaming is active");
+	
+	delete featureStateCallback;
+	featureStateCallback=newFeatureStateCallback;
+	}
+
 void PSMove::setLedColor(unsigned char red,unsigned char green,unsigned char blue)
 	{
 	/* Set the new LED color and notify the sampling thread: */
@@ -255,4 +477,26 @@ void PSMove::setLedColor(unsigned char red,unsigned char green,unsigned char blu
 	ledColor[1]=green;
 	ledColor[2]=blue;
 	ledColorChanged=true;
+	
+	if(!keepSampling) // Sampling thread isn't actually running; send a feature report directly and hope for the best
+		{
+		/* Send a setLED report: */
+		unsigned char setLedReport[49];
+		memset(setLedReport,0,sizeof(setLedReport));
+		setLedReport[0]=0x02U;
+		for(int i=0;i<3;++i)
+			setLedReport[2+i]=ledColor[i];
+		setLedReport[5]=0U;
+		setLedReport[6]=0U;
+		try
+			{
+			writeReport(setLedReport,sizeof(setLedReport));
+			}
+		catch(const std::runtime_error&)
+			{
+			/* Bug in new kernel's hidraw bluetooth stack; returns 0 on successful write */
+			}
+		
+		ledColorChanged=false;
+		}
 	}

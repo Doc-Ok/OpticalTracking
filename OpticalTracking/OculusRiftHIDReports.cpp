@@ -1,7 +1,7 @@
 /***********************************************************************
 OculusRiftHIDReports - Classes defining the feature reports and raw
 reports used by the Oculus Rift DK1 and DK2's raw HID protocol.
-Copyright (c) 2014 Oliver Kreylos
+Copyright (c) 2014-2022 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -24,9 +24,16 @@ Boston, MA 02111-1307 USA
 
 #include "OculusRiftHIDReports.h"
 
+#include <IO/FixedMemoryFile.h>
 #include <RawHID/Device.h>
 #include <Math/Math.h>
 #include <Math/Constants.h>
+
+#include "TimeStampSource.h"
+
+// DEBUGGING
+#include <iostream>
+#include <iomanip>
 
 namespace {
 
@@ -38,6 +45,40 @@ Helper functions:
 inline float fixToFloat(unsigned int fix,float bias,int numFractionBits)
 	{
 	return (float(fix)-bias)/float(1<<numFractionBits);
+	}
+
+/* Unpack an unsigned integer from 2 unsigned bytes: */
+inline int unpackUInt16(const Misc::UInt8 raw[2])
+	{
+	union // Helper union to assemble 2 bytes into an unsigned 16-bit integer
+		{
+		Misc::UInt8 b[2];
+		Misc::UInt16 u;
+		} p;
+	
+	/* Assemble the integer's components: */
+	p.b[0]=raw[0];
+	p.b[1]=raw[1];
+	
+	/* Return the unsigned integer: */
+	return p.u;
+	}
+
+/* Unpack a signed integer from 2 unsigned bytes: */
+inline int unpackSInt16(const Misc::UInt8 raw[2])
+	{
+	union // Helper union to assemble 2 bytes into a signed 16-bit integer
+		{
+		Misc::UInt8 b[2];
+		Misc::SInt16 i;
+		} p;
+	
+	/* Assemble the integer's components: */
+	p.b[0]=raw[0];
+	p.b[1]=raw[1];
+	
+	/* Return the signed integer: */
+	return p.i;
 	}
 
 /* Convert 8 bytes into a vector of 3 21-bit signed integers: */
@@ -71,7 +112,7 @@ inline void unpackVector(const Misc::UInt8 raw[8],int vector[3])
 	p.b[0]=raw[2];
 	p.b[1]=raw[1];
 	p.b[2]=raw[0];
-	p.b[3]=0U;
+	// p.b[3]=0U; // Not needed because it's masked out below anyway
 	vector[0]=s.si=p.i>>3;
 	p.b[0]=raw[5];
 	p.b[1]=raw[4];
@@ -81,6 +122,7 @@ inline void unpackVector(const Misc::UInt8 raw[8],int vector[3])
 	p.b[0]=raw[7];
 	p.b[1]=raw[6];
 	p.b[2]=raw[5];
+	// p.b[3]=0U; // Not needed because it's masked out below anyway
 	vector[2]=s.si=(p.i>>1)&0x001fffff;
 	
 	#endif
@@ -88,16 +130,16 @@ inline void unpackVector(const Misc::UInt8 raw[8],int vector[3])
 
 }
 
-/****************************
-Methods of class Unknown0x02:
-****************************/
+/*****************************
+Methods of class SensorConfig:
+*****************************/
 
-Unknown0x02::Unknown0x02(unsigned int sValue)
-	:value(sValue)
+SensorConfig::SensorConfig(void)
+	:flags(0x00),packetInterval(19),sampleRate(1000)
 	{
 	}
 
-unsigned int Unknown0x02::get(RawHID::Device& device)
+unsigned int SensorConfig::get(RawHID::Device& device)
 	{
 	/* Set up the feature report packet buffer: */
 	IO::FixedMemoryFile pktBuffer(7);
@@ -106,20 +148,20 @@ unsigned int Unknown0x02::get(RawHID::Device& device)
 	memset(buf,0U,pktBuffer.getSize());
 	buf[0]=0x02U;
 	
-	/* Read the unknown feature report: */
+	/* Read the sensor configuration feature report: */
 	device.readSizedFeatureReport(buf,pktBuffer.getSize());
 	
 	/* Unpack the packet buffer: */
 	pktBuffer.skip<Misc::UInt8>(1); // Skip report ID
 	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
-	pktBuffer.skip<Misc::UInt8>(1); // Skip unknown fixed value (0x20)
-	value=pktBuffer.read<Misc::UInt8>(); // Read value of unknown meaning
-	pktBuffer.skip<Misc::UInt16>(1); // Skip unknown fixed value (0x3e8 or 1000) Timeout in ms?
+	flags=pktBuffer.read<Misc::UInt8>(); // Read flags
+	packetInterval=pktBuffer.read<Misc::UInt8>(); // Read sensor packet interval
+	sampleRate=pktBuffer.read<Misc::UInt16>(); // Read sensor sample rate
 	
 	return commandId;
 	}
 
-void Unknown0x02::set(RawHID::Device& device,unsigned int commandId) const
+void SensorConfig::set(RawHID::Device& device,unsigned int commandId) const
 	{
 	/* Set up the feature report packet buffer: */
 	IO::FixedMemoryFile pktBuffer(7);
@@ -128,12 +170,105 @@ void Unknown0x02::set(RawHID::Device& device,unsigned int commandId) const
 	/* Pack the packet buffer: */
 	pktBuffer.write<Misc::UInt8>(0x02U); // Report ID
 	pktBuffer.write<Misc::UInt16>(commandId);
-	pktBuffer.write<Misc::UInt8>(0x20U); // Unknown fixed value
-	pktBuffer.write<Misc::UInt8>(value);
-	pktBuffer.write<Misc::UInt16>(1000); // Timeout in ms?
+	pktBuffer.write<Misc::UInt8>(flags);
+	pktBuffer.write<Misc::UInt8>(packetInterval);
+	pktBuffer.write<Misc::UInt16>(sampleRate);
 	
-	/* Write the unknown feature report: */
+	/* Write the sensor configuration feature report: */
 	device.writeFeatureReport(static_cast<const RawHID::Device::Byte*>(pktBuffer.getMemory()),pktBuffer.getSize());
+	}
+
+void SensorConfig::print(std::ostream& os) const
+	{
+	os<<"Sensor configuration:"<<std::endl;
+	os<<"  Raw mode          : "<<((flags&RawFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Calibration test  : "<<((flags&TestCalibFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Use calibration   : "<<((flags&UseCalibFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Auto calibration  : "<<((flags&AutoCalibFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Motion keep-alive : "<<((flags&MotionKeepAliveFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Command keep-alive: "<<((flags&CommandKeepAliveFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Sensor coordinates: "<<((flags&SensorCoordinatesFlags)!=0x0U?"on":"off")<<std::endl;
+	os<<"  Packet Interval   : "<<packetInterval<<", "<<double(sampleRate)/double(packetInterval+1)<<" Hz"<<std::endl;
+	os<<"  Sensor sample rate: "<<sampleRate<<" Hz"<<std::endl;
+	}
+
+/*******************************
+Methods of class IMUCalibration:
+*******************************/
+
+IMUCalibration::IMUCalibration(void)
+	{
+	for(int i=0;i<3;++i)
+		for(int j=0;j<4;++j)
+			{
+			accelMatrix[i][j]=i==j?1.0f:0.0f;
+			gyroMatrix[i][j]=i==j?1.0f:0.0f;
+			}
+	temperature=0.0f;
+	}
+
+unsigned int IMUCalibration::get(RawHID::Device& device)
+	{
+	/* Set up the feature report packet buffer: */
+	Misc::UInt8 pktBuffer[69];
+	memset(pktBuffer,0U,sizeof(pktBuffer));
+	pktBuffer[0]=0x03U;
+	
+	/* Read the IMU calibration data feature report: */
+	device.readSizedFeatureReport(pktBuffer,sizeof(pktBuffer));
+	
+	/* Unpack the packet buffer: */
+	int vector[3];
+	unsigned int commandId=unpackUInt16(pktBuffer+1);
+	unpackVector(pktBuffer+3,vector);
+	for(int i=0;i<3;++i)
+		accelMatrix[i][3]=float(vector[i])*1.0e-4f;
+	unpackVector(pktBuffer+11,vector);
+	for(int i=0;i<3;++i)
+		gyroMatrix[i][3]=float(vector[i])*1.0e-4f;
+	for(int j=0;j<3;++j)
+		{
+		unpackVector(pktBuffer+19+j*8,vector);
+		for(int i=0;i<3;++i)
+			accelMatrix[i][j]=float(vector[i])/float((1<<20)-1);
+		accelMatrix[j][j]+=1.0f;
+		}
+	for(int j=0;j<3;++j)
+		{
+		unpackVector(pktBuffer+43+j*8,vector);
+		for(int i=0;i<3;++i)
+			gyroMatrix[i][j]=float(vector[i])/float((1<<20)-1);
+		gyroMatrix[j][j]+=1.0f;
+		}
+	temperature=float(unpackUInt16(pktBuffer+67))*0.01f;
+	
+	return commandId;
+	}
+
+void printMatrix(std::ostream& os,const char* label,const float matrix[3][4])
+	{
+	for(int i=0;i<3;++i)
+		{
+		if(i==0)
+			os<<label;
+		else
+			{
+			for(const char* lPtr=label;*lPtr!='\0';++lPtr)
+				os<<' ';
+			}
+		
+		for(int j=0;j<4;++j)
+			os<<' '<<std::setw(12)<<matrix[i][j];
+		os<<std::endl;
+		}
+	}
+
+void IMUCalibration::print(std::ostream& os) const
+	{
+	os<<"IMU calibration data:"<<std::endl;
+	printMatrix(os,"  Accelerometer matrix:",accelMatrix);
+	printMatrix(os,"  Gyroscope matrix    :",accelMatrix);
+	os<<"  Temperature         : "<<temperature<<std::endl;
 	}
 
 /************************************
@@ -307,6 +442,27 @@ unsigned int DisplayInfo::get(RawHID::Device& device)
 	return commandId;
 	}
 
+void DisplayInfo::print(std::ostream& os) const
+	{
+	std::cout<<"Display information:"<<std::endl;
+	std::cout<<"  Distortion type         : "<<distortionType<<std::endl;
+	if((distortionType&0x0fU)>=0x01U)
+		{
+		std::cout<<"  Screen resolution       : "<<screenResolution[0]<<" x "<<screenResolution[1]<<std::endl;
+		std::cout<<"  Screen size             : "<<screenSize[0]<<" x "<<screenSize[1]<<std::endl;
+		std::cout<<"  Vertical screen center  : "<<screenCenterY<<std::endl;
+		std::cout<<"  Horizontal lens distance: "<<lensDistanceX<<std::endl;
+		std::cout<<"  Eye position            : "<<eyePos[0]<<", "<<eyePos[1]<<std::endl;
+		if((distortionType&0x0fU)>=0x02U)
+			{
+			std::cout<<"  Distortion coefficients :";
+			for(int i=0;i<6;++i)
+				std::cout<<' '<<distortionCoeffs[i];
+			std::cout<<std::endl;
+			}
+		}
+	}
+
 /****************************
 Methods of class Unknown0x0a:
 ****************************/
@@ -413,6 +569,22 @@ void LEDControl::set(RawHID::Device& device,unsigned int commandId) const
 
 	/* Write the sensor range feature report: */
 	device.writeFeatureReport(static_cast<const RawHID::Device::Byte*>(pktBuffer.getMemory()),pktBuffer.getSize());
+	}
+
+void LEDControl::print(std::ostream& os) const
+	{
+	os<<"LED control:"<<std::endl;
+	os<<"  Pattern        : "<<pattern<<std::endl;
+	os<<"  Enabled        : "<<(enable?"true":"false")<<std::endl;
+	os<<"  Auto-increment : "<<(autoIncrement?"on":"off")<<std::endl;
+	os<<"  Use carrier    : "<<(useCarrier?"on":"off")<<std::endl;
+	os<<"  Sync input     : "<<(syncInput?"on":"off")<<std::endl;
+	os<<"  Vsync lock     : "<<(vsyncLock?"on":"off")<<std::endl;
+	os<<"  Custom pattern : "<<(customPattern?"on":"off")<<std::endl;
+	os<<"  Exposure length: "<<exposureLength<<std::endl;
+	os<<"  Frame interval : "<<frameInterval<<" ("<<1.0e6/double(frameInterval)<<" Hz)"<<std::endl;
+	os<<"  Vsync offset   : "<<vsyncOffset<<std::endl;
+	os<<"  Duty cycle     : "<<dutyCycle<<" ("<<double(dutyCycle)/255.0<<"%)"<<std::endl;
 	}
 
 /****************************
@@ -592,7 +764,7 @@ unsigned int SerialNumber::get(RawHID::Device& device)
 	/* Unpack the packet buffer: */
 	pktBuffer.skip<Misc::UInt8>(1); // Skip report ID
 	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
-	pktBuffer.read<Misc::UInt8>(reinterpret_cast<Misc::UInt8*>(serialNumber),20);
+	pktBuffer.read(reinterpret_cast<Misc::UInt8*>(serialNumber),20);
 	serialNumber[20]='\0';
 	
 	return commandId;
@@ -660,13 +832,197 @@ unsigned int LensConfiguration::get(RawHID::Device& device)
 	return commandId;
 	}
 
+void LensConfiguration::print(std::ostream& os) const
+	{
+	std::cout<<"Lens configuration "<<reportIndex<<" of "<<numReports<<":"<<std::endl;
+	std::cout<<"  Version        : "<<version<<std::endl;
+	std::cout<<"  R2Max          : "<<r2Max<<std::endl;
+	std::cout<<"  Catmull-Rom    :";
+	for(int i=0;i<11;++i)
+		std::cout<<' '<<catmullRom[i];
+	std::cout<<std::endl;
+	std::cout<<"  Pixel size     : "<<pixelSize<<std::endl;
+	std::cout<<"  Eye relief     : "<<eyeRelief<<std::endl;
+	std::cout<<"  Red polynomial : "<<redPolynomial[0]<<", "<<redPolynomial[1]<<std::endl;
+	std::cout<<"  Blue polynomial: "<<bluePolynomial[0]<<", "<<bluePolynomial[1]<<std::endl;
+	}
+
+/*****************************
+Methods of class RadioControl:
+*****************************/
+
+RadioControl::RadioControl(unsigned int c0,unsigned int c1,unsigned int c2)
+	{
+	/* Copy the command sequence: */
+	command[0]=Misc::UInt8(c0);
+	command[1]=Misc::UInt8(c1);
+	command[2]=Misc::UInt8(c2);
+	}
+
+unsigned int RadioControl::get(RawHID::Device& device)
+	{
+	/* Set up the feature report packet buffer: */
+	IO::FixedMemoryFile pktBuffer(6);
+	pktBuffer.setEndianness(Misc::LittleEndian);
+	RawHID::Device::Byte* buf=static_cast<RawHID::Device::Byte*>(pktBuffer.getMemory());
+	memset(buf,0U,pktBuffer.getSize());
+	buf[0]=0x1aU; // Report ID
+	
+	/* Read the radio control feature report: */
+	device.readSizedFeatureReport(buf,pktBuffer.getSize());
+	
+	/* Unpack the packet buffer: */
+	pktBuffer.skip<Misc::UInt8>(1); // Skip report number
+	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
+	pktBuffer.read(command,3);
+	
+	return commandId;
+	}
+
+void RadioControl::set(RawHID::Device& device,unsigned int commandId) const
+	{
+	/* Set up the feature report packet buffer: */
+	IO::FixedMemoryFile pktBuffer(6);
+	pktBuffer.setEndianness(Misc::LittleEndian);
+	
+	/* Pack the packet buffer: */
+	pktBuffer.write<Misc::UInt8>(0x1aU); // Report ID
+	pktBuffer.write<Misc::UInt16>(commandId);
+	pktBuffer.write(command,3);
+	
+	/* Write the radio control feature report: */
+	device.writeFeatureReport(static_cast<const RawHID::Device::Byte*>(pktBuffer.getMemory()),pktBuffer.getSize());
+	}
+
+/**************************
+Methods of class RadioData:
+**************************/
+
+RadioData::RadioData(RadioData::ReportType sReportType)
+	:reportType(sReportType)
+	{
+	switch(reportType)
+		{
+		case MemoryReport:
+			memory.start=0;
+			memory.length=0;
+			memset(memory.data,0,sizeof(memory.data));
+			break;
+		
+		case FirmwareVersionReport:
+			memset(firmwareVersion.date,0,sizeof(firmwareVersion.date));
+			memset(firmwareVersion.version,0,sizeof(firmwareVersion.version));
+			break;
+		
+		case SerialNumberReport:
+			serialNumber.address=0;
+			serialNumber.deviceType=0;
+			memset(serialNumber.serialNumber,0,sizeof(serialNumber.serialNumber));
+			break;
+		}
+	}
+
+unsigned int RadioData::get(RawHID::Device& device)
+	{
+	/* Set up the feature report packet buffer: */
+	IO::FixedMemoryFile pktBuffer(31);
+	pktBuffer.setEndianness(Misc::LittleEndian);
+	RawHID::Device::Byte* buf=static_cast<RawHID::Device::Byte*>(pktBuffer.getMemory());
+	memset(buf,0U,pktBuffer.getSize());
+	buf[0]=0x1bU; // Report ID
+	
+	/* Read the radio data feature report: */
+	device.readSizedFeatureReport(buf,pktBuffer.getSize());
+	
+	/* Unpack the packet buffer: */
+	pktBuffer.skip<Misc::UInt8>(1); // Skip report number
+	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
+	
+	switch(reportType)
+		{
+		case MemoryReport:
+			memory.start=pktBuffer.read<Misc::UInt16>();
+			memory.length=pktBuffer.read<Misc::UInt16>();
+			pktBuffer.read(memory.data,sizeof(memory.data));
+			break;
+		
+		case FirmwareVersionReport:
+			pktBuffer.skip<Misc::UInt8>(3);
+			pktBuffer.read(firmwareVersion.date,sizeof(firmwareVersion.date)-1); // Exclude NUL terminator
+			pktBuffer.read(firmwareVersion.version,sizeof(firmwareVersion.version)-1); // Exclude NUL terminator
+			break;
+		
+		case SerialNumberReport:
+			serialNumber.address=pktBuffer.read<Misc::UInt32>();
+			serialNumber.deviceType=pktBuffer.read<Misc::UInt8>();
+			pktBuffer.skip<Misc::UInt8>(4);
+			pktBuffer.read(serialNumber.serialNumber,sizeof(serialNumber.serialNumber)-1); // Exclude NUL terminator
+			break;
+		}
+	
+	return commandId;
+	}
+
+/********************************
+Methods of class ComponentStatus:
+********************************/
+
+ComponentStatus::ComponentStatus(bool sDisplayEnabled,bool sAudioEnabled,bool sLedsEnabled)
+	:displayEnabled(sDisplayEnabled),audioEnabled(sAudioEnabled),ledsEnabled(sLedsEnabled)
+	{
+	}
+
+unsigned int ComponentStatus::get(RawHID::Device& device)
+	{
+	/* Set up the feature report packet buffer: */
+	IO::FixedMemoryFile pktBuffer(4);
+	pktBuffer.setEndianness(Misc::LittleEndian);
+	RawHID::Device::Byte* buf=static_cast<RawHID::Device::Byte*>(pktBuffer.getMemory());
+	memset(buf,0U,pktBuffer.getSize());
+	buf[0]=0x1dU; // Report ID
+	
+	/* Read the component status feature report: */
+	device.readSizedFeatureReport(buf,pktBuffer.getSize());
+	
+	/* Unpack the packet buffer: */
+	pktBuffer.skip<Misc::UInt8>(1); // Skip report number
+	unsigned int commandId=pktBuffer.read<Misc::UInt16>();
+	unsigned int flags=pktBuffer.read<Misc::UInt8>();
+	displayEnabled=(flags&DisplayFlag)!=0x00U;
+	audioEnabled=(flags&AudioFlag)!=0x00U;
+	ledsEnabled=(flags&LedsFlag)!=0x00U;
+	
+	return commandId;
+	}
+
+void ComponentStatus::set(RawHID::Device& device,unsigned int commandId) const
+	{
+	/* Set up the feature report packet buffer: */
+	IO::FixedMemoryFile pktBuffer(4);
+	pktBuffer.setEndianness(Misc::LittleEndian);
+	
+	/* Pack the packet buffer: */
+	pktBuffer.write<Misc::UInt8>(0x1dU); // Report ID
+	pktBuffer.write<Misc::UInt16>(commandId);
+	Misc::UInt8 flags=0x0;
+	if(displayEnabled)
+		flags|=DisplayFlag;
+	if(audioEnabled)
+		flags|=AudioFlag;
+	if(ledsEnabled)
+		flags|=LedsFlag;
+	pktBuffer.write<Misc::UInt8>(flags);
+	
+	/* Write the component status interval feature report: */
+	device.writeFeatureReport(static_cast<const RawHID::Device::Byte*>(pktBuffer.getMemory()),pktBuffer.getSize());
+	}
+
 /***************************
 Methods of class SensorData:
 ***************************/
 
 SensorData::SensorData(void)
-	:pktBuffer(64),
-	 numSamples(0U),
+	:numSamples(0U),
 	 timeStamp(0U),
 	 temperature(0)
 	{
@@ -681,29 +1037,93 @@ SensorData::SensorData(void)
 		mag[i]=0;
 	}
 
+namespace {
+
+/****************
+Helper functions:
+****************/
+
+}
+
 void SensorData::get(RawHID::Device& device)
 	{
 	/* Read next raw HID report: */
-	device.readSizedReport(static_cast<RawHID::Device::Byte*>(pktBuffer.getMemory()),pktBuffer.getSize());
+	device.readSizedReport(pktBuffer,sizeof(pktBuffer));
 	
 	/* Unpack the message: */
-	pktBuffer.setReadPosAbs(0);
-	if(pktBuffer.read<Misc::UInt8>()==0x01U)
+	if(pktBuffer[0]==0x01U)
 		{
-		numSamples=pktBuffer.read<Misc::UInt8>();
-		timeStamp=pktBuffer.read<Misc::UInt16>();
-		pktBuffer.skip<Misc::UInt16>(1);
-		temperature=pktBuffer.read<Misc::SInt16>();
-		for(unsigned int sample=0;sample<numSamples&&sample<3;++sample)
+		/* Unpack packet header: */
+		numSamples=pktBuffer[1];
+		timeStamp=unpackUInt16(pktBuffer+2)+(numSamples-1); // Move time stamp from first sample to last sample
+		temperature=unpackUInt16(pktBuffer+6);
+		
+		/* Calculate number of accel/gyro samples contained in the packet: */
+		unsigned int numContainedSamples=numSamples;
+		if(numContainedSamples>3)
+			numContainedSamples=3;
+		
+		/* Unpack all contained accel/gyro samples: */
+		Misc::UInt8* sPtr=pktBuffer+8;
+		for(unsigned int sample=0;sample<numContainedSamples;++sample,sPtr+=16)
 			{
-			Misc::UInt8 bytes[16];
-			pktBuffer.read<Misc::UInt8>(bytes,16);
-			unpackVector(bytes,samples[sample].accel);
-			unpackVector(bytes+8,samples[sample].gyro);
+			unpackVector(sPtr,samples[sample].accel);
+			unpackVector(sPtr+8,samples[sample].gyro);
 			}
-		for(unsigned int sample=numSamples;sample<3;++sample)
-			pktBuffer.skip<Misc::UInt8>(16);
-		for(int i=0;i<3;++i)
-			mag[i]=pktBuffer.read<Misc::SInt16>();
+		
+		/* Unpack the mag sample: */
+		Misc::UInt8* mPtr=pktBuffer+56;
+		for(int i=0;i<3;++i,mPtr+=2)
+			mag[i]=unpackSInt16(mPtr);
 		}
+	}
+
+unsigned int SensorData::get(RawHID::Device& device,IMU::RawSample rawSamples[3],TimeStampSource& timeStampSource)
+	{
+	/* Read next raw HID report: */
+	device.readSizedReport(pktBuffer,sizeof(pktBuffer));
+	
+	/* Unpack the message: */
+	if(pktBuffer[0]==0x01U)
+		{
+		/* Unpack packet header: */
+		numSamples=pktBuffer[1];
+		Misc::UInt16 newTimeStamp=unpackUInt16(pktBuffer+2);
+		newTimeStamp+=numSamples-1; // Move time stamp from first sample to last sample
+		Misc::UInt16 timeStampInterval=newTimeStamp-timeStamp;
+		timeStamp=newTimeStamp;
+		
+		/* Update the given time stamp source: */
+		timeStampSource.advance(TimeStamp(timeStampInterval)*sampleInterval);
+		
+		/* Unpack temperature reading: */
+		temperature=unpackUInt16(pktBuffer+6);
+		
+		/* Calculate number of accel/gyro samples contained in the packet: */
+		unsigned int numContainedSamples=numSamples;
+		if(numContainedSamples>3)
+			numContainedSamples=3;
+		
+		/* Unpack all contained accel/gyro samples: */
+		Misc::UInt8* sPtr=pktBuffer+8;
+		for(unsigned int sample=0;sample<numContainedSamples;++sample,sPtr+=16)
+			{
+			unpackVector(sPtr,rawSamples[sample].accelerometer);
+			unpackVector(sPtr+8,rawSamples[sample].gyroscope);
+			}
+		
+		/* Unpack the mag sample: */
+		Misc::UInt8* mPtr=pktBuffer+56;
+		for(int i=0;i<3;++i,mPtr+=2)
+			rawSamples[0].magnetometer[i]=unpackSInt16(mPtr);
+		
+		/* Copy the mag sample into the other raw samples: */
+		for(unsigned int sample=1;sample<numContainedSamples;++sample)
+			for(int i=0;i<3;++i)
+				rawSamples[sample].magnetometer[i]=rawSamples[0].magnetometer[i];
+		
+		return numContainedSamples;
+		}
+	else
+		return 0;
 	}

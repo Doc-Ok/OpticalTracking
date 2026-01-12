@@ -2,7 +2,7 @@
 HMDModel - Class to represent 3D models of head-mounted displays for
 optical tracking purposes, including LED positions and emission vectors
 and the position of the integrated inertial measurement unit.
-Copyright (c) 2014 Oliver Kreylos
+Copyright (c) 2014-2026 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -26,7 +26,7 @@ Boston, MA 02111-1307 USA
 #include "HMDModel.h"
 
 #include <string.h>
-#include <Misc/ThrowStdErr.h>
+#include <Misc/StdError.h>
 #include <RawHID/Device.h>
 
 namespace {
@@ -160,7 +160,7 @@ void HMDModel::readFromRiftDK2(RawHID::Device& rift)
 		buffer[0]=0x0fU;
 		size_t reportSize=rift.readFeatureReport(buffer,sizeof(buffer));
 		if(reportSize!=sizeof(buffer))
-			Misc::throwStdErr("HMDModel::readFromRiftDK2: Received LED feature report of %u bytes instead of %u bytes",(unsigned int)reportSize,(unsigned int)sizeof(buffer));
+			throw Misc::makeStdErr(__PRETTY_FUNCTION__,"Received LED feature report of %u bytes instead of %u bytes",(unsigned int)reportSize,(unsigned int)sizeof(buffer));
 		
 		/* Extract the report index and total number of reports: */
 		unsigned int ri=buffer[24];

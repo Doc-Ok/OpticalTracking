@@ -1,7 +1,7 @@
 /***********************************************************************
 LEDFinder - A simple viewer for live video from a video source
 connected to the local computer.
-Copyright (c) 2013-2014 Oliver Kreylos
+Copyright (c) 2013-2022 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -37,6 +37,7 @@ Boston, MA 02111-1307 USA
 #include <GL/GLObject.h>
 #include <GL/GLNumberRenderer.h>
 #include <Images/RGBImage.h>
+#include <Video/Types.h>
 #include <Video/VideoDataFormat.h>
 #include <Vrui/Application.h>
 
@@ -142,7 +143,7 @@ class LEDFinder:public Vrui::Application,public GLObject
 	ModelTracker modelTracker; // Object to reconstruct the pose of the tracked 3D model
 	unsigned int frameIndex; // Index of the next incoming video frame
 	Realtime::TimePointMonotonic frameTimes[13]; // Array of recent video frame arrival times to calculate an accurate frame rate
-	unsigned int frameSize[2]; // Size of incoming video frames
+	Video::Size frameSize; // Size of incoming video frames
 	Threads::TripleBuffer<NumberedGreyscaleFrame> videoFrames; // Triple buffer to pass video frames from the video callback to the blob extractor
 	Threads::MutexCond videoFrameCond; // Condition variable to signal arrival of a new video frame
 	volatile bool runBlobExtractorThread; // Flag to terminate the blob extraction thread

@@ -2,7 +2,7 @@
 LensDistortionParameters - Class to represent functions to correct
 common lens distortions; specifically, the Brown-Conrady radial/
 tangential distortion formula with quartic radial and tangential terms.
-Copyright (c) 2009-2014 Oliver Kreylos
+Copyright (c) 2009-2022 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -54,10 +54,10 @@ void LensDistortionParameters::read(const char* fileName)
 void LensDistortionParameters::read(IO::File& file)
 	{
 	file.setEndianness(Misc::LittleEndian);
-	file.read<double>(center.getComponents(),2);
+	file.read(center.getComponents(),2);
 	file.read<double>(radiusScale2);
-	file.read<double>(kappa,2);
-	file.read<double>(rho,3);
+	file.read(kappa,2);
+	file.read(rho,3);
 	}
 
 void LensDistortionParameters::write(const char* fileName) const
@@ -69,10 +69,10 @@ void LensDistortionParameters::write(const char* fileName) const
 void LensDistortionParameters::write(IO::File& file) const
 	{
 	file.setEndianness(Misc::LittleEndian);
-	file.write<double>(center.getComponents(),2);
+	file.write(center.getComponents(),2);
 	file.write<double>(radiusScale2);
-	file.write<double>(kappa,2);
-	file.write<double>(rho,3);
+	file.write(kappa,2);
+	file.write(rho,3);
 	}
 
 const char* LensDistortionParameters::getVarName(int index)

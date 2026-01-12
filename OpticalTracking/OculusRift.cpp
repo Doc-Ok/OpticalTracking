@@ -1,7 +1,7 @@
 /***********************************************************************
 OculusRift - Class to represent the tracking subsystem of an Oculus Rift
 head-mounted display as an inertially-tracked input device.
-Copyright (c) 2014 Oliver Kreylos
+Copyright (c) 2014-2018 Oliver Kreylos
 
 This file is part of the optical/inertial sensor fusion tracking
 package.
@@ -24,16 +24,15 @@ Boston, MA 02111-1307 USA
 
 #include "OculusRift.h"
 
+#include <unistd.h>
 #include <stdexcept>
 #include <iostream>
 #include <IO/File.h>
 #include <IO/OpenFile.h>
 #include <RawHID/BusType.h>
 
+#include "TimeStampSource.h"
 #include "OculusRiftHIDReports.h"
-
-// DEBUGGING
-// #include <Misc/Timer.h>
 
 /***************************
 Methods of class OculusRift:
@@ -50,21 +49,42 @@ void OculusRift::initialize(void)
 		
 		case 0x0021U:
 			deviceType=DK2;
+			break;
+		
+		case 0x0031U:
+			deviceType=CV1;
+			break;
 		
 		default:
 			deviceType=UNKNOWN;
 		}
+	
+	/* Read sensor measurement ranges: */
+	SensorRange sensorRange;
+	sensorRange.get(*this);
+	
+	/* Read display information: */
+	DisplayInfo displayInfo;
+	displayInfo.get(*this);
+	
+	/* Read sensor configuration: */
+	SensorConfig sensorConfig;
+	sensorConfig.get(*this);
+	
+	/* Set sensors to raw mode: */
+	sensorConfig.flags|=SensorConfig::UseCalibFlags;
+	sensorConfig.flags|=SensorConfig::AutoCalibFlags;
+	sensorConfig.set(*this,0x0000U);
+	
+	/* Double-check sensor configuration: */
+	sensorConfig.get(*this);
 	
 	/* Initialize other state: */
 	opticalTracking=false;
 	keepSampling=false;
 	
 	/* Initialize the calibration data structure: */
-	calibrationData.accelerometerFactor=Scalar(0.0001);
-	calibrationData.gyroscopeFactor=Scalar(0.0001);
 	calibrationData.magnetometer=true;
-	calibrationData.magnetometerFactor=Scalar(0.0001);
-	calibrationData.timeStepFactor=Scalar(0.001);
 	
 	/* Try loading calibration data from a calibration file: */
 	std::string calibrationFileName="Calibration-OculusRift-";
@@ -77,9 +97,7 @@ void OculusRift::initialize(void)
 	catch(std::runtime_error)
 		{
 		/* Ignore the error and reset calibration data to the default: */
-		calibrationData.accelerometerMatrix=Matrix(Scalar(0.0001));
-		calibrationData.gyroscopeMatrix=Matrix(Scalar(0.0001));
-		calibrationData.magnetometerMatrix=Matrix(Scalar(0.0001));
+		initCalibrationData(getAccelerometerScale(),getGyroscopeScale(),getMagnetometerScale());
 		}
 	
 	if(deviceType==DK1)
@@ -94,85 +112,113 @@ void OculusRift::initialize(void)
 		}
 	}
 
-namespace {
-
-/****************
-Helper functions:
-****************/
-
-inline int unpackSInt16(const Misc::UInt8 raw[2]) // Unpacks a signed integer from 2 bytes
-	{
-	union // Helper union to assemble 2 bytes into a signed 16-bit integer
-		{
-		Misc::UInt8 b[2];
-		Misc::SInt16 i;
-		} p;
-	
-	/* Assemble the integer's components: */
-	p.b[0]=raw[0];
-	p.b[1]=raw[1];
-	
-	/* Return the signed integer: */
-	return p.i;
-	}
-
-inline void unpackVector(const Misc::UInt8 raw[8],int vector[3]) // Unpacks a 3D vector from 8 bytes
-	{
-	union // Helper union to assemble 3 or 4 bytes into a signed 32-bit integer
-		{
-		Misc::UInt8 b[4];
-		Misc::SInt32 i;
-		} p;
-	struct // Helper structure to sign-extend a 21-bit signed integer value
-		{
-		signed int si:21;
-		} s;
-
-	/* Assemble the vector's x component: */
-	p.b[0]=raw[2];
-	p.b[1]=raw[1];
-	p.b[2]=raw[0];
-	// p.b[3]=0U; // Not needed because it's masked out below anyway
-	vector[0]=s.si=(p.i>>3)&0x001fffff;
-
-	/* Assemble the vector's y component: */
-	p.b[0]=raw[5];
-	p.b[1]=raw[4];
-	p.b[2]=raw[3];
-	p.b[3]=raw[2];
-	vector[1]=s.si=(p.i>>6)&0x001fffff;
-
-	/* Assemble the vector's z component: */
-	p.b[0]=raw[7];
-	p.b[1]=raw[6];
-	p.b[2]=raw[5];
-	// p.b[3]=0U; // Not needed because it's masked out below anyway
-	vector[2]=s.si=(p.i>>1)&0x001fffff;
-	}
-
-}
-
 void* OculusRift::samplingThreadMethod(void)
 	{
 	/* Enable thread cancellation: */
 	Threads::Thread::setCancelState(Threads::Thread::CANCEL_ENABLE);
 	// Threads::Thread::setCancelType(Threads::Thread::CANCEL_ASYNCHRONOUS);
 	
-	// DEBUGGING
-	// Misc::Timer packetTimer;
-	
 	try
 		{
 		/* Set the keep-alive interval for streaming to 10 seconds: */
 		Misc::UInt16 keepAliveInterval=10000U;
 		
-		/* Create an update timer to send keep-alive feature reports at regular intervals: */
-		int timeToKeepAlive=0;
+		/*******************************************************************
+		Warm-up period: Collect an initial set of samples to avoid bad time
+		stamps at the beginning of the stream, and establish an initial
+		offset between the Rift's internal clock and the CPU's wall clock.
+		*******************************************************************/
 		
+		// DEBUGGING
+		std::cout<<"OculusRift: Sending first keep-alive"<<std::endl;
+		
+		/* Send a keep-alive feature report to start streaming sample data: */
+		if(deviceType==DK1)
+			{
+			KeepAliveDK1 ka(keepAliveInterval);
+			ka.set(*this,0x0000U);
+			}
+		else
+			{
+			// KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
+			KeepAliveDK2 ka(false,keepAliveInterval);
+			ka.set(*this,0x0000U);
+			}
+		
+		/* Create an update timer to send keep-alive feature reports at regular intervals: */
+		int timeToKeepAlive=int(keepAliveInterval)-1000;
+		
+		// DEBUGGING
+		std::cout<<"OculusRift: Reading initial batch of input reports"<<std::endl;
+		
+		/* Read the first batch of input reports until raw time stamps stabilize: */
+		SensorData sensorData;
+		TimeStampSource timeStampSource(1000000,1000);
+		temperature=0.0f;
+		unsigned int numWarmupReports=0;
+		for(int numReports=0;numReports<2;++numReports,++numWarmupReports)
+			{
+			/* Read the next input report and initialize the time stamp source: */
+			sensorData.get(*this);
+			timeStampSource.set();
+			temperature=(temperature*float(numWarmupReports)+float(sensorData.temperature))/float(numWarmupReports+1);
+			
+			/* Check if the report was over-full: */
+			if(sensorData.numSamples>3)
+				{
+				/* Wait for two more reports: */
+				numReports=-1;
+				}
+			
+			timeToKeepAlive-=int(sensorData.numSamples);
+			}
+		
+		// DEBUGGING
+		std::cout<<"OculusRift: Stabilizing time stamps"<<std::endl;
+		
+		/* Read some more input reports until the offset between raw and CPU time stamps stabilizes: */
+		RawSample rawSamples[3];
+		for(int i=0;i<3;++i)
+			rawSamples[i].warmup=true;
+		for(int numReports=0;numReports<10;++numReports,++numWarmupReports)
+			{
+			/* Read the next input report and advance the time stamp source: */
+			unsigned int numRawSamples=sensorData.get(*this,rawSamples,timeStampSource);
+			
+			/* Adjust the running temperature average: */
+			temperature=temperature*(1023.0f/1024.0f)+float(sensorData.temperature)*(1.0f/1024.0f);
+			
+			/* Send off each raw sample: */
+			TimeStamp sampleTimeStamp=timeStampSource.get()-TimeStamp(sensorData.numSamples-1)*SensorData::sampleInterval;
+			for(unsigned int sample=0;sample<numRawSamples;++sample,sampleTimeStamp+=SensorData::sampleInterval)
+				{
+				/* Attach a time stamp to this sample and send it: */
+				rawSamples[sample].timeStamp=sampleTimeStamp;
+				sendSample(rawSamples[sample]);
+				}
+			
+			/* Prepare for the next input report: */
+			timeToKeepAlive-=int(sensorData.numSamples);
+			}
+		
+		/*******************************************************************
+		Main tracking loop: Collect and distribute samples while keeping the
+		two timers synchronized.
+		*******************************************************************/
+		
+		// DEBUGGING
+		std::cout<<"OculusRift: Starting sampling loop"<<std::endl;
+		
+		/* Process further samples in "regular mode" until interrupted: */
+		for(int i=0;i<3;++i)
+			rawSamples[i].warmup=false;
 		while(keepSampling)
 			{
 			if(timeToKeepAlive<=0)
 				{
+				// DEBUGGING
+				std::cout<<"OculusRift: Sending keep-alive"<<std::endl;
+		
 				/* Send a keep-alive feature report to start streaming sample data: */
 				if(deviceType==DK1)
 					{
@@ -181,7 +227,8 @@ void* OculusRift::samplingThreadMethod(void)
 					}
 				else
 					{
-					KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
+					// KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
+					KeepAliveDK2 ka(false,keepAliveInterval);
 					ka.set(*this,0x0000U);
 					}
 				
@@ -189,41 +236,22 @@ void* OculusRift::samplingThreadMethod(void)
 				timeToKeepAlive+=int(keepAliveInterval)-1000;
 				}
 			
-			/* Read the next input report: */
-			unsigned char inputReport[62];
-			memset(inputReport,0x00U,sizeof(inputReport));
-			readReport(inputReport,sizeof(inputReport));
-			Misc::UInt16 numSamples=Misc::UInt16(inputReport[1]);
+			/* Read the next input report and advance the time stamp source: */
+			unsigned int numRawSamples=sensorData.get(*this,rawSamples,timeStampSource);
 			
-			// DEBUGGING
-			// std::cout<<packetTimer.peekTime()*1000.0<<", "<<numSamples<<std::endl;
+			/* Adjust the running temperature average: */
+			temperature=temperature*(1023.0f/1024.0f)+float(sensorData.temperature)*(1.0f/1024.0f);
 			
-			/* Process up to three samples included in the current input report: */
-			RawSample rawSample;
-			
-			/* Read the magnetometer reading valid for all samples: */
-			for(int i=0;i<3;++i)
-				rawSample.magnetometer[i]=unpackSInt16(inputReport+56+i*2);
-			
-			/* Set the time step for all samples: */
-			rawSample.timeStep=1;
-			
-			/* Unpack and send off each sample: */
-			unsigned int sendSamples=numSamples;
-			if(sendSamples>3)
-				sendSamples=3;
-			for(unsigned int sampleIndex=0;sampleIndex<sendSamples;++sampleIndex)
+			TimeStamp sampleTimeStamp=timeStampSource.get()-TimeStamp(sensorData.numSamples-1)*SensorData::sampleInterval;
+			for(unsigned int sample=0;sample<numRawSamples;++sample,sampleTimeStamp+=SensorData::sampleInterval)
 				{
-				/* Read the accelerometer and gyroscope readings for all samples: */
-				unpackVector(inputReport+8+sampleIndex*16,rawSample.accelerometer);
-				unpackVector(inputReport+16+sampleIndex*16,rawSample.gyroscope);
-				
-				/* Send the sample: */
-				sendSample(rawSample);
+				/* Attach a time stamp to this sample and send it: */
+				rawSamples[sample].timeStamp=sampleTimeStamp;
+				sendSample(rawSamples[sample]);
 				}
 			
-			/* Prepare for the next sample: */
-			timeToKeepAlive-=numSamples;
+			/* Prepare for the next input report: */
+			timeToKeepAlive-=int(sensorData.numSamples);
 			}
 		}
 	catch(std::runtime_error err)
@@ -246,7 +274,7 @@ class OculusRiftMatcher:public RawHID::Device::DeviceMatcher
 	public:
 	virtual bool operator()(int busType,unsigned short vendorId,unsigned short productId) const
 		{
-		return busType==RawHID::BUSTYPE_USB&&vendorId==0x2833U&&(productId==0x0001U||productId==0x0021U);
+		return busType==RawHID::BUSTYPE_USB&&vendorId==0x2833U&&(productId==0x0001U||productId==0x0021U||productId==0x0031U);
 		}
 	};
 
@@ -256,6 +284,65 @@ OculusRift::OculusRift(unsigned int deviceIndex)
 	:RawHID::Device(OculusRiftMatcher(),deviceIndex)
 	{
 	initialize();
+	
+	#if 0
+	
+	/* Send a keep-alive feature report to start streaming sample data: */
+	Misc::UInt16 keepAliveInterval=10000U;
+	if(deviceType==DK1)
+		{
+		KeepAliveDK1 ka(keepAliveInterval);
+		ka.set(*this,0x0000U);
+		}
+	else
+		{
+		// KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
+		KeepAliveDK2 ka(false,keepAliveInterval);
+		ka.set(*this,0x0000U);
+		}
+	
+	/* Create an update timer to send keep-alive feature reports at regular intervals: */
+	int timeToKeepAlive=int(keepAliveInterval)-1000;
+	
+	/* Read 500 sample packets to clear any buffers etc.: */
+	SensorData sensorData;
+	for(int i=0;i<500;++i)
+		{
+		sensorData.get(*this);
+		timeToKeepAlive-=sensorData.numSamples;
+		}
+	
+	/* Start timing: */
+	Realtime::TimePointMonotonic timer;
+	unsigned int totalNumSamples=0;
+	for(int i=0;i<100*500;++i)
+		{
+		if(timeToKeepAlive<=0)
+			{
+			/* Send a keep-alive feature report to start streaming sample data: */
+			if(deviceType==DK1)
+				{
+				KeepAliveDK1 ka(keepAliveInterval);
+				ka.set(*this,0x0000U);
+				}
+			else
+				{
+				// KeepAliveDK2 ka(opticalTracking,keepAliveInterval);
+				KeepAliveDK2 ka(false,keepAliveInterval);
+				ka.set(*this,0x0000U);
+				}
+			timeToKeepAlive+=int(keepAliveInterval)-1000;
+			}
+		
+		/* Read the next sample: */
+		sensorData.get(*this);
+		totalNumSamples+=sensorData.numSamples;
+		timeToKeepAlive-=sensorData.numSamples;
+		}
+	double time=double(timer.setAndDiff());
+	std::cout<<totalNumSamples<<" samples in "<<time<<"s, "<<time*1000000000.0/double(totalNumSamples)<<" ns/sample"<<std::endl;
+	
+	#endif
 	}
 
 OculusRift::OculusRift(const std::string& deviceSerialNumber)
@@ -272,6 +359,19 @@ OculusRift::~OculusRift(void)
 		keepSampling=false;
 		samplingThread.join();
 		}
+	
+	if(deviceType==DK2)
+		{
+		#if 0
+		
+		/* Run the shutdown sequence of unknown semantics: */
+		Unknown0x02 unknown0x02(0x01U);
+		unknown0x02.get(*this);
+		unknown0x02.value=0x13U;
+		unknown0x02.set(*this,0x0000U);
+		
+		#endif
+		}
 	}
 
 std::string OculusRift::getSerialNumber(void) const
@@ -282,8 +382,26 @@ std::string OculusRift::getSerialNumber(void) const
 	return result;
 	}
 
+IMU::Scalar OculusRift::getAccelerometerScale(void) const
+	{
+	return Scalar(0.0001);
+	}
+
+IMU::Scalar OculusRift::getGyroscopeScale(void) const
+	{
+	return Scalar(0.0001);
+	}
+
+IMU::Scalar OculusRift::getMagnetometerScale(void) const
+	{
+	return Scalar(0.0001);
+	}
+
 void OculusRift::startStreamingRaw(IMU::RawSampleCallback* newRawSampleCallback)
 	{
+	// DEBUGGING
+	std::cout<<"OculusRift: Starting raw streaming"<<std::endl;
+	
 	/* Install the new raw sample callback: */
 	IMU::startStreamingRaw(newRawSampleCallback);
 	
@@ -294,6 +412,9 @@ void OculusRift::startStreamingRaw(IMU::RawSampleCallback* newRawSampleCallback)
 
 void OculusRift::startStreamingCalibrated(IMU::CalibratedSampleCallback* newCalibratedSampleCallback)
 	{
+	// DEBUGGING
+	std::cout<<"OculusRift: Starting calibrated streaming"<<std::endl;
+	
 	/* Install the new calibrated sample callback: */
 	IMU::startStreamingCalibrated(newCalibratedSampleCallback);
 	
@@ -308,6 +429,9 @@ void OculusRift::stopStreaming(void)
 	if(!keepSampling)
 		return;
 	
+	// DEBUGGING
+	std::cout<<"OculusRift: Stopping streaming"<<std::endl;
+	
 	/* Shut down the background sampling thread: */
 	keepSampling=false;
 	samplingThread.join();
@@ -316,31 +440,40 @@ void OculusRift::stopStreaming(void)
 	IMU::stopStreaming();
 	}
 
+void OculusRift::enableComponents(bool enableDisplay,bool enableAudio,bool enableLeds)
+	{
+	if(deviceType==CV1)
+		{
+		/* Switch components on or off: */
+		ComponentStatus componentStatus(enableDisplay,enableAudio,enableLeds);
+		componentStatus.set(*this,0x0000U);
+		}
+	}
+
 void OculusRift::startOpticalTracking(void)
 	{
-	if(deviceType==DK1&&!opticalTracking)
+	if((deviceType==DK2||deviceType==CV1)&&!opticalTracking)
 		{
-		/* Run the initialization sequence of unknown semantics: */
-		Unknown0x02 unknown0x02(0x01U);
-		unknown0x02.get(*this);
-		unknown0x02.value=0x01U;
-		unknown0x02.set(*this,0x0000U);
+		// DEBUGGING
+		std::cout<<"OculusRift: Turning on LEDs"<<std::endl;
 		
 		/* Turn on the LEDs: */
+		usleep(16666);
 		LEDControl ledControl;
 		ledControl.get(*this);
-		ledControl.pattern=1; // This should have been 0, but I ran the wrong pattern when noting down LED IDs
+		ledControl.pattern=deviceType==CV1?0xffU:0x00U;
 		ledControl.enable=true;
-		ledControl.autoIncrement=true;
+		ledControl.autoIncrement=false;
 		ledControl.useCarrier=true;
 		ledControl.syncInput=false;
 		ledControl.vsyncLock=false;
 		ledControl.customPattern=false;
-		ledControl.exposureLength=350U;
-		ledControl.frameInterval=16666U;
+		ledControl.exposureLength=deviceType==CV1?399U:350U;
+		ledControl.frameInterval=deviceType==CV1?19200U:16666U;
 		ledControl.vsyncOffset=0U;
 		ledControl.dutyCycle=127U;
 		ledControl.set(*this,0x0000U);
+		ledControl.get(*this);
 		
 		/* Remember that optical tracking is on to send the appropriate keep-alive report: */
 		opticalTracking=true;
@@ -349,29 +482,28 @@ void OculusRift::startOpticalTracking(void)
 
 void OculusRift::stopOpticalTracking(void)
 	{
-	if(deviceType==DK1&&opticalTracking)
+	if((deviceType==DK2||deviceType==CV1)&&opticalTracking)
 		{
+		// DEBUGGING
+		std::cout<<"OculusRift: Turning off LEDs"<<std::endl;
+		
 		/* Turn off the LEDs: */
 		LEDControl ledControl;
 		ledControl.get(*this);
-		ledControl.pattern=0;
+		ledControl.pattern=deviceType==CV1?0xffU:0x00U;
 		ledControl.enable=false;
 		ledControl.autoIncrement=false;
 		ledControl.useCarrier=false;
 		ledControl.syncInput=false;
 		ledControl.vsyncLock=false;
 		ledControl.customPattern=false;
-		ledControl.exposureLength=350U;
-		ledControl.frameInterval=16666U;
+		ledControl.exposureLength=deviceType==CV1?399U:350U;
+		ledControl.frameInterval=deviceType==CV1?19200U:16666U;
 		ledControl.vsyncOffset=0U;
 		ledControl.dutyCycle=127U;
 		ledControl.set(*this,0x0000U);
-		
-		/* Run the shutdown sequence of unknown semantics: */
-		Unknown0x02 unknown0x02(0x01U);
-		unknown0x02.get(*this);
-		unknown0x02.value=0x13U;
-		unknown0x02.set(*this,0x0000U);
+		ledControl.get(*this);
+		usleep(16666);
 		
 		/* Remember that optical tracking is off to send the appropriate keep-alive report: */
 		opticalTracking=false;
